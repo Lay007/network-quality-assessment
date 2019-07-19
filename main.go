@@ -1,6 +1,29 @@
 package main
 
 import (
+    "time"
+    . "github.com/blacked/go-zabbix"
+)
+
+const (
+    defaultHost  = `localhost`
+    defaultPort  = 10051
+)
+
+func main() {
+    var metrics []*Metric
+    metrics = append(metrics, NewMetric("lay-test", "Delay", "1.22", time.Now().Unix()))
+    metrics = append(metrics, NewMetric("lay-test", "status", "OK"))
+
+    // Create instance of Packet class
+    packet := NewPacket(metrics)
+
+    // Send packet to zabbix
+    z := NewSender(defaultHost, defaultPort)
+    z.Send(packet)
+}
+
+/*import (
 	"encoding/json"
 	"log"
 	"net/http"
@@ -27,3 +50,4 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	js, _ := json.Marshal(user)
 	w.Write(js)
 }
+*/
