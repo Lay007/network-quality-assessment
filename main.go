@@ -1,12 +1,13 @@
 package main
 
 import (
-    "time"
-    ."/go-zabbix/"
-)
+    "time"	
+	."./go-zabbix" 
+	)
 
 const (
-    defaultHost  = `localhost`
+	defaultHost  = `localhost`
+	//defaultHost = `remote.fibertrade.ru`
     defaultPort  = 10051
 )
 
