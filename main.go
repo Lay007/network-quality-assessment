@@ -13,8 +13,8 @@ const (
 
 func main() {
     var metrics []*Metric
-    metrics = append(metrics, NewMetric("lay-test", "Delay", "1.22", time.Now().Unix()))
-    metrics = append(metrics, NewMetric("lay-test", "status", "OK"))
+    metrics = append(metrics, NewMetric("Server_SLA", "Delay", "1.22", time.Now().Unix()))
+    metrics = append(metrics, NewMetric("Server_SLA", "status", "OK"))
 
     // Create instance of Packet class
     packet := NewPacket(metrics)
