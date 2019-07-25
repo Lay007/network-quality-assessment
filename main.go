@@ -15,7 +15,7 @@ const (
 func main() {
     var metrics []*Metric
     metrics = append(metrics, NewMetric("SFP-SLA_4401", "delay", "4343"))
-    metrics = append(metrics, NewMetric("SFP-SLA_4401", "status", "OK"))
+   // metrics = append(metrics, NewMetric("SFP-SLA_4401", "status", "OK"))
 
     // Create instance of Packet class
     packet := NewPacket(metrics)
