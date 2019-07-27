@@ -1,7 +1,7 @@
 package main
 
 import (
-	"math/rand"
+//	"math/rand"
 	"time"
 	"fmt"	
 	."./go-zabbix" 
