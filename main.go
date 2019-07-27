@@ -16,7 +16,7 @@ const (
 )
 
 func main() {
-  go zabbixHello("SFP-SLA_4401")
+  zabbixHello("SFP-SLA_4401")
   // Find all devices
   devices, err := pcap.FindAllDevs()
   if err != nil {
@@ -38,10 +38,11 @@ func main() {
 }
 
 func zabbixHello(host string){
-	for {
-		var delay = rand.Int
+	for i:=0;i<15;i++ {
+		//var delay = rand.Int
+		delay:=i*100
 	var metrics []*Metric
-    metrics = append(metrics, NewMetric("SFP-SLA_4401", "delay",fmt.Sprint(delay),time.Now().Unix()))
+    metrics = append(metrics, NewMetric(host, "delay",fmt.Sprint(delay),time.Now().Unix()))
    
     // Create instance of Packet class
     packet := NewPacket(metrics)
