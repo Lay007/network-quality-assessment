@@ -3,10 +3,14 @@ package main
 import (
 	"math/rand"
 	"time"
-	"fmt"	
+	"fmt"
+	"net"	
 	."./go-zabbix" 
 	"log"
-    "github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/pcap"
+	
+	"github.com/mdlayher/ethernet"
+	"github.com/mdlayher/raw"
 	)
 
 const (
@@ -22,7 +26,7 @@ func main() {
   if err != nil {
 	  log.Fatal(err)
   }
-
+  var net_name string
   // Print device information
   fmt.Println("Devices found:")
   for _, device := range devices {
@@ -31,11 +35,92 @@ func main() {
 	  fmt.Println("Devices addresses: ", device.Description)
 	  for _, address := range device.Addresses {
 		  fmt.Println("- IP address: ", address.IP)
+		  if address.IP.Equal(net.ParseIP("10.0.10.115")) {
+			  net_name=device.Name
+		  }
 		  fmt.Println("- Subnet mask: ", address.Netmask)
 	  }
   }
-  
+   // Open a raw socket on the specified interface, and configure it to accept
+
+	ifi, err := net.InterfaceByName(net_name)
+	if err != nil {
+		log.Fatalf("failed to find interface %q: %v", net_name, err)
+	}
+
+	c, err := raw.ListenPacket(ifi, 0x0800, nil)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	// Default message to system's hostname if empty.
+	msg := string([]byte{0x11,0x22,0x33,0x44})
+
+
+	// Send messages in one goroutine, receive messages in another.
+	go sendMessages(c, ifi.HardwareAddr, msg)
+	go receiveMessages(c, ifi.MTU)
+
+	// Block forever.
+	select {}
 }
+
+// sendMessages continuously sends a message over a connection at regular intervals,
+// sourced from specified hardware address.
+func sendMessages(c net.PacketConn, source net.HardwareAddr, msg string) {
+	// Message is broadcast to all machines in same network segment.
+	f := &ethernet.Frame{
+		Destination: ethernet.Broadcast,
+		Source:      source,
+		EtherType:   0x0800,
+		Payload:     []byte(msg),
+	}
+
+	b, err := f.MarshalBinary()
+	if err != nil {
+		log.Fatalf("failed to marshal ethernet frame: %v", err)
+	}
+
+	// Required by Linux, even though the Ethernet frame has a destination.
+	// Unused by BSD.
+	addr := &raw.Addr{
+		HardwareAddr: ethernet.Broadcast,
+	}
+
+	// Send message forever.
+	t := time.NewTicker(1 * time.Second)
+	for range t.C {
+		if _, err := c.WriteTo(b, addr); err != nil {
+			log.Fatalf("failed to send message: %v", err)
+		}
+	}
+}
+
+// receiveMessages continuously receives messages over a connection. The messages
+// may be up to the interface's MTU in size.
+func receiveMessages(c net.PacketConn, mtu int) {
+	var f ethernet.Frame
+	b := make([]byte, mtu)
+
+	// Keep receiving messages forever.
+	for {
+		n, addr, err := c.ReadFrom(b)
+		if err != nil {
+			log.Fatalf("failed to receive message: %v", err)
+		}
+
+		// Unpack Ethernet II frame into Go representation.
+		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
+			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
+		}
+
+		// Display source of message and message itself.
+		fmt.Printf("[%s] %s", addr.String(), string(f.Payload))
+	}
+}
+
+  
+
 
 func zabbixHello(host string){
 	for  {
