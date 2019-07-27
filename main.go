@@ -41,7 +41,7 @@ func zabbixHello(host string){
 	for {
 		var delay = rand.Int
 	var metrics []*Metric
-    metrics = append(metrics, NewMetric("SFP-SLA_4401", fmt.Sprint(delay), "4343",time.Now().Unix()))
+    metrics = append(metrics, NewMetric("SFP-SLA_4401", "delay",fmt.Sprint(delay),time.Now().Unix()))
    
     // Create instance of Packet class
     packet := NewPacket(metrics)
