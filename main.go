@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"time"
 	"fmt"	
 	."./go-zabbix" 
@@ -15,7 +16,7 @@ const (
 )
 
 func main() {
-  zabbixHello("SFP-SLA_4401")
+  go zabbixHello("SFP-SLA_4401")
   // Find all devices
   devices, err := pcap.FindAllDevs()
   if err != nil {
@@ -37,15 +38,19 @@ func main() {
 }
 
 func zabbixHello(host string){
+	for {
+		var delay = rand.Int
 	var metrics []*Metric
-    metrics = append(metrics, NewMetric("SFP-SLA_4401", "delay", "4343",time.Now().Unix()))
+    metrics = append(metrics, NewMetric("SFP-SLA_4401", fmt.Sprint(delay), "4343",time.Now().Unix()))
    
     // Create instance of Packet class
     packet := NewPacket(metrics)
 	fmt.Println(packet);
     // Send packet to zabbix
     z := NewSender(defaultHost, defaultPort)
-    z.Send(packet)
+	z.Send(packet)
+	time.Sleep(5 * time.Second)
+	}
 }
 
 /*import (
