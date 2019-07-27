@@ -39,7 +39,7 @@ func main() {
 
 func zabbixHello(host string){
 	for  {
-		var delay = rand.Int
+		var delay = rand.Intn(1500)
 		//delay:=i*100
 	var metrics []*Metric
     metrics = append(metrics, NewMetric(host, "delay",fmt.Sprint(delay),time.Now().Unix()))
