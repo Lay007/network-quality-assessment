@@ -1,7 +1,7 @@
 package main
 
 import (
-//	"math/rand"
+	"math/rand"
 	"time"
 	"fmt"	
 	."./go-zabbix" 
@@ -16,7 +16,7 @@ const (
 )
 
 func main() {
-  zabbixHello("SFP-SLA_4401")
+  go zabbixHello("SFP-SLA_4401")
   // Find all devices
   devices, err := pcap.FindAllDevs()
   if err != nil {
@@ -38,9 +38,9 @@ func main() {
 }
 
 func zabbixHello(host string){
-	for i:=0;i<15;i++ {
-		//var delay = rand.Int
-		delay:=i*100
+	for  {
+		var delay = rand.Int
+		//delay:=i*100
 	var metrics []*Metric
     metrics = append(metrics, NewMetric(host, "delay",fmt.Sprint(delay),time.Now().Unix()))
    
