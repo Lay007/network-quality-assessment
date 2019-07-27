@@ -1,9 +1,11 @@
 package main
 
 import (
-//	"time"
+	"time"
 	"fmt"	
 	."./go-zabbix" 
+	"log"
+    "github.com/google/gopacket/pcap"
 	)
 
 const (
@@ -13,13 +15,34 @@ const (
 )
 
 func main() {
-    var metrics []*Metric
-    metrics = append(metrics, NewMetric("SFP-SLA_4401", "delay", "4343"))
-   // metrics = append(metrics, NewMetric("SFP-SLA_4401", "status", "OK"))
+  zabbixHello("SFP-SLA_4401")
+  // Find all devices
+  devices, err := pcap.FindAllDevs()
+  if err != nil {
+	  log.Fatal(err)
+  }
 
+  // Print device information
+  fmt.Println("Devices found:")
+  for _, device := range devices {
+	  fmt.Println("\nName: ", device.Name)
+	  fmt.Println("Description: ", device.Description)
+	  fmt.Println("Devices addresses: ", device.Description)
+	  for _, address := range device.Addresses {
+		  fmt.Println("- IP address: ", address.IP)
+		  fmt.Println("- Subnet mask: ", address.Netmask)
+	  }
+  }
+  
+}
+
+func zabbixHello(host string){
+	var metrics []*Metric
+    metrics = append(metrics, NewMetric("SFP-SLA_4401", "delay", "4343",time.Now().Unix()))
+   
     // Create instance of Packet class
     packet := NewPacket(metrics)
-	fmt.Print(packet);
+	fmt.Println(packet);
     // Send packet to zabbix
     z := NewSender(defaultHost, defaultPort)
     z.Send(packet)
