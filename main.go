@@ -16,7 +16,7 @@ const (
 )
 
 func main() {
-  go zabbixHello("SFP-SLA_4401")
+  zabbixHello("SFP-SLA_4401")
   // Find all devices
   devices, err := pcap.FindAllDevs()
   if err != nil {
