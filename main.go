@@ -138,12 +138,16 @@ func main() {
 	ip.iplen = uint16(20 + 26)
 	ip.checksum()
 
-	msg := make([]byte, ip.iplen)
-	ipd:=[]byte(fmt.Sprintf("%v",ip))
-	dats:=[]byte(fmt.Sprintf("%v",sfpdat))
-	msg=append(ipd,dats...)
+	//msg := make([]byte, ip.iplen)
+	//ipd:=[]byte(fmt.Sprintf("%v",ip))
+	//dats:=[]byte(fmt.Sprintf("%v",sfpdat))
+	//msg=append(ipd,dats...)
 
+	var bin_buf bytes.Buffer
+	binary.Write(&bin_buf, binary.BigEndian, ip)
+	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
 
+    msg := bin_buf.Bytes()
 	// Send messages in one goroutine, receive messages in another.
 	go sendMessages(c, ifi.HardwareAddr, msg)
 	go receiveMessages(c, ifi.MTU)
