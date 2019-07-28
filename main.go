@@ -174,7 +174,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
-	fmt.Println(" --== ", b)
+	fmt.Printf(" --== %x", b)
 	// Send message forever.
 	t := time.NewTicker(1 * time.Second)
 	for range t.C {
