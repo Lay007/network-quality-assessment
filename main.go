@@ -19,7 +19,7 @@ const (
     defaultPort  = 10051
 )
 
-funGOOS=linux GOARCH=arm go build -o http_example_armc main() {
+func main() {
   go zabbixHello("SFP-SLA_4401")
   // Find all devices
   devices, err := pcap.FindAllDevs()
