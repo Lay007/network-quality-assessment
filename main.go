@@ -56,7 +56,26 @@ func main() {
 	}
 
 	// Default message to system's hostname if empty.
-	msg := string([]byte{0x11,0x22,0x33,0x44})
+	msg := []byte{0x45,			// 14
+						 0x00,			// 15 QoS
+						 0x00,0x32,		// 16 Size_Frame
+						 0x00,0x00,		// 18 Id
+						 0x00,0x00,		// 20 Frag
+						 0xFF,			// 22 TTL
+						 0x5e,			// 23 Protocol
+						 0x88, 0x3e,	// 24 CRC
+						 10,0,10,115,	// 26 IP Source (Server)
+						 10,1,10,144,	// 30 IP Dist (SFP-SLA_1)
+						 0xFA,			// 34 Id
+						 10,1,10,140,	// 35 IP SFP-SLA_2
+						 0xAA,0xAA,0xAA,
+						 0xAA,0xAA,0xAA,0xAA, // 39 Time_stamp_11
+						 0xBB,0xBB,0xBB,
+						 0xBB,0xBB,0xBB,0xBB, // 46 Time_stamp_11
+						 0xCC,0xCC,0xCC,
+						 0xCC,0xCC,0xCC,0xCC, // 53 Time_stamp_11
+						 0x01,0x23,0x45,0x67 } // 60 Number_count
+					
 
 
 	// Send messages in one goroutine, receive messages in another.
@@ -69,8 +88,9 @@ func main() {
 
 // sendMessages continuously sends a message over a connection at regular intervals,
 // sourced from specified hardware address.
-func sendMessages(c net.PacketConn, source net.HardwareAddr, msg string) {
+func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 	// Message is broadcast to all machines in same network segment.
+	
 	f := &ethernet.Frame{
 		Destination: ethernet.Broadcast,
 		Source:      source,
@@ -117,7 +137,9 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		}
 
 		// Display source of message and message itself.
-		fmt.Printf("[%s] %s", addr.String(), string(f.Payload))
+		if f.Payload[20]==0xFA	{
+		    fmt.Printf("[%s] %s", addr.String(), string(f.Payload))
+		}
 	}
 }
 
