@@ -204,7 +204,7 @@ func receiveMessages(c net.PacketConn, mtu int) {
 
 		// Display source of message and message itself.
 		if f.Payload[20] == 0xFA {
-			fmt.Printf("\n\n\r\r[%s] %s", addr.String(), string(f.Payload))
+			fmt.Printf("\n\n--=Yes=--\n\r\r[%s] %s", addr.String(), string(f.Payload))
 		} else {
 			fmt.Printf("\n\n\r[%s] %v", addr.String(), len(f.Payload))
 
