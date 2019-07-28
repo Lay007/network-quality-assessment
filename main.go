@@ -210,7 +210,7 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		if f.Payload[20] == 0xFA {
 			fmt.Printf("\n\n--=Yes=--\n\r\r[%s] %s", addr.String(), string(f.Payload))
 		} else {
-			fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload),f.Payload[10:25])
+			fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload),f.Payload[:25])
 
 		}
 	}
