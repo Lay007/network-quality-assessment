@@ -16,7 +16,8 @@ import (
 const (
 	defaultHost  = `localhost`
 	//defaultHost = `remote.fibertrade.ru`
-    defaultPort  = 10051
+	defaultPort  = 10051
+	etherType = 0x0800
 )
 
 func main() {
@@ -47,8 +48,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to find interface %q: %v", net_name, err)
 	}
-
-	c, err := raw.ListenPacket(ifi, 0x0800, nil)
+	fmt.Println("Net_NAME: %q", net_name)
+	fmt.Println("interface: %q", ifi.Name)
+	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -123,15 +125,16 @@ func receiveMessages(c net.PacketConn, mtu int) {
 
 
 func zabbixHello(host string){
+	var delay int
 	for  {
-		var delay = rand.Intn(1500)
+		delay = rand.Intn(1500)
 		//delay:=i*100
 	var metrics []*Metric
     metrics = append(metrics, NewMetric(host, "delay",fmt.Sprint(delay),time.Now().Unix()))
    
     // Create instance of Packet class
     packet := NewPacket(metrics)
-	fmt.Println(packet);
+	//fmt.Println(packet);
     // Send packet to zabbix
     z := NewSender(defaultHost, defaultPort)
 	z.Send(packet)
