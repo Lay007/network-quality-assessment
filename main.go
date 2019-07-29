@@ -113,7 +113,7 @@ func main() {
 	}
 
 	ipsrcstr := "10.0.10.115"
-	ipdst_1sfpsla_str := "10.1.10.145"
+	ipdst_1sfpsla_str := "10.0.10.189"
 	ipdst_2sfpsla_str := "10.1.10.140"
 
 	ipsrc := net.ParseIP(ipsrcstr)
@@ -179,7 +179,16 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
-	fmt.Printf(" --== %x", b)
+	fmt.Printf("raw  %x \n", b)
+	fmt.Println(" --== Packet send ==--");
+	fmt.Printf("mac dst  %x \n", b[0:5])
+	fmt.Printf("mac src  %x \n", b[6:11])
+	fmt.Printf("type eth %x \n", b[12:13])
+	fmt.Printf("size     %v \n", b[16:17])
+
+	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[25],b[26],b[27],b[28])
+	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[29],b[30],b[31],b[32])
+	fmt.Println(" --== End Packet ==--");
 	// Send message forever.
 	t := time.NewTicker(1 * time.Second)
 	for range t.C {
