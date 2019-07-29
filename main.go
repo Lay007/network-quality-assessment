@@ -218,21 +218,21 @@ func receiveMessages(c net.PacketConn, mtu int) {
 
 		// Display source of message and message itself.
 		if f.Payload[20] == 0xFA {
-			fmt.Printf("\n\n--=Packet DETECT!!!=--")
-			fmt.Printf("raw:  %x \n", f.Payload)
+			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+			fmt.Printf("size: %v raw:  %x \n", len(f.Payload),f.Payload)
 			fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
-			fmt.Printf("type eth %x \n", f.Payload[12:14])
-	fmt.Printf("size     %v \n", b[16:18])
+			
+	fmt.Printf("size     %v \n", b[2:4])
 
-	fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[26],f.Payload[27],f.Payload[28],f.Payload[29])
-	fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[30],f.Payload[31],f.Payload[32],f.Payload[33])
+	fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12],f.Payload[13],f.Payload[14],f.Payload[15])
+	fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16],f.Payload[17],f.Payload[18],f.Payload[19])
 	
-	fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[35],f.Payload[36],f.Payload[37],f.Payload[38])
+	fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21],f.Payload[22],f.Payload[23],f.Payload[24])
 
-	fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[39:46])
-	fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[46:53])
-	fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[53:60])
-	fmt.Printf("Number marker      :   %x \n", f.Payload[60:64])
+	fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+	fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:49])
+	fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[49:56])
+	fmt.Printf("Number marker      :   %x \n", f.Payload[56:])
 	
 	fmt.Println(" --== End Packet ==--");
 		
