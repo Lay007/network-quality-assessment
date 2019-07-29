@@ -78,7 +78,7 @@ func (h *iphdr) checksum() {
 }
 
 func main() {
-	go zabbixHello("SFP-SLA_4401")
+	//go zabbixHello("SFP-SLA_4401")
 	// Find all devices
 	devices, err := pcap.FindAllDevs()
 	if err != nil {
@@ -135,7 +135,7 @@ func main() {
 		id: 0xFA,
 	}
 	copy(sfpdat.dst[:], ipdst2.To4())
-	ip.iplen = uint16(20 +26+4)
+	ip.iplen = uint16(20 + 26 + 4)
 	ip.checksum()
 
 	//msg := make([]byte, ip.iplen)
@@ -147,7 +147,7 @@ func main() {
 	binary.Write(&bin_buf, binary.BigEndian, ip)
 	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
 
-    msg := bin_buf.Bytes()
+	msg := bin_buf.Bytes()
 	// Send messages in one goroutine, receive messages in another.
 	go sendMessages(c, ifi.HardwareAddr, msg)
 	go receiveMessages(c, ifi.MTU)
@@ -163,7 +163,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 
 	f := &ethernet.Frame{
 		//Destination: ethernet.Broadcast,
-		Destination: []byte{0x64,0xD1,0x54,0x17,0xF6,0x82},
+		Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
 		Source:      source,
 		EtherType:   0x0800,
 		Payload:     []byte(msg),
@@ -180,15 +180,15 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 		HardwareAddr: ethernet.Broadcast,
 	}
 	fmt.Printf("raw:  %x \n", b)
-	fmt.Println(" --== Packet send ==--");
+	fmt.Println(" --== Packet send ==--")
 	fmt.Printf("mac dst  %x \n", b[0:6])
 	fmt.Printf("mac src  %x \n", b[6:12])
 	fmt.Printf("type eth %x \n", b[12:14])
 	fmt.Printf("size     %v \n", b[16:18])
 
-	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26],b[27],b[28],b[29])
-	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30],b[31],b[32],b[33])
-	fmt.Println(" --== End Packet ==--");
+	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
+	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
+	fmt.Println(" --== End Packet ==--")
 	// Send message forever.
 	t := time.NewTicker(1 * time.Second)
 	for range t.C {
@@ -219,25 +219,34 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		// Display source of message and message itself.
 		if f.Payload[20] == 0xFA {
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
-			fmt.Printf("size: %v raw:  %x \n", len(f.Payload),f.Payload)
+			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
 			fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
-			
-	fmt.Printf("size     %v \n", b[2:4])
 
-	fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12],f.Payload[13],f.Payload[14],f.Payload[15])
-	fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16],f.Payload[17],f.Payload[18],f.Payload[19])
-	
-	fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21],f.Payload[22],f.Payload[23],f.Payload[24])
+			fmt.Printf("size     %x \n", b[2:4])
 
-	fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-	fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-	fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-	fmt.Printf("Number marker      :   %x \n", f.Payload[46:])
-	
-	fmt.Println(" --== End Packet ==--");
-		
+			fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+			fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+
+			fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+
+			fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+			fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+			fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+			fmt.Printf("Number marker      :   %x \n", f.Payload[46:])
+			fmt.Println(" --== End Packet ==--")
+
+			var markerSFP11, markerSFP12, markerSFP2 int64
+			var ind uint
+
+			for ind = 0; ind < 7; ind++ {
+				markerSFP11 = markerSFP11 + int64(f.Payload[31-ind])<<(8*ind)
+				markerSFP2 = markerSFP2 + int64(f.Payload[38-ind])<<(8*ind)
+				markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
+			}
+			zabbixdelay("SFP-SLA_4401", markerSFP12-markerSFP11)
+
 		} else {
-			fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload),f.Payload[:25])
+			fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
 
 		}
 	}
@@ -259,6 +268,21 @@ func zabbixHello(host string) {
 		z.Send(packet)
 		time.Sleep(5 * time.Second)
 	}
+}
+
+func zabbixdelay(host string, delay int64) {
+
+	delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
+	var metrics []*Metric
+	metrics = append(metrics, NewMetric(host, "delay", fmt.Sprint(delay), time.Now().Unix()))
+
+	// Create instance of Packet class
+	packet := NewPacket(metrics)
+	//fmt.Println(packet);
+	// Send packet to zabbix
+	z := NewSender(defaultHost, defaultPort)
+	z.Send(packet)
+
 }
 
 /*import (
