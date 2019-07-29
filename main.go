@@ -135,7 +135,7 @@ func main() {
 		id: 0xFA,
 	}
 	copy(sfpdat.dst[:], ipdst2.To4())
-	ip.iplen = uint16(20 + 26)
+	ip.iplen = uint16(20 + 26+5)
 	ip.checksum()
 
 	//msg := make([]byte, ip.iplen)
