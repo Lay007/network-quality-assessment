@@ -230,9 +230,9 @@ func receiveMessages(c net.PacketConn, mtu int) {
 	fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21],f.Payload[22],f.Payload[23],f.Payload[24])
 
 	fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-	fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:49])
-	fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[49:56])
-	fmt.Printf("Number marker      :   %x \n", f.Payload[56:])
+	fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+	fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+	fmt.Printf("Number marker      :   %x \n", f.Payload[46:])
 	
 	fmt.Println(" --== End Packet ==--");
 		
