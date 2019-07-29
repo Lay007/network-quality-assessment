@@ -113,7 +113,7 @@ func main() {
 	}
 
 	ipsrcstr := "10.0.10.115"
-	ipdst_1sfpsla_str := "10.0.10.189"
+	ipdst_1sfpsla_str := "10.1.10.144"
 	ipdst_2sfpsla_str := "10.1.10.140"
 
 	ipsrc := net.ParseIP(ipsrcstr)
@@ -184,7 +184,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 	fmt.Printf("mac dst  %x \n", b[0:6])
 	fmt.Printf("mac src  %x \n", b[6:12])
 	fmt.Printf("type eth %x \n", b[12:14])
-	fmt.Printf("size     %x \n", b[16:18])
+	fmt.Printf("size     %v \n", b[16:18])
 
 	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26],b[27],b[28],b[29])
 	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30],b[31],b[32],b[33])
