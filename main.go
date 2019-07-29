@@ -181,13 +181,13 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 	}
 	fmt.Printf("raw  %x \n", b)
 	fmt.Println(" --== Packet send ==--");
-	fmt.Printf("mac dst  %x \n", b[0:5])
-	fmt.Printf("mac src  %x \n", b[6:11])
-	fmt.Printf("type eth %x \n", b[12:13])
-	fmt.Printf("size     %v \n", b[16:17])
+	fmt.Printf("mac dst  %x \n", b[0:6])
+	fmt.Printf("mac src  %x \n", b[6:12])
+	fmt.Printf("type eth %x \n", b[12:14])
+	fmt.Printf("size     %x \n", b[16:18])
 
-	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[25],b[26],b[27],b[28])
-	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[29],b[30],b[31],b[32])
+	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26],b[27],b[28],b[29])
+	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30],b[31],b[32],b[33])
 	fmt.Println(" --== End Packet ==--");
 	// Send message forever.
 	t := time.NewTicker(1 * time.Second)
