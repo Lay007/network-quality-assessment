@@ -113,8 +113,8 @@ func main() {
 	}
 
 	ipsrcstr := "10.0.10.115"
-	ipdst_1sfpsla_str := "10.1.10.144"
-	ipdst_2sfpsla_str := "10.1.10.140"
+	ipdst_1sfpsla_str := "10.0.10.172"
+	ipdst_2sfpsla_str := "10.0.10.175"
 
 	ipsrc := net.ParseIP(ipsrcstr)
 	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
