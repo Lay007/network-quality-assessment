@@ -132,7 +132,7 @@ func main() {
 	copy(ip.src[:], ipsrc.To4())
 	copy(ip.dst[:], ipdst1.To4())
 	sfpdat := sfpsla{
-		id: 0xFA,
+		id: 0xFC,
 	}
 	copy(sfpdat.dst[:], ipdst2.To4())
 	ip.iplen = uint16(20 + 26 + 4)
