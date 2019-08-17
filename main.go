@@ -217,7 +217,7 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		}
 
 		// Display source of message and message itself.
-		if f.Payload[20] == 0xFС {
+		if f.Payload[20] == 0xFC {
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
 			fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
