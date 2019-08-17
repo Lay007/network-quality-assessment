@@ -162,7 +162,8 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 	// Message is broadcast to all machines in same network segment.
 
 	f := &ethernet.Frame{
-		Destination: ethernet.Broadcast,
+		//Destination: ethernet.Broadcast,
+		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
 		Source:      source,
 		EtherType:   0x0800,
