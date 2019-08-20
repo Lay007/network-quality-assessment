@@ -221,7 +221,7 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-		fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
+		fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:16],net.ParseIP(ipsrcstr).To4())
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC)&&(bytes.Equal(f.Payload[12:15],net.ParseIP(ipsrcstr))) {
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
