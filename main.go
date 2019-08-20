@@ -265,6 +265,9 @@ func getJitter(in_solve int64) float32 {
 
 	size_s=100
 	mass_solve=append(mass_solve,in_solve)
+	if len(mass_solve)>size_s{
+		return 0
+	}
 	mass_solve=mass_solve[1:(size_s+1)]
 	
 	max=mass_solve[0]
