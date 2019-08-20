@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"github.com/google/gopacket/pcap"
 	"log"
+	"math"
 	"math/rand"
 	"net"
 	"time"
-	"math"
 
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
@@ -166,9 +166,9 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
 		//Destination: ethernet.Broadcast,
 		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
-		Source:      source,
-		EtherType:   0x0800,
-		Payload:     []byte(msg),
+		Source:    source,
+		EtherType: 0x0800,
+		Payload:   []byte(msg),
 	}
 
 	b, err := f.MarshalBinary()
@@ -256,37 +256,37 @@ func receiveMessages(c net.PacketConn, mtu int) {
 	}
 }
 
-var mass_solve[]int64
+var mass_solve []int64
 
 func getJitter(in_solve int64) float32 {
-	var jitter,mean float32
+	var jitter, mean float32
 	var size_s int
 	var max, min int64
 
-	size_s=100
-	mass_solve=append(mass_solve,in_solve)
-	if len(mass_solve)<size_s{
+	size_s = 100
+	mass_solve = append(mass_solve, in_solve)
+	if len(mass_solve) < size_s {
 		return 0
 	}
-	mass_solve=mass_solve[1:(size_s+1)]
-	
-	max=mass_solve[0]
-	min=max
-	mean=float32(mass_solve[0])/100.0
+	mass_solve = mass_solve[1:(size_s)]
 
-	for ind:= 1; ind < size_s; ind++ {
-		if max<mass_solve[ind]	{
-			max=mass_solve[ind]
+	max = mass_solve[0]
+	min = max
+	mean = float32(mass_solve[0]) / 100.0
+
+	for ind := 1; ind < size_s; ind++ {
+		if max < mass_solve[ind] {
+			max = mass_solve[ind]
 		}
-		if min>mass_solve[ind]	{
-			min=mass_solve[ind]
+		if min > mass_solve[ind] {
+			min = mass_solve[ind]
 		}
-		mean=mean+(float32(mass_solve[ind])/100.0)
+		mean = mean + (float32(mass_solve[ind]) / 100.0)
 	}
-	if ((float32(max)-mean)>(mean-float32(min))){
-		jitter=float32(max)-mean
-	}else{
-		jitter=mean-float32(min)
+	if (float32(max) - mean) > (mean - float32(min)) {
+		jitter = float32(max) - mean
+	} else {
+		jitter = mean - float32(min)
 	}
 	return jitter
 }
@@ -312,9 +312,11 @@ func zabbixHello(host string) {
 func zabbix_delay(host string, delay int64) {
 
 	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
-	delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
+	//delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
+	var delfloat float32
+	delfloat = float32(delay) * 1000000 / float32(math.Pow(2, 32))
 	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "delay", fmt.Sprint(delay), time.Now().Unix()))
+	metrics = append(metrics, NewMetric(host, "delay", fmt.Sprint(delfloat), time.Now().Unix()))
 
 	// Create instance of Packet class
 	packet := NewPacket(metrics)
@@ -328,7 +330,9 @@ func zabbix_delay(host string, delay int64) {
 func zabbix_jitter(host string, jitter float32) {
 
 	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
-	jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
+	if jitter != 0 {
+		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
+	}
 	var metrics []*Metric
 	metrics = append(metrics, NewMetric(host, "jitter", fmt.Sprint(jitter), time.Now().Unix()))
 
@@ -341,10 +345,8 @@ func zabbix_jitter(host string, jitter float32) {
 
 }
 
-
 func zabbix_error(host string, err float32) {
 
-	
 	var metrics []*Metric
 	metrics = append(metrics, NewMetric(host, "error_probability", fmt.Sprint(err), time.Now().Unix()))
 
