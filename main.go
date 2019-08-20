@@ -288,6 +288,15 @@ func getJitter(in_solve int64) float32 {
 	} else {
 		jitter = mean - float32(min)
 	}
+	
+	fmt.Printf(" --== Jitter debug ==-- \n")
+	fmt.Printf(" --== Slice: %x \n",mass_solve)
+	fmt.Printf(" --== Max = %x \n",max)
+	fmt.Printf(" --== Min = %x \n",min)
+	fmt.Printf(" --== Mean = %f \n",mean)
+	fmt.Printf(" --== Jitter = %f \n",jitter)
+	fmt.Printf(" --== End Jitter debug ==-- \n")
+
 	return jitter
 }
 
