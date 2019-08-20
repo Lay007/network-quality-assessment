@@ -21,6 +21,10 @@ const (
 	//defaultHost = `remote.fibertrade.ru`
 	defaultPort = 10051
 	etherType   = 0x0800
+
+	ipsrcstr = "10.0.10.115"
+	ipdst_1sfpsla_str = "10.0.10.172"
+	ipdst_2sfpsla_str = "10.0.10.175"
 )
 
 type iphdr struct {
@@ -113,9 +117,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	ipsrcstr := "10.0.10.115"
-	ipdst_1sfpsla_str := "10.0.10.172"
-	ipdst_2sfpsla_str := "10.0.10.175"
+//	ipsrcstr := "10.0.10.115"
+//	ipdst_1sfpsla_str := "10.0.10.172"
+//	ipdst_2sfpsla_str := "10.0.10.175"
 
 	ipsrc := net.ParseIP(ipsrcstr)
 	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
@@ -217,10 +221,11 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-
+		fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
 		// Display source of message and message itself.
-		if f.Payload[20] == 0xFC {
+		if (f.Payload[20] == 0xFC)&&(bytes.Equal(f.Payload[12:15],net.ParseIP(ipsrcstr))) {
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
 			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
 			fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 
