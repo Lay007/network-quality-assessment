@@ -268,11 +268,11 @@ func getJitter(in_solve int64) float32 {
 	if len(mass_solve) < size_s {
 		return 0
 	}
-	mass_solve = mass_solve[1:(size_s)]
+	mass_solve = mass_solve[1:(size_s+1)]
 
 	max = mass_solve[0]
 	min = max
-	mean = float32(mass_solve[0]) / 100.0
+	mean = float32(mass_solve[0]) / float32(size_s)
 
 	for ind := 1; ind < size_s; ind++ {
 		if max < mass_solve[ind] {
@@ -281,7 +281,7 @@ func getJitter(in_solve int64) float32 {
 		if min > mass_solve[ind] {
 			min = mass_solve[ind]
 		}
-		mean = mean + (float32(mass_solve[ind]) / 100.0)
+		mean = mean + (float32(mass_solve[ind]) / float32(size_s))
 	}
 	if (float32(max) - mean) > (mean - float32(min)) {
 		jitter = float32(max) - mean
