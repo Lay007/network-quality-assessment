@@ -17,12 +17,14 @@ import (
 )
 
 const (
+	debugV = true
+
 	defaultHost = `localhost`
 	//defaultHost = `remote.fibertrade.ru`
 	defaultPort = 10051
 	etherType   = 0x0800
 
-	ipsrcstr = "10.0.10.115"
+	ipsrcstr          = "10.0.10.115"
 	ipdst_1sfpsla_str = "10.0.10.172"
 	ipdst_2sfpsla_str = "10.0.10.175"
 )
@@ -48,6 +50,8 @@ type sfpsla struct {
 	merkertime3 [7]byte
 	number      uint32
 }
+
+var numberTx, numberCounter uint32
 
 func checksum(buf []byte) uint16 {
 	sum := uint32(0)
@@ -90,18 +94,13 @@ func main() {
 		log.Fatal(err)
 	}
 	var net_name string
-	// Print device information
-	// fmt.Println("Devices found:")
+
 	for _, device := range devices {
-		//	  fmt.Println("\nName: ", device.Name)
-		//	  fmt.Println("Description: ", device.Description)
-		//	  fmt.Println("Devices addresses: ", device.Description)
+
 		for _, address := range device.Addresses {
-			//		  fmt.Println("- IP address: ", address.IP)
 			if address.IP.Equal(net.ParseIP("10.0.10.115")) {
 				net_name = device.Name
 			}
-			//		  fmt.Println("- Subnet mask: ", address.Netmask)
 		}
 	}
 	// Open a raw socket on the specified interface, and configure it to accept
@@ -110,6 +109,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to find interface %q: %v", net_name, err)
 	}
+
 	fmt.Println("Net_NAME: ", net_name)
 	fmt.Println("interface: ", ifi.Name)
 	c, err := raw.ListenPacket(ifi, etherType, nil)
@@ -117,44 +117,8 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-//	ipsrcstr := "10.0.10.115"
-//	ipdst_1sfpsla_str := "10.0.10.172"
-//	ipdst_2sfpsla_str := "10.0.10.175"
-
-	ipsrc := net.ParseIP(ipsrcstr)
-	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
-	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
-
-	// Default message to system's hostname if empty.
-	ip := iphdr{
-		vhl:   0x45,
-		tos:   0,
-		id:    0x0000, // the kernel overwrites id if it is zero
-		off:   0,
-		ttl:   0xFF,
-		proto: 0x5E,
-	}
-	copy(ip.src[:], ipsrc.To4())
-	copy(ip.dst[:], ipdst1.To4())
-	sfpdat := sfpsla{
-		id: 0xFC,
-	}
-	copy(sfpdat.dst[:], ipdst2.To4())
-	ip.iplen = uint16(20 + 26 + 4)
-	ip.checksum()
-
-	//msg := make([]byte, ip.iplen)
-	//ipd:=[]byte(fmt.Sprintf("%v",ip))
-	//dats:=[]byte(fmt.Sprintf("%v",sfpdat))
-	//msg=append(ipd,dats...)
-
-	var bin_buf bytes.Buffer
-	binary.Write(&bin_buf, binary.BigEndian, ip)
-	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
-
-	msg := bin_buf.Bytes()
 	// Send messages in one goroutine, receive messages in another.
-	go sendMessages(c, ifi.HardwareAddr, msg)
+	go sendMessages(c, ifi.HardwareAddr)
 	go receiveMessages(c, ifi.MTU)
 
 	// Block forever.
@@ -163,41 +127,71 @@ func main() {
 
 // sendMessages continuously sends a message over a connection at regular intervals,
 // sourced from specified hardware address.
-func sendMessages(c net.PacketConn, source net.HardwareAddr, msg []byte) {
-	// Message is broadcast to all machines in same network segment.
+func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 
-	f := &ethernet.Frame{
-		//Destination: ethernet.Broadcast,
-		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
-		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
-		Source:    source,
-		EtherType: 0x0800,
-		Payload:   []byte(msg),
-	}
-
-	b, err := f.MarshalBinary()
-	if err != nil {
-		log.Fatalf("failed to marshal ethernet frame: %v", err)
-	}
-
-	// Required by Linux, even though the Ethernet frame has a destination.
-	// Unused by BSD.
-	addr := &raw.Addr{
-		HardwareAddr: ethernet.Broadcast,
-	}
-	fmt.Printf("raw:  %x \n", b)
-	fmt.Println(" --== Packet send ==--")
-	fmt.Printf("mac dst  %x \n", b[0:6])
-	fmt.Printf("mac src  %x \n", b[6:12])
-	fmt.Printf("type eth %x \n", b[12:14])
-	fmt.Printf("size     %v \n", b[16:18])
-
-	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
-	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
-	fmt.Println(" --== End Packet ==--")
-	// Send message forever.
 	t := time.NewTicker(1 * time.Second)
 	for range t.C {
+
+		ipsrc := net.ParseIP(ipsrcstr)
+		ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
+		ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
+
+		// Default message to system's hostname if empty.
+		ip := iphdr{
+			vhl:   0x45,
+			tos:   0,
+			id:    0x0000, // the kernel overwrites id if it is zero
+			off:   0,
+			ttl:   0xFF,
+			proto: 0x5E,
+		}
+		copy(ip.src[:], ipsrc.To4())
+		copy(ip.dst[:], ipdst1.To4())
+		sfpdat := sfpsla{
+			id: 0xFC,
+		}
+		copy(sfpdat.dst[:], ipdst2.To4())
+		numberTx++
+		sfpdat.number = numberTx
+		ip.iplen = uint16(20 + 26 + 4)
+		ip.checksum()
+
+		var bin_buf bytes.Buffer
+		binary.Write(&bin_buf, binary.BigEndian, ip)
+		binary.Write(&bin_buf, binary.BigEndian, sfpdat)
+
+		msg := bin_buf.Bytes()
+		f := &ethernet.Frame{
+			//Destination: ethernet.Broadcast,
+			Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+			//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
+			Source:    source,
+			EtherType: 0x0800,
+			Payload:   []byte(msg),
+		}
+
+		b, err := f.MarshalBinary()
+		if err != nil {
+			log.Fatalf("failed to marshal ethernet frame: %v", err)
+		}
+
+		// Required by Linux, even though the Ethernet frame has a destination.
+		// Unused by BSD.
+		addr := &raw.Addr{
+			HardwareAddr: ethernet.Broadcast,
+		}
+
+		fmt.Printf("raw:  %x \n", b)
+		fmt.Println(" --== Packet send ==--")
+		fmt.Printf("mac dst  %x \n", b[0:6])
+		fmt.Printf("mac src  %x \n", b[6:12])
+		fmt.Printf("type eth %x \n", b[12:14])
+		fmt.Printf("size     %v \n", b[16:18])
+
+		fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
+		fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
+		fmt.Println(" --== End Packet ==--")
+
 		if _, err := c.WriteTo(b, addr); err != nil {
 			log.Fatalf("failed to send message: %v", err)
 		}
@@ -221,13 +215,13 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-		fmt.Printf("\n\n--=Test %x - \n",f.Payload[12:16])
+		fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
 		var ips [4]byte
-		copy(ips[:],(net.ParseIP(ipdst_1sfpsla_str)).To4())
-		fmt.Printf("\n\n--=T_so %x - \n",ips)
+		copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
+		fmt.Printf("\n\n--=T_so %x - \n", ips)
 
 		// Display source of message and message itself.
-		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16],ips[:])==true) {
+		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) {
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
 			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
@@ -277,7 +271,7 @@ func getJitter(in_solve int64) float32 {
 	if len(mass_solve) < size_s {
 		return 0
 	}
-	mass_solve = mass_solve[1:(size_s+1)]
+	mass_solve = mass_solve[1:(size_s + 1)]
 
 	max = mass_solve[0]
 	min = max
@@ -297,13 +291,13 @@ func getJitter(in_solve int64) float32 {
 	} else {
 		jitter = mean - float32(min)
 	}
-	
+
 	fmt.Printf(" --== Jitter debug ==-- \n")
-	fmt.Printf(" --== Slice: %x \n",mass_solve)
-	fmt.Printf(" --== Max = %x \n",max)
-	fmt.Printf(" --== Min = %x \n",min)
-	fmt.Printf(" --== Mean = %f \n",mean)
-	fmt.Printf(" --== Jitter = %f \n",jitter)
+	fmt.Printf(" --== Slice: %x \n", mass_solve)
+	fmt.Printf(" --== Max = %x \n", max)
+	fmt.Printf(" --== Min = %x \n", min)
+	fmt.Printf(" --== Mean = %f \n", mean)
+	fmt.Printf(" --== Jitter = %f \n", jitter)
 	fmt.Printf(" --== End Jitter debug ==-- \n")
 
 	return jitter
