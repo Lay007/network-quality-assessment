@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net"
 	"time"
+	"math"
 
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
@@ -244,13 +245,47 @@ func receiveMessages(c net.PacketConn, mtu int) {
 				markerSFP2 = markerSFP2 + int64(f.Payload[38-ind])<<(8*ind)
 				markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
 			}
-			zabbixdelay("SFP-SLA_4401", markerSFP12-markerSFP11)
+			zabbix_delay("SFP-SLA_4401", markerSFP12-markerSFP11)
+			zabbix_jitter("SFP-SLA_4401", getJitter(markerSFP12-markerSFP11))
+			zabbix_error("SFP-SLA_4401", float32(0.001))
 
 		} else {
 			fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
 
 		}
 	}
+}
+
+var mass_solve[]int64
+
+func getJitter(in_solve int64) float32 {
+	var jitter,mean float32
+	var size_s int
+	var max, min int64
+
+	size_s=100
+	mass_solve=append(mass_solve,in_solve)
+	mass_solve=mass_solve[1:(size_s+1)]
+	
+	max=mass_solve[0]
+	min=max
+	mean=float32(mass_solve[0])/100.0
+
+	for ind:= 1; ind < size_s; ind++ {
+		if max<mass_solve[ind]	{
+			max=mass_solve[ind]
+		}
+		if min>mass_solve[ind]	{
+			min=mass_solve[ind]
+		}
+		mean=mean+(float32(mass_solve[ind])/100.0)
+	}
+	if ((float32(max)-mean)>(mean-float32(min))){
+		jitter=float32(max)-mean
+	}else{
+		jitter=mean-float32(min)
+	}
+	return jitter
 }
 
 func zabbixHello(host string) {
@@ -271,11 +306,44 @@ func zabbixHello(host string) {
 	}
 }
 
-func zabbixdelay(host string, delay int64) {
+func zabbix_delay(host string, delay int64) {
 
-	delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
+	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
+	delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
 	var metrics []*Metric
 	metrics = append(metrics, NewMetric(host, "delay", fmt.Sprint(delay), time.Now().Unix()))
+
+	// Create instance of Packet class
+	packet := NewPacket(metrics)
+	//fmt.Println(packet);
+	// Send packet to zabbix
+	z := NewSender(defaultHost, defaultPort)
+	z.Send(packet)
+
+}
+
+func zabbix_jitter(host string, jitter float32) {
+
+	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
+	jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
+	var metrics []*Metric
+	metrics = append(metrics, NewMetric(host, "jitter", fmt.Sprint(jitter), time.Now().Unix()))
+
+	// Create instance of Packet class
+	packet := NewPacket(metrics)
+	//fmt.Println(packet);
+	// Send packet to zabbix
+	z := NewSender(defaultHost, defaultPort)
+	z.Send(packet)
+
+}
+
+
+func zabbix_error(host string, err float32) {
+
+	
+	var metrics []*Metric
+	metrics = append(metrics, NewMetric(host, "error_probability", fmt.Sprint(err), time.Now().Unix()))
 
 	// Create instance of Packet class
 	packet := NewPacket(metrics)
