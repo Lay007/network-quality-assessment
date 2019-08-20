@@ -223,11 +223,11 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		}
 		fmt.Printf("\n\n--=Test %x - \n",f.Payload[12:16])
 		var ips [4]byte
-		copy(ips[:],(net.ParseIP(ipsrcstr)).To4())
+		copy(ips[:],(net.ParseIP(ipdst_1sfpsla_str)).To4())
 		fmt.Printf("\n\n--=T_so %x - \n",ips)
 
 		// Display source of message and message itself.
-		if (f.Payload[20] == 0xFC)&&(bytes.Equal(f.Payload[12:15],net.ParseIP(ipsrcstr))) {
+		if (f.Payload[20] == 0xFC)&&(bytes.Equal(f.Payload[12:15],ips[:])) {
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
 			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
