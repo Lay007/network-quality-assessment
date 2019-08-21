@@ -222,6 +222,7 @@ func receiveMessages(c net.PacketConn, mtu int) {
 
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) {
+			numberCounter++
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
 			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
@@ -237,7 +238,7 @@ func receiveMessages(c net.PacketConn, mtu int) {
 			fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
 			fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
 			fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-			fmt.Printf("Number marker      :   %x \n", f.Payload[46:])
+			fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
 			fmt.Println(" --== End Packet ==--")
 
 			var markerSFP11, markerSFP12, markerSFP2 int64
@@ -248,9 +249,15 @@ func receiveMessages(c net.PacketConn, mtu int) {
 				markerSFP2 = markerSFP2 + int64(f.Payload[38-ind])<<(8*ind)
 				markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
 			}
+
+			var numberR uint32
+			for ind = 0; ind < 4; ind++ {
+				numberR += uint32(f.Payload[49-ind])<<(8*ind)
+			}
+
 			zabbix_delay("SFP-SLA_4401", markerSFP12-markerSFP11)
 			zabbix_jitter("SFP-SLA_4401", getJitter(markerSFP12-markerSFP11))
-			zabbix_error("SFP-SLA_4401", float32(0.001))
+			zabbix_error("SFP-SLA_4401", float32(numberR-numberCounter)/float32(numberR))
 
 		} else {
 			fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
