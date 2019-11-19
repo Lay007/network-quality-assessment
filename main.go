@@ -116,6 +116,22 @@ func main() {
         panic(err)
     } 
    
+	devices, err := pcap.FindAllDevs()
+	if err != nil {
+		log.Fatal(err)
+	}	
+	
+	var net_name string
+
+	for _, device := range devices {
+		for _, address := range device.Addresses {
+			net_name = device.Name
+			db.Exec("INSERT INTO net_interfaces_from_server_sla ('name', 'address_IP', 'address_mac') VALUES($1, $2, $3)", device.Name, address.IP, address.IP) 
+					
+		}
+	}
+
+
     row, err := db.Query("select * from global_config")
 	if err != nil {
         panic(err)
@@ -148,26 +164,12 @@ func main() {
 	}
 
 
+
 	defer db.Close()
 
 		
 	//go zabbixHello("SFP-SLA_4401")
-	// Find all devices
-	devices, err := pcap.FindAllDevs()
-	if err != nil {
-		log.Fatal(err)
-	}
-	var net_name string
 
-	for _, device := range devices {
-
-		for _, address := range device.Addresses {
-			if address.IP.Equal(net.ParseIP("10.0.10.115")) {
-				net_name = device.Name
-			}
-		}
-	}
-	// Open a raw socket on the specified interface, and configure it to accept
 
 	ifi, err := net.InterfaceByName(net_name)
 	if err != nil {
