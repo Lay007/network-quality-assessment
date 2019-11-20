@@ -167,7 +167,7 @@ func main() {
 	defer db.Close()
 
 	//go zabbixHello("SFP-SLA_4401")
-
+	net_name:="lo";
 	ifi, err := net.InterfaceByName(net_name)
 	if err != nil {
 		log.Fatalf("failed to find interface %q: %v", net_name, err)
