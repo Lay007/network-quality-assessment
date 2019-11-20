@@ -125,8 +125,8 @@ func main() {
 	for _, device := range devices {
 		fmt.Println(device.Name)
 		for _, address := range device.Addresses {
-			net_name = device.Name
-			_,result := db.Exec("INSERT INTO net_interfaces_from_server_sla ('name', 'address_IP', 'address_mac') VALUES($1, $2, $3)", device.Name, address.IP, address.IP)
+			net_name = device.Name			 
+			_,result := db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES($1, $2, $3)", device.Name, address.IP, address.IP)
 			fmt.Println(result)
 		}
 	}
