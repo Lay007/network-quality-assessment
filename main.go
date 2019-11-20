@@ -109,28 +109,27 @@ func (h *iphdr) checksum() {
 }
 
 func main() {
-
+	time.Sleep(100 * time.Second)
+	
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
 		panic(err)
 	}
+	
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
-
 
 	devices, err := pcap.FindAllDevs()
 	fmt.Println(err)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	var net_name string
+	
 	for _, device := range devices {
 		fmt.Println(device.Name)
 		for _, address := range device.Addresses {
-			net_name = device.Name			 
-			_,result := db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), address.IP.String())
-			fmt.Println(result)
-			fmt.Println(address)
+			netInterface, _ := net.InterfaceByName(device.Name)
+			address_mac := netInterface.HardwareAddr;
+			_,result := db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), address_mac.String())
 		}
 	}
 
