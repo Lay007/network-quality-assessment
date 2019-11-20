@@ -124,12 +124,15 @@ func main() {
 		log.Fatal(err)
 	}
 	
+	var net_name string
+
 	for _, device := range devices {
 		fmt.Println(device.Name)
-		for _, address := range device.Addresses {
-			netInterface, _ := net.InterfaceByName(device.Name)
-			address_mac := netInterface.HardwareAddr;
-			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), address_mac.String())
+		netInterface, _ := net.InterfaceByName(device.Name)
+		addressMac := netInterface.HardwareAddr;
+		net_name=device.Name
+		for _, address := range device.Addresses {						
+			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
 		}
 	}
 
@@ -167,7 +170,7 @@ func main() {
 	defer db.Close()
 
 	//go zabbixHello("SFP-SLA_4401")
-	net_name:="lo";
+	
 	ifi, err := net.InterfaceByName(net_name)
 	if err != nil {
 		log.Fatalf("failed to find interface %q: %v", net_name, err)
