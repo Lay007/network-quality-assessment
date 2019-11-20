@@ -109,7 +109,7 @@ func (h *iphdr) checksum() {
 }
 
 func main() {
-	time.Sleep(100 * time.Second)
+	//time.Sleep(100 * time.Second)
 	
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
