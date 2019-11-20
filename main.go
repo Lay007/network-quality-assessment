@@ -117,6 +117,7 @@ func main() {
 	}
 	
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
+	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
 	devices, err := pcap.FindAllDevs()
 	fmt.Println(err)
@@ -128,8 +129,11 @@ func main() {
 
 	for _, device := range devices {
 		fmt.Println(device.Name)
-		netInterface, _ := net.InterfaceByName(device.Name)
-		addressMac := netInterface.HardwareAddr;
+		netInterface, err := net.InterfaceByName(device.Name)
+		var addressMac net.HardwareAddr		
+		if err==nil {
+		   	addressMac = netInterface.HardwareAddr
+		}
 		net_name=device.Name
 		for _, address := range device.Addresses {						
 			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
