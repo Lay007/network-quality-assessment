@@ -15,16 +15,14 @@ import (
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 
-	"database/sql"    
-    _ "github.com/go-sql-driver/mysql"
-
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-const (	
-	
-	db_user = `sfp_user`
-	db_user_pass= `rootsfp`
-    db_database = `server_sfp_sla`
+const (
+	db_user      = `sfp_user`
+	db_user_pass = `rootsfp`
+	db_database  = `server_sfp_sla`
 
 	debugV = true
 
@@ -60,20 +58,21 @@ type sfpsla struct {
 	number      uint32
 }
 
-type global_config struct{
-	server_ip 	string
+type global_config struct {
+	server_ip          string
 	zabbix_server_name string
-	vlan 		int
-	vlan_number int
+	vlan               int
+	vlan_number        int
 }
 type module_sfp struct {
-	id int
-	name string
+	id          int
+	name        string
 	address_mac string
-	address_ip string
-	version string
-	location string
+	address_ip  string
+	version     string
+	location    string
 }
+
 var numberTx, numberCounter uint32
 
 func checksum(buf []byte) uint16 {
@@ -111,65 +110,61 @@ func (h *iphdr) checksum() {
 
 func main() {
 
-	db, err := sql.Open("mysql", db_user + ":" + db_user_pass+"@/" + db_database)
-    if err != nil {
-        panic(err)
-    } 
-   
+	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	if err != nil {
+		panic(err)
+	}
+
 	devices, err := pcap.FindAllDevs()
+	fmt.Println(err)
 	if err != nil {
 		log.Fatal(err)
-	}	
-	
-	var net_name string
+	}
 
+	var net_name string
 	for _, device := range devices {
+		fmt.Println(device.Name)
 		for _, address := range device.Addresses {
 			net_name = device.Name
-			db.Exec("INSERT INTO net_interfaces_from_server_sla ('name', 'address_IP', 'address_mac') VALUES($1, $2, $3)", device.Name, address.IP, address.IP) 
-					
+			_,result := db.Exec("INSERT INTO net_interfaces_from_server_sla ('name', 'address_IP', 'address_mac') VALUES($1, $2, $3)", device.Name, address.IP, address.IP)
+			fmt.Println(result)
 		}
 	}
 
-
-    row, err := db.Query("select * from global_config")
+	row, err := db.Query("select * from global_config")
 	if err != nil {
-        panic(err)
-    }
-    defer row.Close()
-	row.Next();
-	conf:=new(global_config)
-	err = row.Scan(&conf.server_ip, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number )
-	if err != nil{
-        fmt.Println(err)        
-    }
-	
+		panic(err)
+	}
+	defer row.Close()
+	row.Next()
+	conf := new(global_config)
+	err = row.Scan(&conf.server_ip, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	rows, err := db.Query("select * from modules_sfp_sla")
 	if err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 	defer rows.Close()
-	
-	modules:=[]module_sfp{}
 
-	for rows.Next(){
-		m:=module_sfp{}
-		err = rows.Scan(&m.id, &m.name, &m.address_mac, &m.address_ip,&m.version, &m.location)
-        if err != nil{
-            fmt.Println(err)
-            continue
+	modules := []module_sfp{}
+
+	for rows.Next() {
+		m := module_sfp{}
+		err = rows.Scan(&m.id, &m.name, &m.address_mac, &m.address_ip, &m.version, &m.location)
+		if err != nil {
+			fmt.Println(err)
+			continue
 		}
 		fmt.Println(m.address_ip)
-        modules = append(modules, m)
+		modules = append(modules, m)
 	}
-
-
 
 	defer db.Close()
 
-		
 	//go zabbixHello("SFP-SLA_4401")
-
 
 	ifi, err := net.InterfaceByName(net_name)
 	if err != nil {
@@ -318,7 +313,7 @@ func receiveMessages(c net.PacketConn, mtu int) {
 
 			var numberR uint32
 			for ind = 0; ind < 4; ind++ {
-				numberR += uint32(f.Payload[49-ind])<<(8*ind)
+				numberR += uint32(f.Payload[49-ind]) << (8 * ind)
 			}
 
 			zabbix_delay("SFP-SLA_4401", markerSFP12-markerSFP11)
@@ -341,7 +336,7 @@ func getJitter(in_solve int64) float32 {
 
 	size_s = 100
 	mass_solve = append(mass_solve, in_solve)
-	if len(mass_solve) < (size_s+1) {
+	if len(mass_solve) < (size_s + 1) {
 		return 0
 	}
 	mass_solve = mass_solve[1:(size_s + 1)]
