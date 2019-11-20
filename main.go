@@ -128,6 +128,7 @@ func main() {
 			net_name = device.Name			 
 			_,result := db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, "", "")
 			fmt.Println(result)
+			fmt.Println(address)
 		}
 	}
 
