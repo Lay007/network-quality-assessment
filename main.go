@@ -114,6 +114,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	db.Exec("DELETE FROM net_interfaces_from_server")
+
 
 	devices, err := pcap.FindAllDevs()
 	fmt.Println(err)
