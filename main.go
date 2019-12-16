@@ -118,6 +118,8 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Println("Hello")
+
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
 	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
