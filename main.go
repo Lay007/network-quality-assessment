@@ -117,9 +117,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Hello")
-
+	
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
 	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
@@ -162,6 +160,8 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	fmt.Println(conf.server_ip)
 
 	rows, err := db.Query("select * from modules_sfp_sla")
 	if err != nil {
