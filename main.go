@@ -1,21 +1,23 @@
 package main
 
 import (
-	"./go-zabbix"
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/google/gopacket/pcap"
 	"log"
 	"math"
 	"math/rand"
 	"net"
 	"time"
 
+	. "./go-zabbix"
+	"github.com/google/gopacket/pcap"
+
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 
 	"database/sql"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -142,7 +144,7 @@ func main() {
 
 	t := time.NewTicker(30 * time.Second)
 	for range t.C {
-		row_test_real, err := db.Query("select * from global_config where status=1")
+		//	row_test_real, err := db.Query("select * from global_config where status=1")
 
 	}
 	// -------=======
