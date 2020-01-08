@@ -210,7 +210,7 @@ func main() {
 // sourced from specified hardware address.
 func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 
-	t := time.NewTicker(1 * time.Second)
+	t := time.NewTicker(1 * time.Microsecond)
 	for range t.C {
 
 		ipsrc := net.ParseIP(ipsrcstr)
