@@ -117,7 +117,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
 	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
