@@ -62,6 +62,7 @@ type sfpsla struct {
 
 type global_config struct {
 	server_ip          string
+	net_interface_name string
 	zabbix_server_name string
 	vlan               int
 	vlan_number        int
@@ -111,17 +112,18 @@ func (h *iphdr) checksum() {
 }
 
 func main() {
+
 	//time.Sleep(100 * time.Second)
 
+	// подключение к БД и обновление списка сетевых интерфейсов
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
 		panic(err)
 	}
-
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
 	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
-	devices, err := pcap.FindAllDevs()
+	devices, err := pcap.FindAllDevs() // считывание перечня сетевых интерфейсов
 	fmt.Println(err)
 	if err != nil {
 		log.Fatal(err)
@@ -129,6 +131,7 @@ func main() {
 
 	var net_name string
 
+	// запись перечня сетевых интерфейсов в БД
 	for _, device := range devices {
 		fmt.Println(device.Name)
 		netInterface, err := net.InterfaceByName(device.Name)
@@ -142,68 +145,79 @@ func main() {
 		}
 	}
 
-	t := time.NewTicker(30 * time.Second)
+	t := time.NewTicker(30 * time.Second) //проверка один раз в 30 секунд
 	for range t.C {
+
+		// считывание из БД глобальных параметров
+		row, err := db.Query("select * from global_config")
+		if err != nil {
+			panic(err)
+		}
+		defer row.Close()
+		row.Next()
+		conf := new(global_config)
+		err = row.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		if conf.net_interface_name == "" {
+			fmt.Println("Net interface is not selected")
+			continue
+		}
+
+		fmt.Println(conf.server_ip)
+
+		rows, err := db.Query("select * from modules_sfp_sla")
+		if err != nil {
+			panic(err)
+		}
+		defer rows.Close()
+
+		modules := []module_sfp{}
+
+		for rows.Next() {
+			m := module_sfp{}
+			err = rows.Scan(&m.id, &m.name, &m.address_mac, &m.address_ip, &m.version, &m.location)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println(m.address_ip)
+			modules = append(modules, m)
+		}
+
+		defer db.Close()
+
+		//go zabbixHello("SFP-SLA_4401")
+
+		ifi, err := net.InterfaceByName(net_name)
+		if err != nil {
+			log.Fatalf("failed to find interface %q: %v", net_name, err)
+		}
+
+		fmt.Println("Net_NAME: ", net_name)
+		fmt.Println("interface: ", ifi.Name)
+
 		//	row_test_real, err := db.Query("select * from global_config where status=1")
+
+		//go Test_SLA_real_go()
 
 	}
 	// -------=======
-
-	row, err := db.Query("select * from global_config")
-	if err != nil {
-		panic(err)
-	}
-	defer row.Close()
-	row.Next()
-	conf := new(global_config)
-	err = row.Scan(&conf.server_ip, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(conf.server_ip)
-
-	rows, err := db.Query("select * from modules_sfp_sla")
-	if err != nil {
-		panic(err)
-	}
-	defer rows.Close()
-
-	modules := []module_sfp{}
-
-	for rows.Next() {
-		m := module_sfp{}
-		err = rows.Scan(&m.id, &m.name, &m.address_mac, &m.address_ip, &m.version, &m.location)
+	/*
+		c, err := raw.ListenPacket(ifi, etherType, nil)
 		if err != nil {
-			fmt.Println(err)
-			continue
+			log.Fatalf("failed to listen: %v", err)
 		}
-		fmt.Println(m.address_ip)
-		modules = append(modules, m)
-	}
 
-	defer db.Close()
+		// Send messages in one goroutine, receive messages in another.
+		go sendMessages(c, ifi.HardwareAddr)
+		go receiveMessages(c, ifi.MTU)
 
-	//go zabbixHello("SFP-SLA_4401")
-
-	ifi, err := net.InterfaceByName(net_name)
-	if err != nil {
-		log.Fatalf("failed to find interface %q: %v", net_name, err)
-	}
-
-	fmt.Println("Net_NAME: ", net_name)
-	fmt.Println("interface: ", ifi.Name)
-	c, err := raw.ListenPacket(ifi, etherType, nil)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	// Send messages in one goroutine, receive messages in another.
-	go sendMessages(c, ifi.HardwareAddr)
-	go receiveMessages(c, ifi.MTU)
-
-	// Block forever.
-	select {}
+		// Block forever.
+		select {}
+	*/
 }
 
 // sendMessages continuously sends a message over a connection at regular intervals,
