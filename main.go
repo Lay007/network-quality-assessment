@@ -145,7 +145,7 @@ func main() {
 		}
 	}
 
-	t := time.NewTicker(30 * time.Second) //проверка один раз в 30 секунд
+	t := time.NewTicker(5 * time.Second) //проверка один раз в 30 секунд
 	for range t.C {
 
 		// считывание из БД глобальных параметров
@@ -153,6 +153,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println(row);
 		defer row.Close()
 		row.Next()
 		conf := new(global_config)
