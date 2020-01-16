@@ -129,8 +129,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var net_name string
-
 	// запись перечня сетевых интерфейсов в БД
 	for _, device := range devices {
 		fmt.Println(device.Name)
