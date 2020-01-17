@@ -143,6 +143,9 @@ func main() {
 		}
 	}
 
+	// Оценка выполнения тестов
+	db.Exec("UPDATE test_throughput SET status=4 WHERE status=2")
+
 	t := time.NewTicker(5 * time.Second) //проверка один раз в 30 секунд
 	for range t.C {
 
@@ -151,7 +154,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(row);
+		fmt.Println(row)
 		defer row.Close()
 		row.Next()
 		conf := new(global_config)
@@ -198,11 +201,27 @@ func main() {
 		fmt.Println("Net_NAME: ", conf.net_interface_name)
 		fmt.Println("interface: ", ifi.Name)
 
+		// проверка тестов пропускной способности
+		rows, err = db.Query("SELECT id FROM test_throughput WHERE status=1")
+		if err != nil {
+			panic(err)
+		}
+		for rows.Next() {
+			var id int
+			err = rows.Scan(&id)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			go TestThroughput(id)
+		}
+
 		//	row_test_real, err := db.Query("select * from global_config where status=1")
 
 		//go Test_SLA_real_go()
 
 	}
+
 	// -------=======
 	/*
 		c, err := raw.ListenPacket(ifi, etherType, nil)
@@ -217,6 +236,54 @@ func main() {
 		// Block forever.
 		select {}
 	*/
+}
+
+type testThroughput struct {
+	id            int
+	test_type     int
+	module_first  int
+	module_second int
+	thr_begin     int
+	count         int
+	block_size    int
+	ch_type       int
+	max_loss      int
+	rez_64        int
+	rez_128       int
+	rez_256       int
+	rez_512       int
+	rez_1024      int
+	rez_1280      int
+	rez_1518      int
+	rez_4096      int
+	rez_9000      int
+	status        int
+}
+
+func TestThroughput(id int) { //Нагрузочное тестирование пропускной способности
+	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	defer db.Close()
+	if err != nil {
+		panic(err)
+	}
+	row, err := db.Query("select * from test_throughput where id=?", id)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(row)
+	defer row.Close()
+	row.Next()
+	test := new(testThroughput)
+	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.block_size, &test.ch_type, &test.max_loss, &test.rez_64, &test.rez_128, &test.rez_256, &test.rez_512, &test.rez_1024, &test.rez_1280, &test.rez_1518, &test.rez_4096, &test.rez_9000, &test.status)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	test.rez_256 = 335
+
+	test.status = 3
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
+
 }
 
 // sendMessages continuously sends a message over a connection at regular intervals,
