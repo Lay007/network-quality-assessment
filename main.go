@@ -375,9 +375,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		//go receivePacket(c, ifi.MTU)
 		//select {}
 
-		//	if counter <= 0 {
-		//		break
-		//	}
+			if counter <= 0 {
+				break
+			}
 	}
 	test.rez_256 = 335
 
