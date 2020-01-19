@@ -371,9 +371,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		counter--
 		fmt.Println("counter=", counter)
 		numberTX++
-		go sendPacket(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, numberTx, 256)
+		 sendPacket(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, numberTx, 256)
 		//go receivePacket(c, ifi.MTU)
-		select {}
+		//select {}
 
 		//	if counter <= 0 {
 		//		break
