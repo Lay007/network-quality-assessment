@@ -369,7 +369,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//t := time.NewTicker(1 * time.Second)
 	for range t.C {
 		counter--
-		fmt.Println("counter=", counter)
+	//	fmt.Println("counter=", counter)
 		numberTX++
 		 sendPacket(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, numberTx, 256)
 		//go receivePacket(c, ifi.MTU)
@@ -439,6 +439,7 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 		HardwareAddr: ethernet.Broadcast,
 	}
 
+	/*
 	fmt.Printf("raw:  %x \n", b)
 	fmt.Println(" --== Packet send ==--")
 	fmt.Printf("mac dst  %x \n", b[0:6])
@@ -449,7 +450,7 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
 	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
 	fmt.Println(" --== End Packet ==--")
-
+*/
 	if _, err := c.WriteTo(b, addr); err != nil {
 		log.Fatalf("failed to send message: %v", err)
 		fmt.Println("failed to send message: ", err)
