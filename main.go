@@ -407,10 +407,10 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 	copy(sfpdat.dst[:], ipdst2.To4())
 	numberTx++
 	sfpdat.number = numberTx
-	//	ip.iplen = uint16(20 + 26 + 4)
-	ip.iplen = uint16(size)
+	ip.iplen = uint16(20 + 26 + 4)
+	//ip.iplen = uint16(size)
 	ip.checksum()
-	payloadAdd := make([]byte, size-64)
+	payloadAdd := make([]byte, 0) //size-64)
 	var bin_buf bytes.Buffer
 	binary.Write(&bin_buf, binary.BigEndian, ip)
 	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
@@ -418,8 +418,8 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 
 	msg := bin_buf.Bytes()
 	f := &ethernet.Frame{
-		Destination: ethernet.Broadcast,
-		//Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+		//Destination: ethernet.Broadcast,
+		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
 		Source:    source,
 		EtherType: 0x0800,
