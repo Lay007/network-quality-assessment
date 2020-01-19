@@ -323,6 +323,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 			panic(err)
 		}
+		defer row_ip.Close()
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
@@ -411,11 +412,11 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 	ip.iplen = uint16(20 + 26 + 4)
 	//ip.iplen = uint16(size)
 	ip.checksum()
-	payloadAdd := make([]byte, 0) //size-64)
+	//payloadAdd := make([]byte, 0) //size-64)
 	var bin_buf bytes.Buffer
 	binary.Write(&bin_buf, binary.BigEndian, ip)
 	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
-	binary.Write(&bin_buf, binary.BigEndian, payloadAdd)
+	//binary.Write(&bin_buf, binary.BigEndian, payloadAdd)
 
 	msg := bin_buf.Bytes()
 	f := &ethernet.Frame{
