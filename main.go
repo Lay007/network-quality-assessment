@@ -267,6 +267,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close();
 	db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
@@ -354,8 +355,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	counter := test.count
 	var numberTX uint32
 	numberTX = 0
-	fmt.Println("период=", period_nano)
-	fmt.Println("counter=", counter)
+
 	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -409,14 +409,14 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 	copy(sfpdat.dst[:], ipdst2.To4())
 	numberTx++
 	sfpdat.number = numberTx
-	ip.iplen = uint16(20 + 26 + 4)
-	//ip.iplen = uint16(size)
+	//ip.iplen = uint16(20 + 26 + 4)
+	ip.iplen = uint16(size)
 	ip.checksum()
-	//payloadAdd := make([]byte, 0) //size-64)
+	payloadAdd := make([]byte, 0) //size-64)
 	var bin_buf bytes.Buffer
 	binary.Write(&bin_buf, binary.BigEndian, ip)
 	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
-	//binary.Write(&bin_buf, binary.BigEndian, payloadAdd)
+	binary.Write(&bin_buf, binary.BigEndian, payloadAdd)
 
 	msg := bin_buf.Bytes()
 	f := &ethernet.Frame{
