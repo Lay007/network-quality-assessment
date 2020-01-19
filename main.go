@@ -261,6 +261,7 @@ type testThroughput struct {
 }
 
 func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
+	fmt.Println("Тест пропускной способности начался")
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	defer db.Close()
 	if err != nil {
@@ -342,6 +343,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 		}
 	}
+	fmt.Println(ipsrcstr)
+	fmt.Println(ipdst_1sfpsla_str)
+	fmt.Println(ipdst_2sfpsla_str)
 
 	// Тестирование пропускной способности для пакета длиной 256 бит
 	period_nano := 256 * 1000000000 / (test.thr_begin * 1024 * 1024)
@@ -349,7 +353,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	counter := test.count
 	var numberTX uint32
 	numberTX = 0
-
+	fmt.Println("период=",period_nano)
 	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
