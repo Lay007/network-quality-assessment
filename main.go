@@ -354,6 +354,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	var numberTX uint32
 	numberTX = 0
 	fmt.Println("период=",period_nano)
+	fmt.Println("counter=",counter)
 	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -366,6 +367,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
 	for range t.C {
 		counter--
+		fmt.Println("counter=",counter)
 		numberTX++
 		go sendPacket(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, numberTx, 256)
 		//go receivePacket(c, ifi.MTU)
