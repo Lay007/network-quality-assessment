@@ -412,7 +412,7 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 	//ip.iplen = uint16(20 + 26 + 4)
 	ip.iplen = uint16(size)
 	ip.checksum()
-	payloadAdd := make([]byte, 0) //size-64)
+	payloadAdd := make([]byte, size-64)
 	var bin_buf bytes.Buffer
 	binary.Write(&bin_buf, binary.BigEndian, ip)
 	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
