@@ -353,8 +353,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	counter := test.count
 	var numberTX uint32
 	numberTX = 0
-	fmt.Println("период=",period_nano)
-	fmt.Println("counter=",counter)
+	fmt.Println("период=", period_nano)
+	fmt.Println("counter=", counter)
 	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -367,15 +367,15 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
 	for range t.C {
 		counter--
-		fmt.Println("counter=",counter)
+		fmt.Println("counter=", counter)
 		numberTX++
 		go sendPacket(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, numberTx, 256)
 		//go receivePacket(c, ifi.MTU)
 		select {}
 
-		if counter <= 0 {
-			break
-		}
+		//	if counter <= 0 {
+		//		break
+		//	}
 	}
 	test.rez_256 = 335
 
@@ -410,7 +410,7 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 	//	ip.iplen = uint16(20 + 26 + 4)
 	ip.iplen = uint16(size)
 	ip.checksum()
-    payloadAdd := make([]byte, size-64)
+	payloadAdd := make([]byte, size-64)
 	var bin_buf bytes.Buffer
 	binary.Write(&bin_buf, binary.BigEndian, ip)
 	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
