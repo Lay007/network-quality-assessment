@@ -365,8 +365,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
-	//t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
-	t := time.NewTicker(1 * time.Second)
+	t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
+	//t := time.NewTicker(1 * time.Second)
 	for range t.C {
 		counter--
 		fmt.Println("counter=", counter)
