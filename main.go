@@ -450,6 +450,7 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 
 	if _, err := c.WriteTo(b, addr); err != nil {
 		log.Fatalf("failed to send message: %v", err)
+		fmt.Println("failed to send message: ", err)
 	}
 
 }
