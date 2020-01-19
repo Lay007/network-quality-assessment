@@ -28,14 +28,14 @@ const (
 
 	debugV = true
 
-	defaultHost = `localhost`
+	//	defaultHost = `localhost`
 	//defaultHost = `remote.fibertrade.ru`
-	defaultPort = 10051
-	etherType   = 0x0800
+	//	defaultPort = 10051
+	etherType = 0x0800
 
-	ipsrcstr          = "10.0.10.115"
-	ipdst_1sfpsla_str = "10.0.10.172"
-	ipdst_2sfpsla_str = "10.0.10.175"
+//	ipsrcstr          = "10.0.10.115"
+//	ipdst_1sfpsla_str = "10.0.10.172"
+//	ipdst_2sfpsla_str = "10.0.10.175"
 )
 
 type iphdr struct {
@@ -213,7 +213,7 @@ func main() {
 				fmt.Println(err)
 				continue
 			}
-			go TestThroughput(id)
+			go TestThroughput(id, conf.net_interface_name)
 		}
 
 		//	row_test_real, err := db.Query("select * from global_config where status=1")
@@ -260,12 +260,20 @@ type testThroughput struct {
 	status        int
 }
 
-func TestThroughput(id int) { //Нагрузочное тестирование пропускной способности
+func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	defer db.Close()
 	if err != nil {
 		panic(err)
 	}
+	db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
+	ifi, err := net.InterfaceByName(net_interface_name)
+	if err != nil {
+		log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
+		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		return
+	}
+
 	row, err := db.Query("select * from test_throughput where id=?", id)
 	if err != nil {
 		panic(err)
@@ -279,6 +287,90 @@ func TestThroughput(id int) { //Нагрузочное тестирование 
 		fmt.Println(err)
 	}
 
+	var ipsrcstr string
+	var ipdst_1sfpsla_str string
+	var ipdst_2sfpsla_str string
+
+	row, err = db.Query("SELECT server_IP FROM global_config")
+	if err != nil {
+		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		panic(err)
+	}
+	for row.Next() {
+		err = row.Scan(&ipsrcstr)
+		if err != nil {
+			fmt.Println(err)
+			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			return
+		}
+	}
+	var id_sfp1, id_sfp2 int
+	row, err = db.Query("SELECT module_first, module_second FROM test_throughput WHERE id=?", id)
+	if err != nil {
+		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		panic(err)
+	}
+	for row.Next() {
+		err = row.Scan(&id_sfp1, &id_sfp2)
+		if err != nil {
+			fmt.Println(err)
+			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			return
+		}
+		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
+		if err != nil {
+			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			panic(err)
+		}
+		for row_ip.Next() {
+			err = row_ip.Scan(&ipdst_1sfpsla_str)
+			if err != nil {
+				fmt.Println(err)
+				db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			}
+		}
+		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
+		if err != nil {
+			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			panic(err)
+		}
+		for row_ip.Next() {
+			err = row_ip.Scan(&ipdst_2sfpsla_str)
+			if err != nil {
+				fmt.Println(err)
+				db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			}
+		}
+	}
+
+	// Тестирование пропускной способности для пакета длиной 256 бит
+	period_nano := 256 * 1000000000 / (test.thr_begin * 1024 * 1024)
+
+	counter := test.count
+	var numberTX uint32
+	numberTX = 0
+
+	c, err := raw.ListenPacket(ifi, etherType, nil)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	ipsrc := net.ParseIP(ipsrcstr)
+	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
+	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
+
+	t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
+	for range t.C {
+		counter--
+		numberTX++
+		go sendPacket(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, numberTx, 256)
+		//go receivePacket(c, ifi.MTU)
+		select {}
+
+		if counter <= 0 {
+			break
+		}
+	}
 	test.rez_256 = 335
 
 	test.status = 3
@@ -286,6 +378,77 @@ func TestThroughput(id int) { //Нагрузочное тестирование 
 
 }
 
+func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
+
+	//	ipsrc := net.ParseIP(ipsrcstr)
+	//	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
+	//	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
+
+	// Default message to system's hostname if empty.
+	ip := iphdr{
+		vhl:   0x45,
+		tos:   0,
+		id:    0x0000, // the kernel overwrites id if it is zero
+		off:   0,
+		ttl:   0xFF,
+		proto: 0x5E,
+	}
+	copy(ip.src[:], ipsrc.To4())
+	copy(ip.dst[:], ipdst1.To4())
+	sfpdat := sfpsla{
+		id: 0xFC,
+	}
+	copy(sfpdat.dst[:], ipdst2.To4())
+	numberTx++
+	sfpdat.number = numberTx
+	//	ip.iplen = uint16(20 + 26 + 4)
+	ip.iplen = uint16(size)
+	ip.checksum()
+    payloadAdd := make([]byte, size-64)
+	var bin_buf bytes.Buffer
+	binary.Write(&bin_buf, binary.BigEndian, ip)
+	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
+	binary.Write(&bin_buf, binary.BigEndian, payloadAdd)
+
+	msg := bin_buf.Bytes()
+	f := &ethernet.Frame{
+		Destination: ethernet.Broadcast,
+		//Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
+		Source:    source,
+		EtherType: 0x0800,
+		Payload:   []byte(msg),
+	}
+
+	b, err := f.MarshalBinary()
+	if err != nil {
+		log.Fatalf("failed to marshal ethernet frame: %v", err)
+	}
+
+	// Required by Linux, even though the Ethernet frame has a destination.
+	// Unused by BSD.
+	addr := &raw.Addr{
+		HardwareAddr: ethernet.Broadcast,
+	}
+
+	fmt.Printf("raw:  %x \n", b)
+	fmt.Println(" --== Packet send ==--")
+	fmt.Printf("mac dst  %x \n", b[0:6])
+	fmt.Printf("mac src  %x \n", b[6:12])
+	fmt.Printf("type eth %x \n", b[12:14])
+	fmt.Printf("size     %v \n", b[16:18])
+
+	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
+	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
+	fmt.Println(" --== End Packet ==--")
+
+	if _, err := c.WriteTo(b, addr); err != nil {
+		log.Fatalf("failed to send message: %v", err)
+	}
+
+}
+
+/*
 // sendMessages continuously sends a message over a connection at regular intervals,
 // sourced from specified hardware address.
 func sendMessages(c net.PacketConn, source net.HardwareAddr) {
@@ -426,7 +589,7 @@ func receiveMessages(c net.PacketConn, mtu int) {
 		}
 	}
 }
-
+*/
 var mass_solve []int64
 
 func getJitter(in_solve int64) float32 {
@@ -471,7 +634,7 @@ func getJitter(in_solve int64) float32 {
 	return jitter
 }
 
-func zabbixHello(host string) {
+func zabbixHello(host string, defaultHost string, defaultPort int) {
 	var delay int
 	for {
 		delay = rand.Intn(1500)
@@ -489,7 +652,7 @@ func zabbixHello(host string) {
 	}
 }
 
-func zabbix_delay(host string, delay int64) {
+func zabbix_delay(host string, delay int64, defaultHost string, defaultPort int) {
 
 	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
 	//delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
@@ -507,7 +670,7 @@ func zabbix_delay(host string, delay int64) {
 
 }
 
-func zabbix_jitter(host string, jitter float32) {
+func zabbix_jitter(host string, jitter float32, defaultHost string, defaultPort int) {
 
 	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
 	if jitter != 0 {
@@ -525,7 +688,7 @@ func zabbix_jitter(host string, jitter float32) {
 
 }
 
-func zabbix_error(host string, err float32) {
+func zabbix_error(host string, err float32, defaultHost string, defaultPort int) {
 
 	var metrics []*Metric
 	metrics = append(metrics, NewMetric(host, "error_probability", fmt.Sprint(err), time.Now().Unix()))
