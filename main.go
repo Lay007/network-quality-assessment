@@ -451,11 +451,12 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
 	fmt.Println(" --== End Packet ==--")
 */
+   for i := 0; i < 1000; i++{
 	if _, err := c.WriteTo(b, addr); err != nil {
 		log.Fatalf("failed to send message: %v", err)
 		fmt.Println("failed to send message: ", err)
 	}
-
+   }
 }
 
 /*
