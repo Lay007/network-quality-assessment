@@ -213,7 +213,7 @@ func main() {
 				fmt.Println(err)
 				continue
 			}
-			go TestThroughput(id, conf.net_interface_name)
+			TestThroughput(id, conf.net_interface_name)
 		}
 
 		//	row_test_real, err := db.Query("select * from global_config where status=1")
@@ -267,7 +267,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close();
+	defer db.Close()
 	db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
@@ -350,11 +350,12 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println(ipdst_2sfpsla_str)
 
 	// Тестирование пропускной способности для пакета длиной 256 бит
-	period_nano := 256 * 1000000000 / (test.thr_begin * 1024 * 1024)
+	size := 256
+	period_nano := size * 1000000000 / (test.thr_begin * 1024 * 1024)
 
-	counter := test.count
-	var numberTX uint32
-	numberTX = 0
+	//counter := test.count
+	//var numberTX uint32
+	//	numberTX = 0
 
 	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
@@ -365,28 +366,92 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
-	t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
-	//t := time.NewTicker(1 * time.Second)
-	for range t.C {
-		counter--
-	//	fmt.Println("counter=", counter)
-		numberTX++
-		 sendPacket(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, numberTx, 1280)
-		//go receivePacket(c, ifi.MTU)
-		//select {}
+	period_min := time.Duration(time.Duration(int(period_nano)) * time.Nanosecond)
+	period_gen := time.Duration(10 * time.Second)
 
-			if counter <= 0 {
-				break
-			}
+	//t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
+	//t := time.NewTicker(1 * time.Second)
+	//	for range t.C {
+	//		counter--
+	//	fmt.Println("counter=", counter)
+	//	numberTX++
+
+	ip := iphdr{
+		vhl:   0x45,
+		tos:   0,
+		id:    0x0000, // the kernel overwrites id if it is zero
+		off:   0,
+		ttl:   0xFF,
+		proto: 0x5E,
 	}
-	test.rez_256 = 335
+	copy(ip.src[:], ipsrc.To4())
+	copy(ip.dst[:], ipdst1.To4())
+	sfpdat := sfpsla{
+		id: 0xFC,
+	}
+	copy(sfpdat.dst[:], ipdst2.To4())
+	numberTx++
+	sfpdat.number = numberTx
+	//ip.iplen = uint16(20 + 26 + 4)
+	ip.iplen = uint16(size)
+	ip.checksum()
+	payloadAdd := make([]byte, size-64)
+	var bin_buf bytes.Buffer
+	binary.Write(&bin_buf, binary.BigEndian, ip)
+	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
+	binary.Write(&bin_buf, binary.BigEndian, payloadAdd)
+
+	msg := bin_buf.Bytes()
+	f := &ethernet.Frame{
+		//Destination: ethernet.Broadcast,
+		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
+		Source:    ifi.HardwareAddr,
+		EtherType: 0x0800,
+		Payload:   []byte(msg),
+	}
+
+	b, err := f.MarshalBinary()
+	if err != nil {
+		log.Fatalf("failed to marshal ethernet frame: %v", err)
+	}
+
+	// Required by Linux, even though the Ethernet frame has a destination.
+	// Unused by BSD.
+	addr := &raw.Addr{
+		HardwareAddr: ethernet.Broadcast,
+	}
+	t := time.NewTicker(period_min)
+	go func() {
+
+		for range t.C {
+			c.WriteTo(b, addr)
+		}
+	}()
+
+	count_recive := make(chan int)
+
+	//	go sendPackets(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, per_min time.Duration, 1280)
+	go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, count_recive)
+	select {}
+	time.Sleep(period_gen)
+	t.Stop()
+
+	//		if counter <= 0 {
+	//			break
+	//		}
+	//}
+
+	rez_count := <-count_recive
+
+	test.rez_256 = rez_count
 
 	test.status = 3
 	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 
 }
 
-func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
+func sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
 
 	//	ipsrc := net.ParseIP(ipsrcstr)
 	//	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
@@ -440,23 +505,55 @@ func sendPacket(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 
 	}
 
 	/*
-	fmt.Printf("raw:  %x \n", b)
-	fmt.Println(" --== Packet send ==--")
-	fmt.Printf("mac dst  %x \n", b[0:6])
-	fmt.Printf("mac src  %x \n", b[6:12])
-	fmt.Printf("type eth %x \n", b[12:14])
-	fmt.Printf("size     %v \n", b[16:18])
+		fmt.Printf("raw:  %x \n", b)
+		fmt.Println(" --== Packet send ==--")
+		fmt.Printf("mac dst  %x \n", b[0:6])
+		fmt.Printf("mac src  %x \n", b[6:12])
+		fmt.Printf("type eth %x \n", b[12:14])
+		fmt.Printf("size     %v \n", b[16:18])
 
-	fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
-	fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
-	fmt.Println(" --== End Packet ==--")
-*/
-   for i := 0; i < 1000; i++{
-	if _, err := c.WriteTo(b, addr); err != nil {
-		log.Fatalf("failed to send message: %v", err)
-		fmt.Println("failed to send message: ", err)
+		fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
+		fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
+		fmt.Println(" --== End Packet ==--")
+	*/
+
+	//  t := time.NewTicker(
+
+	for i := 0; i < 1000; i++ {
+		if _, err := c.WriteTo(b, addr); err != nil {
+			log.Fatalf("failed to send message: %v", err)
+			fmt.Println("failed to send message: ", err)
+		}
 	}
-   }
+}
+
+func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, count_recive chan int) {
+	var f ethernet.Frame
+	b := make([]byte, mtu)
+	var count int
+	// Keep receiving messages forever.
+	for {
+		n, _, err := c.ReadFrom(b)
+		if err != nil {
+			log.Fatalf("failed to receive message: %v", err)
+		}
+
+		// Unpack Ethernet II frame into Go representation.
+		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
+			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
+		}
+		fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
+		var ips [4]byte
+		copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
+		fmt.Printf("\n\n--=T_so %x - \n", ips)
+
+		// Display source of message and message itself.
+		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) {
+			count++
+			count_recive <- count
+
+		}
+	}
 }
 
 /*
