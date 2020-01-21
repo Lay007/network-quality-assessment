@@ -420,7 +420,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
-//	end_gen := make(chan int)
+	end_gen := make(chan int)
 	t := time.NewTicker(period_min)
 	go func() {
 		for range t.C {
