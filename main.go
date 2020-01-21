@@ -434,7 +434,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		}
 	}()
 
-	count_recive := make(chan int)
+//	count_recive := make(chan int)
 
 	//	go sendPackets(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, per_min time.Duration, 1280)
 	//go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, count_recive)
