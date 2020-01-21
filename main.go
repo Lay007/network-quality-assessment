@@ -543,14 +543,15 @@ func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string){//}, co
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-		fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
+		//fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
 		var ips [4]byte
 		copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
-		fmt.Printf("\n\n--=T_so %x - \n", ips)
+		//fmt.Printf("\n\n--=T_so %x - \n", ips)
 
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) {
 			count++
+			fmt.Printf("-->>Detect");
 		//	count_recive <- count
 
 		}
