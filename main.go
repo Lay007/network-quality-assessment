@@ -420,6 +420,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
+	end_gen := make(chan int)
 	t := time.NewTicker(period_min)
 	go func() {
 		for range t.C {
@@ -428,6 +429,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			if counter < 0 {
 				break
 			}
+			time.Sleep(period_gen)
+			end_gen <- 1
 		}
 	}()
 
@@ -436,16 +439,15 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//	go sendPackets(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, per_min time.Duration, 1280)
 	go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, count_recive)
 	//go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str)
-	select {}
 
-    time.Sleep(period_gen)
-//	t.Stop()
+	//time.Sleep(period_gen)
+	//	t.Stop()
 
 	//		if counter <= 0 {
 	//			break
 	//		}
 	//}
-
+	<-end_gen
 	rez_count := <-count_recive
 	//rez_count := 133
 
