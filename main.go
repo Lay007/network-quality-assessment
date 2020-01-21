@@ -435,6 +435,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, count_recive)
 	select {}
 	time.Sleep(period_gen)
+	
 	t.Stop()
 
 	//		if counter <= 0 {
