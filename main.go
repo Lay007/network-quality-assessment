@@ -423,16 +423,20 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		HardwareAddr: ethernet.Broadcast,
 	}
 	//	end_gen := make(chan int)
-	t := time.NewTicker(period_min)
+	//	t := time.NewTicker(period_min)
+	gen_start:= time.Now()
 	go func() {
-		for range t.C {
+		//for range t.C {
+		for {
 			counter--
 			c.WriteTo(b, addr)
 			if counter < 0 {
 				break
 			}
+
 		}
-		time.Sleep(period_gen)
+		fmt.Println(time.Since(gen_start))
+		//time.Sleep(period_gen)
 		//			end_gen <- 1
 
 	}()
