@@ -260,6 +260,8 @@ type testThroughput struct {
 	status        int
 }
 
+var count_recive int
+
 func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
 	fmt.Println("Тест пропускной способности начался")
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
@@ -435,10 +437,10 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	}()
 	//var	count_recive int
-	count_recive:=make(chan int)
+	//count_recive:=make(chan int)
 	//	go sendPackets(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, per_min time.Duration, 1280)
-	go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, count_recive)
-	//go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str)
+	//go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, count_recive)
+	go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str)
 	//  select {}
 	time.Sleep(period_gen)
 	//	t.Stop()
@@ -448,8 +450,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//		}
 	//}
 	//<-end_gen
-	rez_count := <-count_recive
-	//rez_count := count_recive
+	//rez_count := <-count_recive
+	rez_count := count_recive
 
 	test.rez_256 = rez_count
 
@@ -535,7 +537,7 @@ func sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1
 }
 
 //func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, counter int) {
-func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, counter chan<- int) {
+func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string) { //, counter chan<- int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 	var count int
@@ -558,9 +560,9 @@ func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, counter
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) {
 			count++
-		//	fmt.Printf("-->>Detect")
-			counter <-count
-
+			//	fmt.Printf("-->>Detect")
+			//	counter <-count
+			count_recive = count
 		}
 	}
 }
