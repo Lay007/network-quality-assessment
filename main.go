@@ -452,7 +452,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//<-end_gen
 	//rez_count := <-count_recive
 	rez_count := count_recive
-
+	fmt.Println("rez_count= ", rez_count)
 	test.rez_256 = rez_count
 
 	test.status = 3
