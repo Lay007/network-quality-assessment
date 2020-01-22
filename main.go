@@ -438,9 +438,10 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}()
 	//var	count_recive int
 	//count_recive:=make(chan int)
+	quit := make(chan int)
 	//	go sendPackets(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, per_min time.Duration, 1280)
 	//go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, count_recive)
-	go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str)
+	go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit)
 	//  select {}
 	time.Sleep(period_gen)
 	//	t.Stop()
@@ -454,7 +455,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	rez_count := count_recive
 	fmt.Println("rez_count= ", rez_count)
 	test.rez_256 = rez_count
-
+	quit <- 1
 	test.status = 3
 	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 
@@ -537,12 +538,17 @@ func sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1
 }
 
 //func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, counter int) {
-func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string) { //, counter chan<- int) {
+func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit chan int) { //, counter chan<- int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 	var count int
 	// Keep receiving messages forever.
 	for {
+		select {
+		case <-quit:
+			return
+		default:
+		}
 		n, _, err := c.ReadFrom(b)
 		if err != nil {
 			log.Fatalf("failed to receive message: %v", err)
