@@ -362,6 +362,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	// Тестирование пропускной способности для пакета длиной 256 бит
 	size := 1518
+	ifi.MTU = 9000
 	period_nano := size * 1000000000 / (test.thr_begin * 1024 * 1024)
 
 	counter := test.count
