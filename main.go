@@ -434,11 +434,15 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 	//	end_gen := make(chan int)
 	//	t := time.NewTicker(period_min)
-	t := time.NewTicker(12 * time.Microsecond)
+
+
+
+
+//	t := time.NewTicker(12 * time.Microsecond)
 	gen_start := time.Now()
 	go func() {
-		for range t.C {
-			//for {
+//		for range t.C {
+			for {
 			counter--
 			c.WriteTo(b, addr)
 			if counter <= 0 {
