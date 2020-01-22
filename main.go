@@ -352,7 +352,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println(ipdst_2sfpsla_str)
 
 	// Тестирование пропускной способности для пакета длиной 256 бит
-	size := 1480
+	size := 128
 	period_nano := size * 1000000000 / (test.thr_begin * 1024 * 1024)
 
 	counter := test.count
