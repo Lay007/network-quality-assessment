@@ -146,9 +146,15 @@ func main() {
 	// Оценка выполнения тестов
 	db.Exec("UPDATE test_throughput SET status=4 WHERE status=2")
 
+	db.Close()
+
 	t := time.NewTicker(5 * time.Second) //проверка один раз в 30 секунд
 	for range t.C {
 
+		db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		if err != nil {
+			panic(err)
+		}
 		// считывание из БД глобальных параметров
 		row, err := db.Query("select * from global_config")
 		if err != nil {
@@ -189,7 +195,7 @@ func main() {
 			modules = append(modules, m)
 		}
 
-		defer db.Close()
+		//defer db.Close()
 
 		//go zabbixHello("SFP-SLA_4401")
 
@@ -206,6 +212,9 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+
+		db.Close()
+
 		for rows.Next() {
 			var id int
 			err = rows.Scan(&id)
@@ -424,10 +433,11 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 	//	end_gen := make(chan int)
 	//	t := time.NewTicker(period_min)
-	gen_start:= time.Now()
+	t := time.NewTicker(12 * time.Microsecond)
+	gen_start := time.Now()
 	go func() {
-		//for range t.C {
-		for {
+		for range t.C {
+			//for {
 			counter--
 			c.WriteTo(b, addr)
 			if counter < 0 {
@@ -440,6 +450,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		//			end_gen <- 1
 
 	}()
+
 	//var	count_recive int
 	//count_recive:=make(chan int)
 	quit := make(chan int)
