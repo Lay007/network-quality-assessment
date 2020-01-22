@@ -363,7 +363,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	// Тестирование пропускной способности для пакета длиной 256 бит
 	size := 1480
 	//ifi.MTU = 9000
-	period_nano := size * 1000000000 / (test.thr_begin * 1024 * 1024)
+	period_nano := size *8* 1000000000 / (test.thr_begin * 1024 * 1024)
 
 	counter := test.count
 	//var numberTX uint32
@@ -443,6 +443,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	go func() {
 //		for range t.C {
 			for {
+				time.Sleep(12*time.Microsecond)
 			counter--
 			c.WriteTo(b, addr)
 			if counter <= 0 {
