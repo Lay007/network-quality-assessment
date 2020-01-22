@@ -558,7 +558,7 @@ func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, counter
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) {
 			count++
-		//	fmt.Printf("-->>Detect")
+			fmt.Printf("-->>Detect")
 			counter=count
 
 		}
