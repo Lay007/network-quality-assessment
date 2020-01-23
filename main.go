@@ -449,7 +449,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	go func() {
 //		for range t.C {
 			for {
-				time.Sleep(12*time.Microsecond)
+			//	time.Sleep(12*time.Microsecond)
 			counter--
 			//c.WriteTo(b, addr)
 			c.WriteTo(b_big, addr)
