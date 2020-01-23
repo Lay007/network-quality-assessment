@@ -432,7 +432,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 //	var b_split = []byte {0, 0, 0}
 	//b_big :=make([]byte,(len(b)+3)*3)
 	var b_big []byte
-	b_big=bytes.Repeat(b,1)
+	b_big=bytes.Repeat(b,2)
 	//b_big = append(b_big,b_split)
 	//b_big=append(b_big,b_split)
 	//b_big=append(b_big,b_split)
