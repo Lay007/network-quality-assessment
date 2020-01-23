@@ -156,15 +156,15 @@ func main() {
 			panic(err)
 		}
 		// считывание из БД глобальных параметров
-		row, err := db.Query("select * from global_config")
+		rows, err := db.Query("select * from global_config")
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(row)
-		defer row.Close()
-		row.Next()
+		fmt.Println(rows)
+
+		rows.Next()
 		conf := new(global_config)
-		err = row.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
+		err = rows.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -176,11 +176,10 @@ func main() {
 
 		fmt.Println(conf.server_ip)
 
-		rows, err := db.Query("select * from modules_sfp_sla")
+		rows, err = db.Query("select * from modules_sfp_sla")
 		if err != nil {
 			panic(err)
 		}
-		defer rows.Close()
 
 		modules := []module_sfp{}
 
@@ -224,7 +223,7 @@ func main() {
 			}
 			TestThroughput(id, conf.net_interface_name)
 		}
-
+		rows.Close()
 		//	row_test_real, err := db.Query("select * from global_config where status=1")
 
 		//go Test_SLA_real_go()
@@ -427,7 +426,6 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 }
 
 func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int) []byte {
-
 	ip := iphdr{
 		vhl:   0x45,
 		tos:   0,
@@ -470,7 +468,10 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 	return b
 }
 
+var min_period = time.Duration(15) * time.Microsecond
+
 func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int) int {
+	time_to_Sleep := time.Duration(cnt) * min_period
 	gen_start := time.Now()
 	go func() {
 		//		for range t.C {
@@ -487,7 +488,7 @@ func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str s
 
 	quit := make(chan int)
 	go receivePackets(c, mtu, ipdst_1sfpsla_str, quit)
-	time.Sleep(10 * time.Second)
+	time.Sleep(time_to_Sleep)
 
 	rez_count := count_recive
 	fmt.Println("rez_count= ", rez_count)
