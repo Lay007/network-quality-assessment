@@ -363,7 +363,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	// Тестирование пропускной способности для пакета длиной 256 бит
 	size := 512
 	//ifi.MTU = 9000
-	period_nano := size *8* 1000000000 / (test.thr_begin * 1024 * 1024)
+	period_nano := size * 8 * 1000000000 / (test.thr_begin * 1024 * 1024)
 
 	counter := test.count
 	//var numberTX uint32
@@ -379,7 +379,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
 	period_min := time.Duration(time.Duration(int(period_nano)) * time.Nanosecond)
-	period_gen := time.Duration(10 * time.Second)
+	//period_gen := time.Duration(10 * time.Second)
 
 	//t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
 	//t := time.NewTicker(1 * time.Second)
@@ -388,6 +388,35 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println("counter= ", counter)
 	fmt.Println("period_min= ", period_min)
 	//	numberTX++
+	addr := &raw.Addr{
+		HardwareAddr: ethernet.Broadcast,
+	}
+
+	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 64)
+	test.rez_64 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 128)
+	test.rez_128 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 256)
+	test.rez_256 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 512)
+	test.rez_512 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1024)
+	test.rez_1024 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280)
+	test.rez_1280 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+
+
+	test.status = 3
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
+
+}
+
+func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int) []byte {
 
 	ip := iphdr{
 		vhl:   0x45,
@@ -419,7 +448,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		//Destination: ethernet.Broadcast,
 		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
-		Source:    ifi.HardwareAddr,
+		Source:    mac_src,
 		EtherType: 0x0800,
 		Payload:   []byte(msg),
 	}
@@ -428,84 +457,32 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if err != nil {
 		log.Fatalf("failed to marshal ethernet frame: %v", err)
 	}
+	return b
+}
 
-//	var b_split = []byte {0, 0, 0}
-	//b_big :=make([]byte,(len(b)+3)*3)
-	var b_big []byte
-	b_big=bytes.Repeat(b,1)
-	//b_big = append(b_big,b_split)
-	//b_big=append(b_big,b_split)
-	//b_big=append(b_big,b_split)
-	//b_big=append(b_big,b_split)
-
-	addr := &raw.Addr{
-		HardwareAddr: ethernet.Broadcast,
-	}
-	//	end_gen := make(chan int)
-	//	t := time.NewTicker(period_min)
-
-//	t := time.NewTicker(12 * time.Microsecond)
+func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int) int {
 	gen_start := time.Now()
 	go func() {
 		//		for range t.C {
-					for {
-					//	time.Sleep(12*time.Microsecond)
-					counter--
-					//c.WriteTo(b, addr)
-					c.WriteTo(b_big, addr)
-					if counter <= 0 {
-						break
-					}
-		
-				}
-				//fmt.Println(time.Since(gen_start))
-				//time.Sleep(period_gen)
-				//			end_gen <- 1
-		
-			}()
-
-
-	go func() {
-//		for range t.C {
-			for {
+		for {
 			//	time.Sleep(12*time.Microsecond)
-			counter--
-			//c.WriteTo(b, addr)
-			c.WriteTo(b_big, addr)
-			if counter <= 0 {
+			cnt--
+			c.WriteTo(b, addr)
+			if cnt <= 0 {
 				break
 			}
-
 		}
 		fmt.Println(time.Since(gen_start))
-		//time.Sleep(period_gen)
-		//			end_gen <- 1
-
 	}()
 
-	//var	count_recive int
-	//count_recive:=make(chan int)
 	quit := make(chan int)
-	//	go sendPackets(c, ifi.HardwareAddr, ipsrc, ipdst1, ipdst2, per_min time.Duration, 1280)
-	//go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, count_recive)
-	go receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit)
-	//  select {}
-	time.Sleep(period_gen)
-	//	t.Stop()
+	go receivePackets(c, mtu, ipdst_1sfpsla_str, quit)
+	time.Sleep(10 * time.Second)
 
-	//		if counter <= 0 {
-	//			break
-	//		}
-	//}
-	//<-end_gen
-	//rez_count := <-count_recive
 	rez_count := count_recive
 	fmt.Println("rez_count= ", rez_count)
-	test.rez_256 = rez_count
 	quit <- 1
-	test.status = 3
-	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-
+	return rez_count
 }
 
 func sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
