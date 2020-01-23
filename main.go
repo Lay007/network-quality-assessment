@@ -416,8 +416,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	msg := bin_buf.Bytes()
 	f := &ethernet.Frame{
-		Destination: ethernet.Broadcast,
-		//Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+		//Destination: ethernet.Broadcast,
+		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
 		Source:    ifi.HardwareAddr,
 		EtherType: 0x0800,
@@ -446,6 +446,25 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 //	t := time.NewTicker(12 * time.Microsecond)
 	gen_start := time.Now()
+	go func() {
+		//		for range t.C {
+					for {
+					//	time.Sleep(12*time.Microsecond)
+					counter--
+					//c.WriteTo(b, addr)
+					c.WriteTo(b_big, addr)
+					if counter <= 0 {
+						break
+					}
+		
+				}
+				//fmt.Println(time.Since(gen_start))
+				//time.Sleep(period_gen)
+				//			end_gen <- 1
+		
+			}()
+
+
 	go func() {
 //		for range t.C {
 			for {
