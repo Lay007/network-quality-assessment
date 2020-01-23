@@ -478,7 +478,7 @@ func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str s
 		for {
 			//	time.Sleep(12*time.Microsecond)
 			cnt--
-			for i:=0;i<2000;i++{
+			for i:=0;i<20000;i++{
 				i++
 			}
 			c.WriteTo(b, addr)
