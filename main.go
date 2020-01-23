@@ -429,14 +429,19 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		log.Fatalf("failed to marshal ethernet frame: %v", err)
 	}
 
+//	var b_split = []byte {0, 0, 0}
+	b_big :=make([]byte,(len(b)+3)*3)
+	b_big=bytes.Repeat(b,10)
+	//b_big = append(b_big,b_split)
+	//b_big=append(b_big,b_split)
+	//b_big=append(b_big,b_split)
+	//b_big=append(b_big,b_split)
+
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
 	//	end_gen := make(chan int)
 	//	t := time.NewTicker(period_min)
-
-
-
 
 //	t := time.NewTicker(12 * time.Microsecond)
 	gen_start := time.Now()
@@ -445,7 +450,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			for {
 				time.Sleep(12*time.Microsecond)
 			counter--
-			c.WriteTo(b, addr)
+			//c.WriteTo(b, addr)
+			c.WriteTo(b_big, addr)
 			if counter <= 0 {
 				break
 			}
