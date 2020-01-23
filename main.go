@@ -274,12 +274,11 @@ var count_recive int
 func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
 	fmt.Println("Тест пропускной способности начался")
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-	defer db.Close()
+
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
-	db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
+	defer db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
@@ -356,6 +355,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 		}
 	}
+
+	db.Close()
+
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
 	fmt.Println(ipdst_2sfpsla_str)
@@ -410,10 +412,18 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280)
 	test.rez_1280 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1500)
+	test.rez_1518 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 
 	test.status = 3
-	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 
+	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+
+	if err != nil {
+		panic(err)
+	}
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
+	db.Close()
 }
 
 func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int) []byte {
