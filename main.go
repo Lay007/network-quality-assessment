@@ -471,14 +471,14 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 var min_period = time.Duration(15) * time.Microsecond
 
 func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int) int {
-	time_to_Sleep := time.Duration(cnt) * min_period*10
+	time_to_Sleep := time.Duration(cnt) * min_period*2
 	gen_start := time.Now()
 	go func() {
 		//		for range t.C {
 		for {
 			//	time.Sleep(12*time.Microsecond)
 			cnt--
-			for i:=0;i<2000000;i++{
+			for i:=0;i<2000;i++{
 				i++
 			}
 			c.WriteTo(b, addr)
