@@ -288,7 +288,6 @@ type testThroughput struct {
 	module_second int
 	thr_begin     int
 	count         int
-	block_size    int
 	ch_type       int
 	max_loss      int
 	rez_64        int
