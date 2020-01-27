@@ -151,25 +151,40 @@ func main() {
 	t := time.NewTicker(5 * time.Second) //проверка один раз в 30 секунд
 	for range t.C {
 
-		db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		if err != nil {
-			panic(err)
+			db.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
 		}
 		// считывание из БД глобальных параметров
 		rows, err := db.Query("select * from global_config")
 		if err != nil {
-			panic(err)
+			db.Close()
+			rows.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
 		}
-		fmt.Println(rows)
 
 		rows.Next()
 		conf := new(global_config)
 		err = rows.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
 		if err != nil {
+			db.Close()
+			rows.Close()
+			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
 		}
 
 		if conf.net_interface_name == "" {
+			db.Close()
+			rows.Close()
 			fmt.Println("Net interface is not selected")
 			continue
 		}
@@ -178,7 +193,12 @@ func main() {
 
 		rows, err = db.Query("select * from modules_sfp_sla")
 		if err != nil {
-			panic(err)
+			db.Close()
+			rows.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
 		}
 
 		modules := []module_sfp{}
@@ -201,6 +221,12 @@ func main() {
 		ifi, err := net.InterfaceByName(conf.net_interface_name)
 		if err != nil {
 			log.Fatalf("failed to find interface %q: %v", conf.net_interface_name, err)
+			db.Close()
+			rows.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
 		}
 
 		fmt.Println("Net_NAME: ", conf.net_interface_name)
@@ -209,7 +235,12 @@ func main() {
 		// проверка тестов пропускной способности
 		rows, err = db.Query("SELECT id FROM test_throughput WHERE status=1")
 		if err != nil {
-			panic(err)
+			db.Close()
+			rows.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
 		}
 
 		db.Close()
@@ -218,7 +249,11 @@ func main() {
 			var id int
 			err = rows.Scan(&id)
 			if err != nil {
+				db.Close()
+				rows.Close()
+				fmt.Println(" -!! Error !!-")
 				fmt.Println(err)
+				fmt.Println(" ----=====----")
 				continue
 			}
 			TestThroughput(id, conf.net_interface_name)
@@ -275,11 +310,16 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 
 	if err != nil {
-		panic(err)
+		db.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
 	}
 	defer db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
+		db.Close()
 		log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		return
@@ -287,7 +327,12 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	row, err := db.Query("select * from test_throughput where id=?", id)
 	if err != nil {
-		panic(err)
+		db.Close()
+		row.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
 	}
 	fmt.Println(row)
 	defer row.Close()
@@ -295,7 +340,12 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	test := new(testThroughput)
 	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.block_size, &test.ch_type, &test.max_loss, &test.rez_64, &test.rez_128, &test.rez_256, &test.rez_512, &test.rez_1024, &test.rez_1280, &test.rez_1518, &test.rez_4096, &test.rez_9000, &test.status)
 	if err != nil {
+		db.Close()
+
+		fmt.Println(" -!! Error !!-")
 		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
 	}
 
 	var ipsrcstr string
@@ -305,13 +355,23 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-		panic(err)
+		db.Close()
+		row.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
 	}
 	for row.Next() {
 		err = row.Scan(&ipsrcstr)
 		if err != nil {
-			fmt.Println(err)
+
 			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
 			return
 		}
 	}
@@ -319,38 +379,71 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	row, err = db.Query("SELECT module_first, module_second FROM test_throughput WHERE id=?", id)
 	if err != nil {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-		panic(err)
+		db.Close()
+		row.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
 	}
 	for row.Next() {
 		err = row.Scan(&id_sfp1, &id_sfp2)
 		if err != nil {
-			fmt.Println(err)
+
 			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
 			return
 		}
 		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
 			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-			panic(err)
+			db.Close()
+			row.Close()
+			row_ip.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
 		}
 		defer row_ip.Close()
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
-				fmt.Println(err)
+
 				db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+				row.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
 			}
 		}
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
 			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-			panic(err)
+			db.Close()
+			row.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
 		}
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_2sfpsla_str)
 			if err != nil {
-				fmt.Println(err)
+
 				db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+				row.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
 			}
 		}
 	}
@@ -373,6 +466,12 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
+		db.Close()
+
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
 	}
 
 	ipsrc := net.ParseIP(ipsrcstr)
@@ -417,9 +516,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	test.status = 3
 
 	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-
 	if err != nil {
-		panic(err)
+		db.Close()
+
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
 	}
 	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 	db.Close()
@@ -464,6 +567,11 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 	b, err := f.MarshalBinary()
 	if err != nil {
 		log.Fatalf("failed to marshal ethernet frame: %v", err)
+
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return []byte{}
 	}
 	return b
 }
@@ -471,14 +579,14 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 var min_period = time.Duration(15) * time.Microsecond
 
 func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int) int {
-	time_to_Sleep := time.Duration(cnt) * min_period*2
+	time_to_Sleep := time.Duration(cnt) * min_period * 2
 	gen_start := time.Now()
 	go func() {
 		//		for range t.C {
 		for {
 			//	time.Sleep(12*time.Microsecond)
 			cnt--
-			for i:=0;i<20000;i++{
+			for i := 0; i < 20000; i++ {
 				i++
 			}
 			c.WriteTo(b, addr)
