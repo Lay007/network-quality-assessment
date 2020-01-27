@@ -338,10 +338,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	defer row.Close()
 	row.Next()
 	test := new(testThroughput)
-	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.block_size, &test.ch_type, &test.max_loss, &test.rez_64, &test.rez_128, &test.rez_256, &test.rez_512, &test.rez_1024, &test.rez_1280, &test.rez_1518, &test.rez_4096, &test.rez_9000, &test.status)
+	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.ch_type, &test.max_loss, &test.rez_64, &test.rez_128, &test.rez_256, &test.rez_512, &test.rez_1024, &test.rez_1280, &test.rez_1518, &test.rez_4096, &test.rez_9000, &test.status)
 	if err != nil {
 		db.Close()
-
 		fmt.Println(" -!! Error !!-")
 		fmt.Println(err)
 		fmt.Println(" ----=====----")
