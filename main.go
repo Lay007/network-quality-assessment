@@ -160,41 +160,41 @@ func main() {
 			continue
 		}
 		// считывание из БД глобальных параметров
-		rows, err := db.Query("select * from global_config")
+		row_gc, err := db.Query("select * from global_config")
+		defer row_gc.Close()
 		if err != nil {
 			db.Close()
-			rows.Close()
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
 			continue
 		}
-
-		rows.Next()
+		row_gc.Next()
 		conf := new(global_config)
-		err = rows.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
+		err = row_gc.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
 		if err != nil {
 			db.Close()
-			rows.Close()
+
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
 			continue
 		}
+		row_gc.Close()
 
 		if conf.net_interface_name == "" {
 			db.Close()
-			rows.Close()
 			fmt.Println("Net interface is not selected")
 			continue
 		}
 
 		fmt.Println(conf.server_ip)
 
-		rows, err = db.Query("select * from modules_sfp_sla")
+		row_modules, err := db.Query("select * from modules_sfp_sla")
+		defer row_modules.Close()
 		if err != nil {
 			db.Close()
-			rows.Close()
+
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
@@ -203,9 +203,9 @@ func main() {
 
 		modules := []module_sfp{}
 
-		for rows.Next() {
+		for row_modules.Next() {
 			m := module_sfp{}
-			err = rows.Scan(&m.id, &m.name, &m.address_mac, &m.address_ip, &m.version, &m.location)
+			err = row_modules.Scan(&m.id, &m.name, &m.address_mac, &m.address_ip, &m.version, &m.location)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -213,7 +213,7 @@ func main() {
 			fmt.Println(m.address_ip)
 			modules = append(modules, m)
 		}
-
+		row_modules.Close()
 		//defer db.Close()
 
 		//go zabbixHello("SFP-SLA_4401")
@@ -222,7 +222,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to find interface %q: %v", conf.net_interface_name, err)
 			db.Close()
-			rows.Close()
+
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
@@ -233,10 +233,11 @@ func main() {
 		fmt.Println("interface: ", ifi.Name)
 
 		// проверка тестов пропускной способности
-		rows, err = db.Query("SELECT id FROM test_throughput WHERE status=1")
+		row_test_thr, err := db.Query("SELECT id FROM test_throughput WHERE status=1")
+		defer row_test_thr.Close()
 		if err != nil {
 			db.Close()
-			rows.Close()
+			row_test_thr.Close()
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
@@ -245,12 +246,12 @@ func main() {
 
 		db.Close()
 
-		for rows.Next() {
+		for row_test_thr.Next() {
 			var id int
-			err = rows.Scan(&id)
+			err = row_test_thr.Scan(&id)
 			if err != nil {
 				db.Close()
-				rows.Close()
+				row_test_thr.Close()
 				fmt.Println(" -!! Error !!-")
 				fmt.Println(err)
 				fmt.Println(" ----=====----")
@@ -258,7 +259,7 @@ func main() {
 			}
 			TestThroughput(id, conf.net_interface_name)
 		}
-		rows.Close()
+		row_test_thr.Close()
 		//	row_test_real, err := db.Query("select * from global_config where status=1")
 
 		//go Test_SLA_real_go()
