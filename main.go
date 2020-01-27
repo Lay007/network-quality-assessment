@@ -324,7 +324,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 
-	row, err := db.Query("select * from test_throughput where id=?", id)
+	row, err := db.Query("select id, test_type, module_first, module_second, thr_begin, count, ch_type, max_loss, status from test_throughput where id=?", id)
 	if err != nil {
 		db.Close()
 		row.Close()
@@ -337,10 +337,10 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	defer row.Close()
 	row.Next()
 	test := new(testThroughput)
-	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.ch_type, &test.max_loss, &test.rez_64, &test.rez_128, &test.rez_256, &test.rez_512, &test.rez_1024, &test.rez_1280, &test.rez_1518, &test.rez_4096, &test.rez_9000, &test.status)
+	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.ch_type, &test.max_loss, &test.status)
 	if err != nil {
 		db.Close()
-		fmt.Println("() -!! Error !!-")
+		fmt.Println(" -!! Error !!-")
 		fmt.Println(err)
 		fmt.Println(" ----=====----")
 		return
