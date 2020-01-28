@@ -753,7 +753,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string,port_zabbix 
 		}()
 
 		go receiveMessages(id, c, ipdst_1sfpsla_str,test.node_zabbix,host_zabbix,port_zabbix, ifi.MTU)
-		select {}
+		
 
 	}
 
