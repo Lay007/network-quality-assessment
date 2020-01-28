@@ -269,7 +269,7 @@ func main() {
 				fmt.Println(" ----=====----")
 				continue
 			}
-			TestReal(id, conf.net_interface_name, conf.zabbix_server_name,conf.zabbix_server_name,10051)
+			TestReal(id, conf.net_interface_name, conf.zabbix_server_name, 10051)
 		}
 		row_test_real.Close()
 
@@ -571,7 +571,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	db.Close()
 }
 
-func TestReal(id int, net_interface_name string, host_zabbix,port_zabbix) {
+func TestReal(id int, net_interface_name string, host_zabbix string,port_zabbix int) {
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
 		db.Close()
@@ -752,7 +752,7 @@ func TestReal(id int, net_interface_name string, host_zabbix,port_zabbix) {
 			c.WriteTo(b, addr)
 		}()
 
-		go receiveMessages(id, c, test.node_zabbix, ifi.MTU,)
+		go receiveMessages(id, c, ipdst_1sfpsla_str,test.node_zabbix,host_zabbix,port_zabbix, ifi.MTU)
 		select {}
 
 	}
@@ -1027,7 +1027,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func receiveMessages(id int, c net.PacketConn, node_zabbix string, host_zabbix string, port_zabbix int,mtu int) {
+func receiveMessages(id int, c net.PacketConn,ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int,mtu int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 
