@@ -244,7 +244,34 @@ func main() {
 			continue
 		}
 
+		// проверка тестов SLA в реальном времени
+		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE (status=1 OR status=2)")
+		defer row_test_real.Close()
+		if err != nil {
+			db.Close()
+			row_test_real.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
+		}
+
 		db.Close()
+
+		for row_test_real.Next() {
+			var id int
+			err = row_test_real.Scan(&id)
+			if err != nil {
+				db.Close()
+				row_test_real.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				continue
+			}
+			TestReal(id, conf.net_interface_name, conf.zabbix_server_name,conf.zabbix_server_name,10051)
+		}
+		row_test_real.Close()
 
 		for row_test_thr.Next() {
 			var id int
@@ -303,12 +330,29 @@ type testThroughput struct {
 	status        int
 }
 
+type testReal struct {
+	id                int
+	test_type         int
+	name              string
+	module_first      int
+	module_second     int
+	block_size        int
+	clock             int
+	count             int
+	node_zabbix       string
+	test_delay        bool
+	test_delay_jitter bool
+	test_loss         bool
+	test_delay_1      bool
+	test_delay_2      bool
+	status            int
+}
+
 var count_recive int
 
 func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
 	fmt.Println("Тест пропускной способности начался")
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-
 	if err != nil {
 		db.Close()
 		fmt.Println(" -!! Error !!-")
@@ -316,7 +360,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		fmt.Println(" ----=====----")
 		return
 	}
-	defer db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
+	db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
@@ -525,6 +569,194 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 	db.Close()
+}
+
+func TestReal(id int, net_interface_name string, host_zabbix,port_zabbix) {
+	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	if err != nil {
+		db.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
+	}
+	db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 2, id) // Тест выполняется
+	ifi, err := net.InterfaceByName(net_interface_name)
+	if err != nil {
+		db.Close()
+		log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
+		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		return
+	}
+
+	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay_2s FROM test_sla_real WHERE id=?", id)
+	if err != nil {
+		db.Close()
+		row.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
+	}
+	fmt.Println(row)
+	defer row.Close()
+	row.Next()
+	test := new(testReal)
+	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.clock, &test.count, &test.node_zabbix, &test.test_delay, &test.test_delay_jitter, &test.test_loss, &test.test_delay_1, &test.test_delay_2)
+	if err != nil {
+		db.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
+	}
+
+	var ipsrcstr string
+	var ipdst_1sfpsla_str string
+	var ipdst_2sfpsla_str string
+
+	row, err = db.Query("SELECT server_IP FROM global_config")
+	if err != nil {
+		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+		row.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
+	}
+	for row.Next() {
+		err = row.Scan(&ipsrcstr)
+		if err != nil {
+
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+	}
+	var id_sfp1, id_sfp2 int
+	row, err = db.Query("SELECT module_first, module_second FROM test_sla_real WHERE id=?", id)
+	if err != nil {
+		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+		row.Close()
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
+	}
+	for row.Next() {
+		err = row.Scan(&id_sfp1, &id_sfp2)
+		if err != nil {
+
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
+		if err != nil {
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			row_ip.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+		defer row_ip.Close()
+		for row_ip.Next() {
+			err = row_ip.Scan(&ipdst_1sfpsla_str)
+			if err != nil {
+
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+				row.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
+			}
+		}
+		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
+		if err != nil {
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+		for row_ip.Next() {
+			err = row_ip.Scan(&ipdst_2sfpsla_str)
+			if err != nil {
+
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+				row.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
+			}
+		}
+	}
+
+	db.Close()
+
+	c, err := raw.ListenPacket(ifi, etherType, nil)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+		db.Close()
+
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return
+	}
+
+	addr := &raw.Addr{
+		HardwareAddr: ethernet.Broadcast,
+	}
+	ipsrc := net.ParseIP(ipsrcstr)
+	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
+	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
+
+	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size)
+	t := time.NewTicker(time.Duration(test.clock) * time.Millisecond)
+	var circ bool
+	if test.count == 0 {
+		circ = true
+	} else {
+		circ = false
+	}
+
+	counter := test.count
+	for range t.C {
+		if !circ {
+			counter--
+			if counter <= 0 {
+				break
+			}
+		}
+		go func() {
+			c.WriteTo(b, addr)
+		}()
+
+		go receiveMessages(id, c, test.node_zabbix, ifi.MTU,)
+		select {}
+
+	}
+
 }
 
 func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int) []byte {
@@ -794,7 +1026,8 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
-func receiveMessages(c net.PacketConn, mtu int) {
+*/
+func receiveMessages(id int, c net.PacketConn, node_zabbix string, host_zabbix string, port_zabbix int,mtu int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 
@@ -849,17 +1082,34 @@ func receiveMessages(c net.PacketConn, mtu int) {
 				numberR += uint32(f.Payload[49-ind]) << (8 * ind)
 			}
 
-			zabbix_delay("SFP-SLA_4401", markerSFP12-markerSFP11)
-			zabbix_jitter("SFP-SLA_4401", getJitter(markerSFP12-markerSFP11))
-			zabbix_error("SFP-SLA_4401", float32(numberR-numberCounter)/float32(numberR))
+			delay := zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix,port_zabbix)
 
+			jitter := zabbix_jitter(node_zabbix, getJitter(markerSFP12-markerSFP11), host_zabbix,port_zabbix)
+			loss := zabbix_error(node_zabbix, float32(numberR-numberCounter)/float32(numberR), host_zabbix,port_zabbix)
+
+			delay1 := delay
+			delay2 := delay
+
+			db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+			if err != nil {
+				db.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
+			}
+			db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?)", time.Now().Unix(), id, delay, delay1, delay2, jitter, loss)
+
+			db.Close()
+
+			break
 		} else {
-			fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
+			//	fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
 
 		}
 	}
 }
-*/
+
 var mass_solve []int64
 
 func getJitter(in_solve int64) float32 {
@@ -922,7 +1172,7 @@ func zabbixHello(host string, defaultHost string, defaultPort int) {
 	}
 }
 
-func zabbix_delay(host string, delay int64, defaultHost string, defaultPort int) {
+func zabbix_delay(host string, delay int64, defaultHost string, defaultPort int) float32 {
 
 	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
 	//delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
@@ -937,10 +1187,10 @@ func zabbix_delay(host string, delay int64, defaultHost string, defaultPort int)
 	// Send packet to zabbix
 	z := NewSender(defaultHost, defaultPort)
 	z.Send(packet)
-
+	return delfloat
 }
 
-func zabbix_jitter(host string, jitter float32, defaultHost string, defaultPort int) {
+func zabbix_jitter(host string, jitter float32, defaultHost string, defaultPort int) float32 {
 
 	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
 	if jitter != 0 {
@@ -955,10 +1205,10 @@ func zabbix_jitter(host string, jitter float32, defaultHost string, defaultPort 
 	// Send packet to zabbix
 	z := NewSender(defaultHost, defaultPort)
 	z.Send(packet)
-
+	return jitter
 }
 
-func zabbix_error(host string, err float32, defaultHost string, defaultPort int) {
+func zabbix_error(host string, err float32, defaultHost string, defaultPort int) float32 {
 
 	var metrics []*Metric
 	metrics = append(metrics, NewMetric(host, "error_probability", fmt.Sprint(err), time.Now().Unix()))
@@ -969,7 +1219,7 @@ func zabbix_error(host string, err float32, defaultHost string, defaultPort int)
 	// Send packet to zabbix
 	z := NewSender(defaultHost, defaultPort)
 	z.Send(packet)
-
+	return err
 }
 
 /*import (
