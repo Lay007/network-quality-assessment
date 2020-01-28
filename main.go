@@ -269,7 +269,7 @@ func main() {
 				fmt.Println(" ----=====----")
 				continue
 			}
-			TestReal(id, conf.net_interface_name, conf.zabbix_server_name, 10051)
+			go TestReal(id, conf.net_interface_name, conf.zabbix_server_name, 10051)
 		}
 		row_test_real.Close()
 
