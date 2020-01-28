@@ -245,7 +245,7 @@ func main() {
 		}
 
 		// проверка тестов SLA в реальном времени
-		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE (status=1 OR status=2)")
+		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE status=1")
 		defer row_test_real.Close()
 		if err != nil {
 			db.Close()
