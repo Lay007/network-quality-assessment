@@ -589,7 +589,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string,port_zabbix 
 		return
 	}
 
-	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay_2s FROM test_sla_real WHERE id=?", id)
+	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay_2 FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()
 		row.Close()
