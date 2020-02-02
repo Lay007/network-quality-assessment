@@ -1097,7 +1097,7 @@ func receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_za
 				fmt.Println(" ----=====----")
 				return
 			}
-			rezul, err := db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?)", time.Now().Unix(), id, int(delay), int(delay1), int(delay2), int(jitter), loss)
+			rezul, err := db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?)", time.Now().Format(time.RFC3339), id, int(delay), int(delay1), int(delay2), int(jitter), loss)
 			if err != nil {
 				db.Close()
 				fmt.Println(" -!! Error !!-")
