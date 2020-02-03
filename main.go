@@ -318,15 +318,15 @@ type testThroughput struct {
 	count         int
 	ch_type       int
 	max_loss      int
-	rez_64        int
-	rez_128       int
-	rez_256       int
-	rez_512       int
-	rez_1024      int
-	rez_1280      int
-	rez_1518      int
-	rez_4096      int
-	rez_9000      int
+	rez_64        float32
+	rez_128       float32
+	rez_256       float32
+	rez_512       float32
+	rez_1024      float32
+	rez_1280      float32
+	rez_1518      float32
+	rez_4096      float32
+	rez_9000      float32
 	status        int
 }
 
@@ -536,25 +536,32 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 64)
-	test.rez_64 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	count_rez, per := testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 128)
-	test.rez_128 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 256)
-	test.rez_256 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 512)
-	test.rez_512 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1024)
-	test.rez_1024 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	test.rez_1024 = (float32)(1024.0 * 8.0 * (float32)(count_rez) / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280)
-	test.rez_1280 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	test.rez_1280 = (float32)(1280.0 * 8.0 * (float32)(count_rez) / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1500)
-	test.rez_1518 = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	test.rez_1518 = (float32)(1518.0 * 8.0 * (float32)(count_rez) / (float32)(per))
 
 	test.status = 3
 
@@ -808,9 +815,10 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 
 var min_period = time.Duration(15) * time.Microsecond
 
-func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int) int {
+func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int) (int, int64) {
 	time_to_Sleep := time.Duration(cnt) * min_period * 2
 	gen_start := time.Now()
+	var rez_time int64
 	go func() {
 		//		for range t.C {
 		for {
@@ -819,12 +827,13 @@ func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str s
 			//for i := 0; i < 20000; i++ {
 			//	i++
 			//}
-			c.WriteTo(b, addr)			 
+			c.WriteTo(b, addr)
 			if cnt <= 0 {
 				break
 			}
 		}
-		fmt.Println(time.Since(gen_start))
+
+		rez_time = (int64)(time.Since(gen_start))
 	}()
 
 	quit := make(chan int)
@@ -834,7 +843,7 @@ func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str s
 	rez_count := count_recive
 	fmt.Println("rez_count= ", rez_count)
 	quit <- 1
-	return rez_count
+	return rez_count, rez_time
 }
 
 func sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
