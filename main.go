@@ -746,7 +746,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	} else {
 		circ = false
 	}
-
+	check_count := 100
 	counter := test.count
 	for range t.C {
 		if !circ {
@@ -761,6 +761,20 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 		go receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU)
 
+		check_count--
+		if check_count < 0 {
+			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+			if err == nil {
+				rez_f, _ := db.Query("SELECT id FROM test_sla_real WHERE id=?", id)
+				if !rez_f.Next() {
+					rez_f.Close()
+					break
+				}
+				rez_f.Close()
+			}
+			db.Close()
+			check_count = 100
+		}
 	}
 
 }
