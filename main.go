@@ -765,7 +765,12 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		if check_count < 0 {
 			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err == nil {
-				rez_f, _ := db.Query("SELECT id FROM test_sla_real WHERE id=?", id)
+				rez_f, er := db.Query("SELECT id FROM test_sla_real WHERE id=?", id)
+				if er!=nil {
+					rez_f.Close()
+					break
+				}
+				
 				if !rez_f.Next() {
 					rez_f.Close()
 					break
