@@ -28,6 +28,8 @@ func NewMetric(host, key, value string, clock ...int64) *Metric {
 	return m
 }
 
+
+
 // Packet class.
 type Packet struct {
 	Request string    `json:"request"`
