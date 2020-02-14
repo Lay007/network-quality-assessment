@@ -461,31 +461,31 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 64)
 	count_rez, per := testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
-	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) / (float32)(per))
+	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000000 / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 128)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
-	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) / (float32)(per))
+	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000000 / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 256)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
-	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) / (float32)(per))
+	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000000000 / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 512)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
-	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) / (float32)(per))
+	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) * 1000000000 / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1024)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
-	test.rez_1024 = (float32)(1024.0 * 8.0 * (float32)(count_rez) / (float32)(per))
+	test.rez_1024 = (float32)(1024.0 * 8.0 * (float32)(count_rez) * 1000000000 / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
-	test.rez_1280 = (float32)(1280.0 * 8.0 * (float32)(count_rez) / (float32)(per))
+	test.rez_1280 = (float32)(1280.0 * 8.0 * (float32)(count_rez) * 1000000000 / (float32)(per))
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1500)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
-	test.rez_1518 = (float32)(1518.0 * 8.0 * (float32)(count_rez) / (float32)(per))
+	test.rez_1518 = (float32)(1518.0 * 8.0 * (float32)(count_rez) * 1000000000 / (float32)(per))
 
 	test.status = 3
 
