@@ -762,22 +762,25 @@ func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str s
 	time_to_Sleep := time.Duration(cnt) * min_period * 2
 	gen_start := time.Now()
 	var rez_time int64
-	go func() {
-		//		for range t.C {
-		for {
-			//	time.Sleep(12*time.Microsecond)
-			cnt--
-			//for i := 0; i < 20000; i++ {
-			//	i++
-			//}
-			c.WriteTo(b, addr)
-			if cnt <= 0 {
-				break
+	for i := 0; i < 100; i++ {
+		go func() {
+			//
+			//		for range t.C {
+			for {
+				//	time.Sleep(12*time.Microsecond)
+				cnt--
+				//for i := 0; i < 20000; i++ {
+				//	i++
+				//}
+				c.WriteTo(b, addr)
+				if cnt <= 0 {
+					break
+				}
 			}
-		}
 
-		rez_time = (int64)(time.Since(gen_start))
-	}()
+			rez_time = (int64)(time.Since(gen_start))
+		}()
+	}
 
 	quit := make(chan int)
 	go receivePackets(c, mtu, ipdst_1sfpsla_str, quit)
