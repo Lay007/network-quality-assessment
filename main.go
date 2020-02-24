@@ -458,32 +458,32 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
-
-	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 64)
+	var number uint32
+	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 64, number)
 	count_rez, per := testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 128)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 128, number)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 256)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 256, number)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 512)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 512, number)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1024)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1024, number)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1024 = (float32)(1024.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280, number)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1280 = (float32)(1280.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1500)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1500, number)
 	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1518 = (float32)(1518.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
@@ -643,6 +643,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 
 	db.Close()
+	var test_this testSLA
 
 	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
@@ -662,7 +663,9 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
-	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size)
+	var number uint32
+	number = 1
+	//b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size, number)
 	t := time.NewTicker(time.Duration(test.clock) * time.Millisecond)
 	var circ bool
 	if test.count == 0 {
@@ -680,10 +683,12 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			}
 		}
 		go func() {
+			number++
+			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size, number)
 			c.WriteTo(b, addr)
 		}()
 
-		go receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU)
+		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU)
 
 		check_count--
 		if check_count < 0 {
@@ -708,7 +713,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 }
 
-func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int) []byte {
+func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int, number uint32) []byte {
 	ip := iphdr{
 		vhl:   0x45,
 		tos:   0,
@@ -723,8 +728,8 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 		id: 0xFC,
 	}
 	copy(sfpdat.dst[:], ipdst2.To4())
-	numberTx++
-	sfpdat.number = numberTx
+
+	sfpdat.number = number
 	//ip.iplen = uint16(20 + 26 + 4)
 	ip.iplen = uint16(size)
 	ip.checksum()
@@ -981,7 +986,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int) {
+func (test testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 
@@ -1038,11 +1043,11 @@ func receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_za
 
 			delay := zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
 
-			jitter := zabbix_jitter(node_zabbix, getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
+			jitter := zabbix_jitter(node_zabbix, test.getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
 			loss := zabbix_error(node_zabbix, float32(numberR-numberCounter)/float32(numberR), host_zabbix, port_zabbix)
 
-			delay1 := delay
-			delay2 := delay
+			delay1 := zabbix_delay_to(node_zabbix, markerSFP2-markerSFP11, host_zabbix, port_zabbix)
+			delay2 := zabbix_delay_un(node_zabbix, markerSFP12-markerSFP2, host_zabbix, port_zabbix)
 
 			db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err != nil {
@@ -1073,32 +1078,32 @@ func receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_za
 	}
 }
 
-var mass_solve []int64
+//var mass_solve []int64
 
-func getJitter(in_solve int64) float32 {
+func (test testSLA) getJitter(in_solve int64) float32 {
 	var jitter, mean float32
 	var size_s int
 	var max, min int64
 
 	size_s = 100
-	mass_solve = append(mass_solve, in_solve)
-	if len(mass_solve) < (size_s + 1) {
+	test.delay_solve = append(test.delay_solve, in_solve)
+	if len(test.delay_solve) < (size_s + 1) {
 		return 0
 	}
-	mass_solve = mass_solve[1:(size_s + 1)]
+	test.delay_solve = test.delay_solve[1:(size_s + 1)]
 
-	max = mass_solve[0]
+	max = test.delay_solve[0]
 	min = max
-	mean = float32(mass_solve[0]) / float32(size_s)
+	mean = float32(test.delay_solve[0]) / float32(size_s)
 
 	for ind := 1; ind < size_s; ind++ {
-		if max < mass_solve[ind] {
-			max = mass_solve[ind]
+		if max < test.delay_solve[ind] {
+			max = test.delay_solve[ind]
 		}
-		if min > mass_solve[ind] {
-			min = mass_solve[ind]
+		if min > test.delay_solve[ind] {
+			min = test.delay_solve[ind]
 		}
-		mean = mean + (float32(mass_solve[ind]) / float32(size_s))
+		mean = mean + (float32(test.delay_solve[ind]) / float32(size_s))
 	}
 	if (float32(max) - mean) > (mean - float32(min)) {
 		jitter = float32(max) - mean
@@ -1107,7 +1112,7 @@ func getJitter(in_solve int64) float32 {
 	}
 
 	fmt.Printf(" --== Jitter debug ==-- \n")
-	fmt.Printf(" --== Slice: %x \n", mass_solve)
+	fmt.Printf(" --== Slice: %x \n", test.delay_solve)
 	fmt.Printf(" --== Max = %x \n", max)
 	fmt.Printf(" --== Min = %x \n", min)
 	fmt.Printf(" --== Mean = %f \n", mean)
@@ -1143,6 +1148,42 @@ func zabbix_delay(host string, delay int64, defaultHost string, defaultPort int)
 	delfloat = float32(delay) * 1000000 / float32(math.Pow(2, 32))
 	var metrics []*Metric
 	metrics = append(metrics, NewMetric(host, "delay", fmt.Sprint(delfloat), time.Now().Unix()))
+
+	// Create instance of Packet class
+	packet := NewPacket(metrics)
+	//fmt.Println(packet);
+	// Send packet to zabbix
+	z := NewSender(defaultHost, defaultPort)
+	z.Send(packet)
+	return delfloat
+}
+
+func zabbix_delay_to(host string, delay int64, defaultHost string, defaultPort int) float32 {
+
+	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
+	//delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
+	var delfloat float32
+	delfloat = float32(delay) * 1000000 / float32(math.Pow(2, 32))
+	var metrics []*Metric
+	metrics = append(metrics, NewMetric(host, "delay_SFP1_SFP2", fmt.Sprint(delfloat), time.Now().Unix()))
+
+	// Create instance of Packet class
+	packet := NewPacket(metrics)
+	//fmt.Println(packet);
+	// Send packet to zabbix
+	z := NewSender(defaultHost, defaultPort)
+	z.Send(packet)
+	return delfloat
+}
+
+func zabbix_delay_un(host string, delay int64, defaultHost string, defaultPort int) float32 {
+
+	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
+	//delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
+	var delfloat float32
+	delfloat = float32(delay) * 1000000 / float32(math.Pow(2, 32))
+	var metrics []*Metric
+	metrics = append(metrics, NewMetric(host, "delay_SFP2_SFP1", fmt.Sprint(delfloat), time.Now().Unix()))
 
 	// Create instance of Packet class
 	packet := NewPacket(metrics)

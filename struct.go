@@ -1,5 +1,10 @@
 package main
 
+type testSLA struct {
+	delay_solve []int64
+	numbers     []int64
+}
+
 type iphdr struct {
 	vhl   uint8
 	tos   uint8
