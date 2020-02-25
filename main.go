@@ -106,7 +106,8 @@ func main() {
 
 	// Оценка выполнения тестов
 	db.Exec("UPDATE test_throughput SET status=4 WHERE status=2")
-
+	db.Exec("UPDATE test_sla_real SET status=1 WHERE status=2")
+	
 	db.Close()
 
 	t := time.NewTicker(5 * time.Second) //проверка один раз в 30 секунд
@@ -206,7 +207,7 @@ func main() {
 		}
 
 		// проверка тестов SLA в реальном времени
-		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE status=1 OR status=2")
+		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE status=1")
 		defer row_test_real.Close()
 		if err != nil {
 			db.Close()
