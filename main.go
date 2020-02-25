@@ -219,7 +219,7 @@ func main() {
 
 		db.Close()
 
-		for row_test_real.Next() {
+		for row_test_real.Next() {			
 			var id int
 			err = row_test_real.Scan(&id)
 			if err != nil {
@@ -230,6 +230,7 @@ func main() {
 				fmt.Println(" ----=====----")
 				continue
 			}
+			fmt.Println("-== Test id  = ",id)
 			go TestReal(id, conf.net_interface_name, conf.zabbix_server_name, 10051)
 		}
 		row_test_real.Close()
