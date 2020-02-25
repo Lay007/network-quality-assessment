@@ -986,7 +986,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int) {
+func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 
@@ -1043,7 +1043,7 @@ func (test testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str 
 
 			delay := zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
 
-			jitter := zabbix_jitter(node_zabbix, test.getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
+			jitter := zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
 			loss := zabbix_error(node_zabbix, float32(numberR-numberCounter)/float32(numberR), host_zabbix, port_zabbix)
 
 			delay1 := zabbix_delay_to(node_zabbix, markerSFP2-markerSFP11, host_zabbix, port_zabbix)
@@ -1080,30 +1080,30 @@ func (test testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str 
 
 //var mass_solve []int64
 
-func (test testSLA) getJitter(in_solve int64) float32 {
+func (test *testSLA) getJitter(in_solve int64) float32 {
 	var jitter, mean float32
 	var size_s int
 	var max, min int64
 
 	size_s = 100
-	test.delay_solve = append(test.delay_solve, in_solve)
-	if len(test.delay_solve) < (size_s + 1) {
+	(*test).delay_solve = append((*test).delay_solve, in_solve)
+	if len((*test).delay_solve) < (size_s + 1) {
 		return 0
 	}
-	test.delay_solve = test.delay_solve[1:(size_s + 1)]
+	test.delay_solve = (*test).delay_solve[1:(size_s + 1)]
 
-	max = test.delay_solve[0]
+	max = (*test).delay_solve[0]
 	min = max
-	mean = float32(test.delay_solve[0]) / float32(size_s)
+	mean = float32((*test).delay_solve[0]) / float32(size_s)
 
 	for ind := 1; ind < size_s; ind++ {
-		if max < test.delay_solve[ind] {
-			max = test.delay_solve[ind]
+		if max < (*test).delay_solve[ind] {
+			max = (*test).delay_solve[ind]
 		}
-		if min > test.delay_solve[ind] {
-			min = test.delay_solve[ind]
+		if min > (*test).delay_solve[ind] {
+			min = (*test).delay_solve[ind]
 		}
-		mean = mean + (float32(test.delay_solve[ind]) / float32(size_s))
+		mean = mean + (float32((*test).delay_solve[ind]) / float32(size_s))
 	}
 	if (float32(max) - mean) > (mean - float32(min)) {
 		jitter = float32(max) - mean
@@ -1112,7 +1112,7 @@ func (test testSLA) getJitter(in_solve int64) float32 {
 	}
 
 	fmt.Printf(" --== Jitter debug ==-- \n")
-	fmt.Printf(" --== Slice: %x \n", test.delay_solve)
+	fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
 	fmt.Printf(" --== Max = %x \n", max)
 	fmt.Printf(" --== Min = %x \n", min)
 	fmt.Printf(" --== Mean = %f \n", mean)
