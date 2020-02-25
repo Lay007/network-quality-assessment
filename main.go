@@ -526,7 +526,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		return
 	}
 
-	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay_2 FROM test_sla_real WHERE id=?", id)
+	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()
 		row.Close()
@@ -539,7 +539,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	defer row.Close()
 	row.Next()
 	test := new(testReal)
-	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.clock, &test.count, &test.node_zabbix, &test.test_delay, &test.test_delay_jitter, &test.test_loss, &test.test_delay_1, &test.test_delay_2)
+	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.clock, &test.count, &test.node_zabbix, &test.test_delay, &test.test_delay_jitter, &test.test_loss, &test.test_delay_1, &test.test_delay_1_jitter)
 	if err != nil {
 		db.Close()
 		fmt.Println(" -!! Error !!-")
@@ -997,7 +997,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int) {
+func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 
@@ -1053,14 +1053,27 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				numberR += uint32(f.Payload[49-ind]) << (8 * ind)
 			}
 
-			delay := zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
+			var delay, delay1, delay2, jitter, jitter1, jitter2, loss float32
 
-			jitter := zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
-			loss := zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
+			if test_id.test_delay == true {
+				delay = zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
+				if test_id.test_delay_jitter == true {
+					jitter = zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
+				}
+			}
+			if test_id.test_loss == true {
+				loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
+			}
+			 
+			if test_id.test_delay_1==true{
+			delay1 = zabbix_delay_to(node_zabbix, (markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff), host_zabbix, port_zabbix)
+			delay2 = zabbix_delay_un(node_zabbix, (markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff), host_zabbix, port_zabbix)
+			if test_id.test_delay_1_jitter==true{
+				jitter1= zabbix_jitter_to(node_zabbix, (*test).getJitterto((markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff)), host_zabbix, port_zabbix)
+				jitter2= zabbix_jitter_un(node_zabbix, (*test).getJitterun((markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff)), host_zabbix, port_zabbix)
 
-			delay1 := zabbix_delay_to(node_zabbix, (markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff), host_zabbix, port_zabbix)
-			delay2 := zabbix_delay_un(node_zabbix, (markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff), host_zabbix, port_zabbix)
-
+			}
+			}
 			db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err != nil {
 				db.Close()
@@ -1131,6 +1144,72 @@ func (test *testSLA) getJitter(in_solve int64) float32 {
 	fmt.Printf(" --== Jitter = %f \n", jitter)
 	fmt.Printf(" --== End Jitter debug ==-- \n")
 
+	return jitter
+}
+
+func (test *testSLA) getJitterto(in_solve int64) float32 {
+	var jitter, mean float32
+	var size_s int
+	var max, min int64
+
+	size_s = 100
+	(*test).delay_solve_to = append((*test).delay_solve_to, in_solve)
+	if len((*test).delay_solve_to) < (size_s + 1) {
+		return 0
+	}
+	test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
+
+	max = (*test).delay_solve_to[0]
+	min = max
+	mean = float32((*test).delay_solve_to[0]) / float32(size_s)
+
+	for ind := 1; ind < size_s; ind++ {
+		if max < (*test).delay_solve_to[ind] {
+			max = (*test).delay_solve_to[ind]
+		}
+		if min > (*test).delay_solve_to[ind] {
+			min = (*test).delay_solve_to[ind]
+		}
+		mean = mean + (float32((*test).delay_solve_to[ind]) / float32(size_s))
+	}
+	if (float32(max) - mean) > (mean - float32(min)) {
+		jitter = float32(max) - mean
+	} else {
+		jitter = mean - float32(min)
+	}
+	return jitter
+}
+
+func (test *testSLA) getJitterun(in_solve int64) float32 {
+	var jitter, mean float32
+	var size_s int
+	var max, min int64
+
+	size_s = 100
+	(*test).delay_solve_un = append((*test).delay_solve_un, in_solve)
+	if len((*test).delay_solve_un) < (size_s + 1) {
+		return 0
+	}
+	test.delay_solve_un = (*test).delay_solve_un[1:(size_s + 1)]
+
+	max = (*test).delay_solve_un[0]
+	min = max
+	mean = float32((*test).delay_solve_un[0]) / float32(size_s)
+
+	for ind := 1; ind < size_s; ind++ {
+		if max < (*test).delay_solve_un[ind] {
+			max = (*test).delay_solve_un[ind]
+		}
+		if min > (*test).delay_solve_un[ind] {
+			min = (*test).delay_solve_un[ind]
+		}
+		mean = mean + (float32((*test).delay_solve_un[ind]) / float32(size_s))
+	}
+	if (float32(max) - mean) > (mean - float32(min)) {
+		jitter = float32(max) - mean
+	} else {
+		jitter = mean - float32(min)
+	}
 	return jitter
 }
 
@@ -1219,6 +1298,34 @@ func zabbix_jitter(host string, jitter float32, defaultHost string, defaultPort 
 	packet := NewPacket(metrics)
 	//fmt.Println(packet);
 	// Send packet to zabbix
+	z := NewSender(defaultHost, defaultPort)
+	z.Send(packet)
+	return jitter
+}
+
+func zabbix_jitter_to(host string, jitter float32, defaultHost string, defaultPort int) float32 {
+
+	
+	if jitter != 0 {
+		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
+	}
+	var metrics []*Metric
+	metrics = append(metrics, NewMetric(host, "jitter_delay_SFP1_SFP2", fmt.Sprint(jitter), time.Now().Unix()))
+	packet := NewPacket(metrics)
+	z := NewSender(defaultHost, defaultPort)
+	z.Send(packet)
+	return jitter
+}
+
+func zabbix_jitter_un(host string, jitter float32, defaultHost string, defaultPort int) float32 {
+
+	
+	if jitter != 0 {
+		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
+	}
+	var metrics []*Metric
+	metrics = append(metrics, NewMetric(host, "jitter_delay_SFP2_SFP1", fmt.Sprint(jitter), time.Now().Unix()))
+	packet := NewPacket(metrics)
 	z := NewSender(defaultHost, defaultPort)
 	z.Send(packet)
 	return jitter

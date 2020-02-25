@@ -1,7 +1,11 @@
 package main
 
+import "time"
+
 type testSLA struct {
 	delay_solve []int64
+	delay_solve_to []int64
+	delay_solve_un []int64
 	number      uint32
 }
 
@@ -80,19 +84,20 @@ type testThroughput struct {
 }
 
 type testReal struct {
-	id                int
-	test_type         int
-	name              string
-	module_first      int
-	module_second     int
-	block_size        int
-	clock             int
-	count             int
-	node_zabbix       string
-	test_delay        bool
-	test_delay_jitter bool
-	test_loss         bool
-	test_delay_1      bool
-	test_delay_2      bool
-	status            int
+	id                  int
+	test_type           int
+	name                string
+	module_first        int
+	module_second       int
+	block_size          int
+	clock               int
+	count               int
+	node_zabbix         string
+	test_delay          bool
+	test_delay_jitter   bool
+	test_loss           bool
+	test_delay_1        bool
+	test_delay_1_jitter bool
+	datetime            string
+	status              int
 }
