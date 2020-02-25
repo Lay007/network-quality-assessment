@@ -39,8 +39,6 @@ const (
 //	ipdst_2sfpsla_str = "10.0.10.175"
 )
 
-var numberTx, numberCounter uint32
-
 func checksum(buf []byte) uint16 {
 	sum := uint32(0)
 
@@ -68,10 +66,10 @@ func checksum(buf []byte) uint16 {
 }
 
 func (h *iphdr) checksum() {
-	h.csum = 0
+	(*h).csum = 0
 	var b bytes.Buffer
-	binary.Write(&b, binary.BigEndian, h)
-	h.csum = checksum(b.Bytes())
+	binary.Write(&b, binary.BigEndian, *h)
+	(*h).csum = checksum(b.Bytes())
 }
 
 func main() {
@@ -459,32 +457,38 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		HardwareAddr: ethernet.Broadcast,
 	}
 	var number uint32
-	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 64, number)
-	count_rez, per := testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	var test_type uint16
+	test_type = 0xA000 + (uint16(id) & 0x1FFF)
+
+	var test_c testThr
+	test_c.numberCounter = uint32(test.count)
+
+	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 64, number, test_type)
+	count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 128, number)
-	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 128, number, test_type)
+	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 256, number)
-	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 256, number, test_type)
+	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 512, number)
-	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 512, number, test_type)
+	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1024, number)
-	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1024, number, test_type)
+	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1024 = (float32)(1024.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280, number)
-	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280, number, test_type)
+	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1280 = (float32)(1280.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1500, number)
-	count_rez, per = testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1500, number, test_type)
+	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1518 = (float32)(1518.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
 	test.status = 3
@@ -645,6 +649,9 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	db.Close()
 	var test_this testSLA
 
+	var test_type uint16
+	test_type = 0x2000 + (uint16(id) & 0x1FFF)
+
 	c, err := raw.ListenPacket(ifi, etherType, nil)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -664,6 +671,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
 	var number uint32
+
 	number = 1
 	//b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size, number)
 	t := time.NewTicker(time.Duration(test.clock) * time.Millisecond)
@@ -684,7 +692,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}
 		go func() {
 			number++
-			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size, number)
+			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size, number, test_type)
 			c.WriteTo(b, addr)
 		}()
 
@@ -713,7 +721,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 }
 
-func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int, number uint32) []byte {
+func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int, number uint32, test_type uint16) []byte {
 	ip := iphdr{
 		vhl:   0x45,
 		tos:   0,
@@ -730,6 +738,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 	copy(sfpdat.dst[:], ipdst2.To4())
 
 	sfpdat.number = number
+	sfpdat.test_type = test_type
 	//ip.iplen = uint16(20 + 26 + 4)
 	ip.iplen = uint16(size)
 	ip.checksum()
@@ -763,7 +772,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 
 var min_period = time.Duration(15) * time.Microsecond
 
-func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int) (int, int64) {
+func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int) (int, int64) {
 	time_to_Sleep := time.Duration(cnt) * min_period * 2
 	gen_start := time.Now()
 	var rez_time int64
@@ -788,7 +797,7 @@ func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str s
 	}
 
 	quit := make(chan int)
-	go receivePackets(c, mtu, ipdst_1sfpsla_str, quit)
+	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit)
 	time.Sleep(time_to_Sleep)
 
 	rez_count := count_recive
@@ -797,7 +806,7 @@ func testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str s
 	return rez_count, rez_time
 }
 
-func sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
+func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
 
 	//	ipsrc := net.ParseIP(ipsrcstr)
 	//	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
@@ -818,8 +827,8 @@ func sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1
 		id: 0xFC,
 	}
 	copy(sfpdat.dst[:], ipdst2.To4())
-	numberTx++
-	sfpdat.number = numberTx
+	(*test).numberTx++
+	sfpdat.number = test.numberTx
 	//ip.iplen = uint16(20 + 26 + 4)
 	ip.iplen = uint16(size)
 	ip.checksum()
@@ -874,7 +883,7 @@ func sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1
 }
 
 //func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, counter int) {
-func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit chan int) { //, counter chan<- int) {
+func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit chan int) { //, counter chan<- int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 	var count int
@@ -904,7 +913,7 @@ func receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit ch
 			count++
 			//	fmt.Printf("-->>Detect")
 			//	counter <-count
-			count_recive = count
+			(*test).numberCounter = uint32(count)
 		}
 	}
 }
@@ -1008,7 +1017,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) {
-			numberCounter++
+
+			(*test).number++
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
 			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
@@ -1044,10 +1054,10 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			delay := zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
 
 			jitter := zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
-			loss := zabbix_error(node_zabbix, float32(numberR-numberCounter)/float32(numberR), host_zabbix, port_zabbix)
+			loss := zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
 
-			delay1 := zabbix_delay_to(node_zabbix, markerSFP2-markerSFP11, host_zabbix, port_zabbix)
-			delay2 := zabbix_delay_un(node_zabbix, markerSFP12-markerSFP2, host_zabbix, port_zabbix)
+			delay1 := zabbix_delay_to(node_zabbix, (markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff), host_zabbix, port_zabbix)
+			delay2 := zabbix_delay_un(node_zabbix, (markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff), host_zabbix, port_zabbix)
 
 			db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err != nil {
