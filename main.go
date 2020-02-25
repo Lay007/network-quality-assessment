@@ -206,7 +206,7 @@ func main() {
 		}
 
 		// проверка тестов SLA в реальном времени
-		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE status=1")
+		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE status=1 OR status=2")
 		defer row_test_real.Close()
 		if err != nil {
 			db.Close()
@@ -800,10 +800,10 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit)
 	time.Sleep(time_to_Sleep)
 
-	rez_count := count_recive
+	rez_count := test.numberCounter
 	fmt.Println("rez_count= ", rez_count)
 	quit <- 1
-	return rez_count, rez_time
+	return int(rez_count), rez_time
 }
 
 func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
