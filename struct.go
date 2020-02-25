@@ -43,8 +43,11 @@ type global_config struct {
 	server_ip          string
 	net_interface_name string
 	zabbix_server_name string
+	zabbix_server_port int
 	vlan               int
 	vlan_number        int
+	QinQ               int
+	QinQ_number        int
 }
 type module_sfp struct {
 	id          int

@@ -107,7 +107,7 @@ func main() {
 	// Оценка выполнения тестов
 	db.Exec("UPDATE test_throughput SET status=4 WHERE status=2")
 	db.Exec("UPDATE test_sla_real SET status=1 WHERE status=2")
-	
+
 	db.Close()
 
 	t := time.NewTicker(5 * time.Second) //проверка один раз в 30 секунд
@@ -133,7 +133,7 @@ func main() {
 		}
 		row_gc.Next()
 		conf := new(global_config)
-		err = row_gc.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.vlan, &conf.vlan_number)
+		err = row_gc.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.zabbix_server_port, &conf.vlan, &conf.vlan_number, &conf.QinQ, &conf.QinQ_number)
 		if err != nil {
 			db.Close()
 
@@ -220,7 +220,7 @@ func main() {
 
 		db.Close()
 
-		for row_test_real.Next() {			
+		for row_test_real.Next() {
 			var id int
 			err = row_test_real.Scan(&id)
 			if err != nil {
@@ -231,7 +231,7 @@ func main() {
 				fmt.Println(" ----=====----")
 				continue
 			}
-			fmt.Println("-== Test id  = ",id)
+			fmt.Println("-== Test id  = ", id)
 			go TestReal(id, conf.net_interface_name, conf.zabbix_server_name, 10051)
 		}
 		row_test_real.Close()
