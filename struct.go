@@ -1,12 +1,12 @@
 package main
 
-import "time"
+//import "time"
 
 type testSLA struct {
-	delay_solve []int64
+	delay_solve    []int64
 	delay_solve_to []int64
 	delay_solve_un []int64
-	number      uint32
+	number         uint32
 }
 
 type testThr struct {

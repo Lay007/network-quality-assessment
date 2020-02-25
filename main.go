@@ -698,7 +698,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			c.WriteTo(b, addr)
 		}()
 
-		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU)
+		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test)
 
 		check_count--
 		if check_count < 0 {
@@ -1064,15 +1064,15 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			if test_id.test_loss == true {
 				loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
 			}
-			 
-			if test_id.test_delay_1==true{
-			delay1 = zabbix_delay_to(node_zabbix, (markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff), host_zabbix, port_zabbix)
-			delay2 = zabbix_delay_un(node_zabbix, (markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff), host_zabbix, port_zabbix)
-			if test_id.test_delay_1_jitter==true{
-				jitter1= zabbix_jitter_to(node_zabbix, (*test).getJitterto((markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff)), host_zabbix, port_zabbix)
-				jitter2= zabbix_jitter_un(node_zabbix, (*test).getJitterun((markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff)), host_zabbix, port_zabbix)
 
-			}
+			if test_id.test_delay_1 == true {
+				delay1 = zabbix_delay_to(node_zabbix, (markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff), host_zabbix, port_zabbix)
+				delay2 = zabbix_delay_un(node_zabbix, (markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff), host_zabbix, port_zabbix)
+				if test_id.test_delay_1_jitter == true {
+					jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto((markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff)), host_zabbix, port_zabbix)
+					jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun((markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff)), host_zabbix, port_zabbix)
+
+				}
 			}
 			db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err != nil {
@@ -1084,7 +1084,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 			var dt = time.Now()
 			dt.Format(time.RFC3339)
-			rezul, err := db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?)", dt, id, int(delay), int(delay1), int(delay2), int(jitter), loss)
+			rezul, err := db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, jitter, jitter1, jitter2, loss)
 			if err != nil {
 				db.Close()
 				fmt.Println(" -!! Error !!-")
@@ -1305,7 +1305,6 @@ func zabbix_jitter(host string, jitter float32, defaultHost string, defaultPort 
 
 func zabbix_jitter_to(host string, jitter float32, defaultHost string, defaultPort int) float32 {
 
-	
 	if jitter != 0 {
 		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
 	}
@@ -1319,7 +1318,6 @@ func zabbix_jitter_to(host string, jitter float32, defaultHost string, defaultPo
 
 func zabbix_jitter_un(host string, jitter float32, defaultHost string, defaultPort int) float32 {
 
-	
 	if jitter != 0 {
 		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
 	}
