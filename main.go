@@ -689,7 +689,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	} else {
 		circ = false
 	}
-	check_count := 100
+	check_count := 10
 	counter := test.count
 	for range t.C {
 		if !circ {
@@ -723,7 +723,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				rez_f.Close()
 			}
 			db.Close()
-			check_count = 100
+			check_count = 10
 		}
 	}
 
@@ -1072,11 +1072,11 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 
 			if test_id.test_delay_1 == true {
-				delay1 = zabbix_delay_to(node_zabbix, (markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff), host_zabbix, port_zabbix)
-				delay2 = zabbix_delay_un(node_zabbix, (markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff), host_zabbix, port_zabbix)
+				delay1 = zabbix_delay_to(node_zabbix, (markerSFP2&0x0000ffffffffff)-(markerSFP11&0x0000ffffffffff), host_zabbix, port_zabbix)
+				delay2 = zabbix_delay_un(node_zabbix, (markerSFP12&0x0000ffffffffff)-(markerSFP2&0x0000ffffffffff), host_zabbix, port_zabbix)
 				if test_id.test_delay_1_jitter == true {
-					jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto((markerSFP2&0xff0fffffffffff)-(markerSFP11&0xff0fffffffffff)), host_zabbix, port_zabbix)
-					jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun((markerSFP12&0xff0fffffffffff)-(markerSFP2&0xff0fffffffffff)), host_zabbix, port_zabbix)
+					jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto((markerSFP2&0x0000ffffffffff)-(markerSFP11&0x0000ffffffffff)), host_zabbix, port_zabbix)
+					jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun((markerSFP12&0x0000ffffffffff)-(markerSFP2&0x0000ffffffffff)), host_zabbix, port_zabbix)
 
 				}
 			}
@@ -1088,8 +1088,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				fmt.Println(" ----=====----")
 				return
 			}
-			var dt = time.Now()
-			dt.Format(time.RFC3339)
+			var dt = time.Now().Unix()
+			//dt.Format(time.RFC3339)
 			rezul, err := db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, jitter, jitter1, jitter2, loss)
 			if err != nil {
 				db.Close()
