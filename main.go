@@ -522,7 +522,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		fmt.Println(" ----=====----")
 		return
 	}
-	db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 2, id) // Тест выполняется
+	db.Exec("UPDATE test_sla_real SET status=? data_start=NOW() WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
@@ -530,7 +530,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		return
 	}
-	db.Exec("UPDATE test_sla_real SET date_start='?' WHERE id=?", time.Now(), id) // Добавление времени начала
+	
 	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()
