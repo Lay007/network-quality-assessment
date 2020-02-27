@@ -530,7 +530,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		return
 	}
-	db.Exec("UPDATE test_sla_real SET date_start=? WHERE id=?", time.Now(), id) // Добавление времени начала
+	db.Exec("UPDATE test_sla_real SET date_start='?' WHERE id=?", time.Now(), id) // Добавление времени начала
 	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()
@@ -1009,10 +1009,6 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	var t_ips [2]byte
 		t_ips[1]=byte(t_type & 0xFF)
 		t_ips[0]=byte((t_type>>8) & 0xFF)
-	fmt.Println("-- test_type --")
-	fmt.Println(t_type)
-	fmt.Println(t_ips)	
-	fmt.Println("-- ********* --")
 
 	start := time.Now()	
 	// Keep receiving messages forever.
