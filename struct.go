@@ -56,7 +56,6 @@ type global_config struct {
 type module_sfp struct {
 	id          int
 	name        string
-	address_mac string
 	address_ip  string
 	version     string
 	location    string

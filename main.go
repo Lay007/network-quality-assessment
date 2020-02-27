@@ -167,7 +167,7 @@ func main() {
 
 		for row_modules.Next() {
 			m := module_sfp{}
-			err = row_modules.Scan(&m.id, &m.name, &m.address_mac, &m.address_ip, &m.version, &m.location)
+			err = row_modules.Scan(&m.id, &m.name, &m.address_ip, &m.version, &m.location)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -180,13 +180,19 @@ func main() {
 
 		//go zabbixHello("SFP-SLA_4401")
 
+		if (conf.net_interface_name=="0"){
+			fmt.Println("  Net interface not changed")
+			db.Close()
+			continue
+		}
+
+
 		ifi, err := net.InterfaceByName(conf.net_interface_name)
 		if err != nil {
-			log.Fatalf("failed to find interface %q: %v", conf.net_interface_name, err)
+			//log.Fatalf("failed to find interface %q: %v", conf.net_interface_name, err)
 			db.Close()
-
 			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
+			fmt.Println("failed to find interface %q: %v", conf.net_interface_name, err)
 			fmt.Println(" ----=====----")
 			continue
 		}
@@ -232,7 +238,7 @@ func main() {
 				continue
 			}
 			fmt.Println("-== Test id  = ", id)
-			go TestReal(id, conf.net_interface_name, conf.zabbix_server_name, 10051)
+			go TestReal(id, conf.net_interface_name, conf.zabbix_server_name, conf.zabbix_server_port)
 		}
 		row_test_real.Close()
 
