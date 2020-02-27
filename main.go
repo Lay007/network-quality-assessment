@@ -72,10 +72,12 @@ func (h *iphdr) checksum() {
 	(*h).csum = checksum(b.Bytes())
 }
 
+
+
 func main() {
 
 	//time.Sleep(100 * time.Second)
-
+	
 	// подключение к БД и обновление списка сетевых интерфейсов
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
@@ -530,7 +532,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		return
 	}
-	db.Exec("UPDATE test_sla_real SET data_start=? WHERE id=?", time.Now(), id) // Добавление времени начала
+	location, _ := time.LoadLocation("NOVT")
+	db.Exec("UPDATE test_sla_real SET data_start=? WHERE id=?", time.Now().In(location), id) // Добавление времени начала
 	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()
