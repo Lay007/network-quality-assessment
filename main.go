@@ -1088,7 +1088,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				fmt.Println(" ----=====----")
 				return
 			}
-			var dt = time.Now().Unix()
+			var dt = time.Now()
 			//dt.Format(time.RFC3339)
 			rezul, err := db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, jitter, jitter1, jitter2, loss)
 			if err != nil {
