@@ -180,12 +180,11 @@ func main() {
 
 		//go zabbixHello("SFP-SLA_4401")
 
-		if (conf.net_interface_name=="0"){
+		if conf.net_interface_name == "0" {
 			fmt.Println("  Net interface not changed")
 			db.Close()
 			continue
 		}
-
 
 		ifi, err := net.InterfaceByName(conf.net_interface_name)
 		if err != nil {
@@ -531,7 +530,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		return
 	}
-
+	db.Exec("UPDATE test_sla_real SET date_start=? WHERE id=?", time.Now, id) // Добавление времени начала
 	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()
@@ -704,7 +703,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			c.WriteTo(b, addr)
 		}()
 
-		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test)
+		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test,test_type)
 
 		check_count--
 		if check_count < 0 {
@@ -1003,12 +1002,24 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal) {
+func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 
+	var t_ips [2]byte
+		t_ips[0]=byte(t_type & 0xFF)
+		t_ips[1]=byte((t_type>>8) & 0xFF)
+	fmt.Println("-- test_type --")
+	fmt.Println(t_type)
+	fmt.Println(t_ips)	
+	fmt.Println("-- ********* --")
+
+	start := time.Now()	
 	// Keep receiving messages forever.
 	for {
+		if (time.Since(start)>time.Second*5){
+			break
+		}
 		n, addr, err := c.ReadFrom(b)
 		if err != nil {
 			log.Fatalf("failed to receive message: %v", err)
@@ -1024,7 +1035,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		fmt.Printf("\n\n--=T_so %x - \n", ips)
 
 		// Display source of message and message itself.
-		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) {
+		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[51:53], t_ips[:]) == true) {
 
 			(*test).number++
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")

@@ -54,11 +54,11 @@ type global_config struct {
 	QinQ_number        int
 }
 type module_sfp struct {
-	id          int
-	name        string
-	address_ip  string
-	version     string
-	location    string
+	id         int
+	name       string
+	address_ip string
+	version    string
+	location   string
 }
 
 type testThroughput struct {
