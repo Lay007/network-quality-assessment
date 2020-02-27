@@ -1007,8 +1007,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	b := make([]byte, mtu)
 
 	var t_ips [2]byte
-		t_ips[0]=byte(t_type & 0xFF)
-		t_ips[1]=byte((t_type>>8) & 0xFF)
+		t_ips[1]=byte(t_type & 0xFF)
+		t_ips[0]=byte((t_type>>8) & 0xFF)
 	fmt.Println("-- test_type --")
 	fmt.Println(t_type)
 	fmt.Println(t_ips)	
