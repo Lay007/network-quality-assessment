@@ -1028,41 +1028,42 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-		fmt.Println("\n\n--=Test ==-- - ")
-		fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
-		fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-		fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+		//fmt.Println("\n\n--=Test ==-- - ")
+		//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+		//fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+		//fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 		var ips [4]byte
 		copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())		
-		fmt.Printf("\n--=T_so ip dst    %v.%v.%v.%v \n", ips[0], ips[1], ips[2], ips[3])
-		fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+		//fmt.Printf("\n--=T_so ip dst    %v.%v.%v.%v \n", ips[0], ips[1], ips[2], ips[3])
+		//fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-		fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-		fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-		fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+		//fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+		//fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+		//fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
 		
-		fmt.Println(" --== End Test ==--")
+		//fmt.Println(" --== End Test ==--")
+		
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 
 			(*test).number++
-			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+		//	fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
-			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-			fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+		//	fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
+		//	fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 
-			fmt.Printf("size     %x \n", b[2:4])
+		//	fmt.Printf("size     %x \n", b[2:4])
 
-			fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-			fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+		//	fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+		//	fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 
-			fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+		//	fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-			fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-			fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-			fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-			fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-			fmt.Println(" --== End Packet ==--")
+		//	fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+		//	fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+		//	fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+		//	fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+		//	fmt.Println(" --== End Packet ==--")
 
 			var markerSFP11, markerSFP12, markerSFP2 int64
 			var ind uint
@@ -1160,7 +1161,7 @@ func (test *testSLA) getJitter(in_solve int64) float32 {
 	} else {
 		jitter = mean - float32(min)
 	}
-
+/*
 	fmt.Printf(" --== Jitter debug ==-- \n")
 	fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
 	fmt.Printf(" --== Max = %x \n", max)
@@ -1168,7 +1169,7 @@ func (test *testSLA) getJitter(in_solve int64) float32 {
 	fmt.Printf(" --== Mean = %f \n", mean)
 	fmt.Printf(" --== Jitter = %f \n", jitter)
 	fmt.Printf(" --== End Jitter debug ==-- \n")
-
+*/
 	return jitter
 }
 
