@@ -1028,7 +1028,9 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-		fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
+		fmt.Println("\n\n--=Test ==-- - ")
+		fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+		fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 		var ips [4]byte
 		copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
 		fmt.Printf("\n\n--=T_so %x - \n", ips)
