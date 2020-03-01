@@ -1039,7 +1039,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
 		fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
 		fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-		fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+		
 		fmt.Println(" --== End Test ==--")
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
