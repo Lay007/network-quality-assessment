@@ -760,8 +760,8 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 
 	msg := bin_buf.Bytes()
 	f := &ethernet.Frame{
-		Destination: ethernet.Broadcast,
-		//Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+		//Destination: ethernet.Broadcast,
+		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
 		Source:    mac_src,
 		EtherType: 0x0800,
@@ -1029,6 +1029,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
 		fmt.Println("\n\n--=Test ==-- - ")
+		fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 		fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
 		fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 		var ips [4]byte
