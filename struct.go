@@ -1,7 +1,5 @@
 package main
 
-import "debug/macho"
-
 //import "time"
 
 type testSLA struct {
