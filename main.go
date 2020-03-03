@@ -323,6 +323,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	var ipsrcstr string
 	var ipdst_1sfpsla_str string
 	var ipdst_2sfpsla_str string
+	mac_dst := make([]byte, 6)
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
@@ -395,6 +396,42 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 				return
 			}
 		}
+
+		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
+		if err != nil {
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			row_mac.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+		defer row_mac.Close()
+		//var mac_dst_str string
+		var test_mac int64
+		for row_mac.Next() {
+			//err = row_mac.Scan(&mac_dst_str)
+			err = row_mac.Scan(&test_mac)
+			if err != nil {
+
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+				row.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
+			}
+		}
+		mac_dst[5] = byte(test_mac & 0xFF)
+		mac_dst[4] = byte((test_mac >> 8) & 0xFF)
+		mac_dst[3] = byte((test_mac >> 16) & 0xFF)
+		mac_dst[2] = byte((test_mac >> 24) & 0xFF)
+		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
+		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
+
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
 			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
@@ -470,31 +507,31 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	var test_c testThr
 	test_c.numberCounter = uint32(test.count)
 
-	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 64, number, test_type)
+	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type)
 	count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 128, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type)
 	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 256, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type)
 	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 512, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 512, number, test_type)
 	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1024, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 1024, number, test_type)
 	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1024 = (float32)(1024.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1280, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 1280, number, test_type)
 	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1280 = (float32)(1280.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, 1500, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 1500, number, test_type)
 	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_1518 = (float32)(1518.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
@@ -557,8 +594,6 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var ipsrcstr string
 	var ipdst_1sfpsla_str string
 	var ipdst_2sfpsla_str string
-	//var mac_dst_str string
-	mac_dst := make([]byte, 6)
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
@@ -584,6 +619,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}
 	}
 	var id_sfp1, id_sfp2 int
+	mac_dst := make([]byte, 6)
 	row, err = db.Query("SELECT module_first, module_second FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
@@ -660,9 +696,6 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				return
 			}
 		}
-
-		//test_mac, _ := strconv.ParseInt(mac_dst_str, 6, 64)
-
 		mac_dst[5] = byte(test_mac & 0xFF)
 		mac_dst[4] = byte((test_mac >> 8) & 0xFF)
 		mac_dst[3] = byte((test_mac >> 16) & 0xFF)
@@ -670,9 +703,6 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
-		fmt.Println(" --!!== MAC ===---")
-		fmt.Println(mac_dst)
-		fmt.Println(test_mac)
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
 			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
@@ -744,7 +774,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}
 		go func() {
 			number++
-			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size, number, test_type)
+			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type)
 			c.WriteTo(b, addr)
 		}()
 
@@ -773,7 +803,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 }
 
-func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size int, number uint32, test_type uint16) []byte {
+func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_dst []byte, size int, number uint32, test_type uint16) []byte {
 	ip := iphdr{
 		vhl:   0x45,
 		tos:   0,
@@ -806,8 +836,8 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 	msg := bin_buf.Bytes()
 	f := &ethernet.Frame{
 		//Destination: ethernet.Broadcast,
-		//Destination: mac_dst,
-		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x01},
+		Destination: mac_dst,
+		//Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x01},
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
 		Source:    mac_src,
 		EtherType: 0x0800,
