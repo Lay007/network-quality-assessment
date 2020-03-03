@@ -8,7 +8,6 @@ import (
 	"math"
 	"math/rand"
 	"net"
-	"strconv"
 	"time"
 
 	. "./go-zabbix"
@@ -645,9 +644,11 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			return
 		}
 		defer row_mac.Close()
-		var mac_dst_str string
+		//var mac_dst_str string
+		var test_mac int64
 		for row_mac.Next() {
-			err = row_mac.Scan(&mac_dst_str)
+			//err = row_mac.Scan(&mac_dst_str)
+			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
 				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
@@ -660,7 +661,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			}
 		}
 
-		test_mac, _ := strconv.ParseInt(mac_dst_str, 6, 64)
+		//test_mac, _ := strconv.ParseInt(mac_dst_str, 6, 64)
 
 		mac_dst[5] = byte(test_mac & 0xFF)
 		mac_dst[4] = byte((test_mac >> 8) & 0xFF)
