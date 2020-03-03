@@ -72,12 +72,10 @@ func (h *iphdr) checksum() {
 	(*h).csum = checksum(b.Bytes())
 }
 
-
-
 func main() {
 
 	//time.Sleep(100 * time.Second)
-	
+
 	// подключение к БД и обновление списка сетевых интерфейсов
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
@@ -532,7 +530,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		return
 	}
-	
+
 	db.Exec("UPDATE test_sla_real SET data_start=? WHERE id=?", time.Now(), id) // Добавление времени начала
 	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
@@ -559,6 +557,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var ipsrcstr string
 	var ipdst_1sfpsla_str string
 	var ipdst_2sfpsla_str string
+	//var mac_dst_str string
+	//var mac_dst []byte
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
@@ -706,7 +706,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			c.WriteTo(b, addr)
 		}()
 
-		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test,test_type)
+		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type)
 
 		check_count--
 		if check_count < 0 {
@@ -752,7 +752,10 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 	//ip.iplen = uint16(20 + 26 + 4)
 	ip.iplen = uint16(size)
 	ip.checksum()
-	payloadAdd := make([]byte, size-64)
+	payloadAdd := make([]byte, 0)
+	if size > 66 {
+		payloadAdd = make([]byte, size-66)
+	}
 	var bin_buf bytes.Buffer
 	binary.Write(&bin_buf, binary.BigEndian, ip)
 	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
@@ -761,7 +764,8 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, size
 	msg := bin_buf.Bytes()
 	f := &ethernet.Frame{
 		//Destination: ethernet.Broadcast,
-		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+		//Destination: mac_dst,
+		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x01},
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
 		Source:    mac_src,
 		EtherType: 0x0800,
@@ -816,7 +820,7 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 	return int(rez_count), rez_time
 }
 
-func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
+func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, dist net.HardwareAddr, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, numberTX uint32, size uint16) {
 
 	//	ipsrc := net.ParseIP(ipsrcstr)
 	//	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
@@ -851,7 +855,8 @@ func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, ipsr
 	msg := bin_buf.Bytes()
 	f := &ethernet.Frame{
 		//Destination: ethernet.Broadcast,
-		Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+		//Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+		Destination: dist,
 		//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
 		Source:    source,
 		EtherType: 0x0800,
@@ -1010,13 +1015,13 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	b := make([]byte, mtu)
 
 	var t_ips [2]byte
-		t_ips[1]=byte(t_type & 0xFF)
-		t_ips[0]=byte((t_type>>8) & 0xFF)
+	t_ips[1] = byte(t_type & 0xFF)
+	t_ips[0] = byte((t_type >> 8) & 0xFF)
 
-	start := time.Now()	
+	start := time.Now()
 	// Keep receiving messages forever.
 	for {
-		if (time.Since(start)>time.Second*5){
+		if time.Since(start) > time.Second*5 {
 			break
 		}
 		n, addr, err := c.ReadFrom(b)
@@ -1033,37 +1038,37 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		//fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
 		//fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 		var ips [4]byte
-		copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())		
+		copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
 		//fmt.Printf("\n--=T_so ip dst    %v.%v.%v.%v \n", ips[0], ips[1], ips[2], ips[3])
 		//fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
 		//fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
 		//fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
 		//fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-		
+
 		//fmt.Println(" --== End Test ==--")
-		
+
 		// Display source of message and message itself.
 		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 
 			(*test).number++
-		//	fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+			//	fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipsrcstr))
-		//	fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-		//	fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+			//	fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
+			fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 
-		//	fmt.Printf("size     %x \n", b[2:4])
+			//	fmt.Printf("size     %x \n", b[2:4])
 
-		//	fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-		//	fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+			//	fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+			//	fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 
-		//	fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+			//	fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-		//	fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-		//	fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-		//	fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-		//	fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-		//	fmt.Println(" --== End Packet ==--")
+			//	fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+			//	fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+			//	fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+			//	fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+			//	fmt.Println(" --== End Packet ==--")
 
 			var markerSFP11, markerSFP12, markerSFP2 int64
 			var ind uint
@@ -1161,15 +1166,15 @@ func (test *testSLA) getJitter(in_solve int64) float32 {
 	} else {
 		jitter = mean - float32(min)
 	}
-/*
-	fmt.Printf(" --== Jitter debug ==-- \n")
-	fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
-	fmt.Printf(" --== Max = %x \n", max)
-	fmt.Printf(" --== Min = %x \n", min)
-	fmt.Printf(" --== Mean = %f \n", mean)
-	fmt.Printf(" --== Jitter = %f \n", jitter)
-	fmt.Printf(" --== End Jitter debug ==-- \n")
-*/
+	/*
+		fmt.Printf(" --== Jitter debug ==-- \n")
+		fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
+		fmt.Printf(" --== Max = %x \n", max)
+		fmt.Printf(" --== Min = %x \n", min)
+		fmt.Printf(" --== Mean = %f \n", mean)
+		fmt.Printf(" --== Jitter = %f \n", jitter)
+		fmt.Printf(" --== End Jitter debug ==-- \n")
+	*/
 	return jitter
 }
 
