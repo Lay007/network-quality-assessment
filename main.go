@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/rand"
 	"net"
+	"strconv"
 	"time"
 
 	. "./go-zabbix"
@@ -167,7 +168,7 @@ func main() {
 
 		for row_modules.Next() {
 			m := module_sfp{}
-			err = row_modules.Scan(&m.id, &m.name, &m.address_ip, &m.version, &m.location)
+			err = row_modules.Scan(&m.id, &m.addres_mac, &m.name, &m.address_ip, &m.version, &m.location)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -558,7 +559,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var ipdst_1sfpsla_str string
 	var ipdst_2sfpsla_str string
 	//var mac_dst_str string
-	var mac_dst []byte
+	mac_dst := make([]byte, 6)
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
@@ -644,8 +645,9 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			return
 		}
 		defer row_mac.Close()
+		var mac_dst_str string
 		for row_mac.Next() {
-			err = row_mac.Scan(&mac_dst)
+			err = row_mac.Scan(&mac_dst_str)
 			if err != nil {
 
 				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
@@ -657,6 +659,16 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				return
 			}
 		}
+
+		test_mac, _ := strconv.ParseInt(mac_dst_str, 6, 64)
+
+		mac_dst[5] = byte(test_mac & 0xFF)
+		mac_dst[4] = byte((test_mac >> 8) & 0xFF)
+		mac_dst[3] = byte((test_mac >> 16) & 0xFF)
+		mac_dst[2] = byte((test_mac >> 24) & 0xFF)
+		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
+		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
+
 		fmt.Println(" --!!== MAC ===---")
 		fmt.Println(mac_dst)
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
