@@ -672,6 +672,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 		fmt.Println(" --!!== MAC ===---")
 		fmt.Println(mac_dst)
+		fmt.Println(test_mac)
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
 			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
