@@ -558,7 +558,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var ipdst_1sfpsla_str string
 	var ipdst_2sfpsla_str string
 	//var mac_dst_str string
-	//var mac_dst []byte
+	var mac_dst []byte
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
@@ -631,6 +631,34 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				return
 			}
 		}
+
+		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
+		if err != nil {
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			row_mac.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+		defer row_mac.Close()
+		for row_mac.Next() {
+			err = row_mac.Scan(&mac_dst)
+			if err != nil {
+
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+				row.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
+			}
+		}
+		fmt.Println(" --!!== MAC ===---")
+		fmt.Println(mac_dst)
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
 			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
