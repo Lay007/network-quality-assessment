@@ -1,5 +1,7 @@
 package main
 
+import "debug/macho"
+
 //import "time"
 
 type testSLA struct {
@@ -55,6 +57,7 @@ type global_config struct {
 }
 type module_sfp struct {
 	id         int
+	addres_mac int64
 	name       string
 	address_ip string
 	version    string
