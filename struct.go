@@ -99,5 +99,6 @@ type testReal struct {
 	test_delay_1        bool
 	test_delay_1_jitter bool
 	datetime            string
-	status              int
+
+	status int
 }

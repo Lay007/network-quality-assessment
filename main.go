@@ -867,27 +867,27 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 	gen_start := time.Now()
 	var rez_time int64
 	//for i := 0; i < 32; i++ {
-		go func() {
-			timer := time.NewTimer(time.Nanosecond * 10)
-			for range timer.C {
-				//for {
-				//	time.Sleep(12*time.Microsecond)
-				cnt--
-				//for i := 0; i < 20000; i++ {
-				//	i++
-				//}
-				c.WriteTo(b, addr)
-				if cnt <= 0 {
-					break
-				}
+	go func() {
+		timer := time.NewTimer(time.Nanosecond * 10)
+		for range timer.C {
+			//for {
+			//	time.Sleep(12*time.Microsecond)
+			cnt--
+			//for i := 0; i < 20000; i++ {
+			//	i++
+			//}
+			c.WriteTo(b, addr)
+			if cnt <= 0 {
+				break
 			}
+		}
 
-			rez_time = (int64)(time.Since(gen_start))
-		}()
+		rez_time = (int64)(time.Since(gen_start))
+	}()
 	//}
 
 	quit := make(chan int)
-	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit,t_type)
+	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit, t_type)
 	time.Sleep(time_to_Sleep)
 
 	rez_count := test.numberCounter
@@ -977,7 +977,7 @@ func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, dist
 func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit chan int, t_type uint16) { //, counter chan<- int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
-	var count int
+	//var count int
 	// Keep receiving messages forever.
 	for {
 		select {
@@ -1004,11 +1004,12 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 		//fmt.Printf("\n\n--=T_so %x - \n", ips)
 
 		// Display source of message and message itself.
-		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {			                      
-			count++
+		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+			//count++
 			//	fmt.Printf("-->>Detect")
 			//	counter <-count
-			(*test).numberCounter = uint32(count)
+			//(*test).numberCounter = uint32(count)
+			(*test).numberCounter++
 		}
 	}
 }
