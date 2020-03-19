@@ -1,6 +1,7 @@
 package main
 
 import (
+	. "./go-zabbix"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -9,8 +10,7 @@ import (
 	"math/rand"
 	"net"
 	"time"
-
-	. "./go-zabbix"
+	"unsafe"
 
 	"github.com/google/gopacket/pcap"
 
@@ -822,12 +822,14 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	sfpdat.number = number
 	sfpdat.test_type = test_type
 	//ip.iplen = uint16(20 + 26 + 4)
-	ip.iplen = uint16(size)
-	ip.checksum()
+
 	payloadAdd := make([]byte, 0)
 	if size > 66 {
 		payloadAdd = make([]byte, size-66)
 	}
+	ip.iplen = uint16(unsafe.Sizeof(ip) + unsafe.Sizeof(sfpdat) + unsafe.Sizeof(payloadAdd))
+	ip.checksum()
+
 	var bin_buf bytes.Buffer
 	binary.Write(&bin_buf, binary.BigEndian, ip)
 	binary.Write(&bin_buf, binary.BigEndian, sfpdat)
@@ -1169,11 +1171,11 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 
 			if test_id.test_delay_1 == true {
-				delay1 = zabbix_delay_to(node_zabbix, (markerSFP2&0x0000ffffffffff)-(markerSFP11&0x0000ffffffffff), host_zabbix, port_zabbix)
-				delay2 = zabbix_delay_un(node_zabbix, (markerSFP12&0x0000ffffffffff)-(markerSFP2&0x0000ffffffffff), host_zabbix, port_zabbix)
+				delay1 = zabbix_delay_to(node_zabbix, markerSFP2-markerSFP11, host_zabbix, port_zabbix)
+				delay2 = zabbix_delay_un(node_zabbix, markerSFP12-markerSFP2, host_zabbix, port_zabbix)
 				if test_id.test_delay_1_jitter == true {
-					jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto((markerSFP2&0x0000ffffffffff)-(markerSFP11&0x0000ffffffffff)), host_zabbix, port_zabbix)
-					jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun((markerSFP12&0x0000ffffffffff)-(markerSFP2&0x0000ffffffffff)), host_zabbix, port_zabbix)
+					jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(markerSFP2-markerSFP11), host_zabbix, port_zabbix)
+					jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(markerSFP12-markerSFP2), host_zabbix, port_zabbix)
 
 				}
 			}
