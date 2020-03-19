@@ -511,6 +511,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
+	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type)
 	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter)
 	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
