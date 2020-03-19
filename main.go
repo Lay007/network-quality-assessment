@@ -870,23 +870,23 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 	var rez_time int64
 	test.numberCounter=0
 	//for i := 0; i < 32; i++ {
-	go func() {
+	go func(cnt_i int) {
 		timer := time.NewTimer(time.Nanosecond * 10)
 		for range timer.C {
 			//for {
 			//	time.Sleep(12*time.Microsecond)
-			cnt--
+			cnt_i--
 			//for i := 0; i < 20000; i++ {
 			//	i++
 			//}
 			c.WriteTo(b, addr)
-			if cnt <= 0 {
+			if cnt_i <= 0 {
 				break
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
 		fmt.Println("rez_time = ",rez_time)
-	}()
+	}(cnt)
 	//}
 
 	quit := make(chan int)
