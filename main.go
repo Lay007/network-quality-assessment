@@ -881,7 +881,7 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 			//}
 			fmt.Println("cnt = ",cnt_i)
 			c.WriteTo(b, addr)
-			if cnt_i <= 0 {
+			if cnt_i < 0 {
 				break
 			}
 		}
