@@ -873,11 +873,11 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 	//for i := 0; i < 32; i++ {
 	go func() {
 		//timer := time.NewTimer(time.Nanosecond * 10)
-		timer := time.NewTimer(time.Microsecond * 10)
-		fmt.Println("Start")
-		for range timer.C {
+		//timer := time.NewTimer(time.Microsecond * 10)
+		//fmt.Println("Start")
+		//for range timer.C {
+		for {
 			cnt--
-			fmt.Println("cnt = ", cnt)
 			c.WriteTo(b, addr)
 			if cnt < 0 {
 				break
