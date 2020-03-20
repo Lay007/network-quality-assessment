@@ -514,7 +514,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type)
-	test_c.numberCounter=0;
+	test_c.numberCounter = 0
 	count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 
@@ -866,29 +866,26 @@ var min_period = time.Duration(15) * time.Microsecond
 func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int, t_type uint16) (int, int64) {
 	time_to_Sleep := time.Duration(cnt) * min_period * 2
 	fmt.Println("time_to_Sleep= ", time_to_Sleep)
+	fmt.Println("cnt start= ", cnt)
 	gen_start := time.Now()
 	var rez_time int64
-	test.numberCounter=0
+	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
-	go func(cnt_i int) {
-		timer := time.NewTimer(time.Nanosecond * 10)
-		fmt.Println(timer.C)
+	go func() {
+		//timer := time.NewTimer(time.Nanosecond * 10)
+		timer := time.NewTimer(time.Microsecond * 10)
+		fmt.Println("Start")
 		for range timer.C {
-			//for {
-			//	time.Sleep(12*time.Microsecond)
-			cnt_i--
-			//for i := 0; i < 20000; i++ {
-			//	i++
-			//}
-			fmt.Println("cnt = ",cnt_i)
+			cnt--
+			fmt.Println("cnt = ", cnt)
 			c.WriteTo(b, addr)
-			if cnt_i < 0 {
+			if cnt < 0 {
 				break
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
-		fmt.Println("rez_time = ",rez_time)
-	}(cnt)
+		fmt.Println("rez_time = ", rez_time)
+	}()
 	//}
 
 	quit := make(chan int)
