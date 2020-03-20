@@ -872,6 +872,7 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 	//for i := 0; i < 32; i++ {
 	go func(cnt_i int) {
 		timer := time.NewTimer(time.Nanosecond * 10)
+		fmt.Println(timer.C)
 		for range timer.C {
 			//for {
 			//	time.Sleep(12*time.Microsecond)
