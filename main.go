@@ -953,7 +953,6 @@ func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, dist
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
-
 	/*
 		fmt.Printf("raw:  %x \n", b)
 		fmt.Println(" --== Packet send ==--")
