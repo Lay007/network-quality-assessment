@@ -502,7 +502,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	var test_c testThr
 	test_c.numberCounter = uint32(test.count)
 
-	period_test := 3 // период теста - 10 секунд
+	period_test := test.count // период теста - 10 секунд
 	size := 64
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
 	period_nano := int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
@@ -514,20 +514,68 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type)
 	//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	count_rez, per := test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
-	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
+	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
 
 	size = 128
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
-	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
+	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
+
+	size = 256
+	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
+	packet_count = (int64(period_test * 1000000000)) / period_nano
+	test_c.numberCounter = 0
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type)
+
+	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
+	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+	fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_256)
+
+	size = 512
+	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
+	packet_count = (int64(period_test * 1000000000)) / period_nano
+	test_c.numberCounter = 0
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 512, number, test_type)
+
+	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
+	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+	fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_512)
+
+	size = 1024
+	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
+	packet_count = (int64(period_test * 1000000000)) / period_nano
+	test_c.numberCounter = 0
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type)
+	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+	fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1024)
+
+	size = 1280
+	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
+	packet_count = (int64(period_test * 1000000000)) / period_nano
+	test_c.numberCounter = 0
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type)
+	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+	fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1280)
+
+	size = 1500
+	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
+	packet_count = (int64(period_test * 1000000000)) / period_nano
+	test_c.numberCounter = 0
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type)
+	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+	fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1518)
 	/*
 		b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type)
 		count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
@@ -872,10 +920,11 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	return b
 }
 
-var min_period = time.Duration(15) * time.Microsecond
+//var min_period = time.Duration(15) * time.Microsecond
 
 func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
-	time_to_gen := ((cnt * period_nano) * 120) / 100
+	time_to_gen := ((cnt * period_nano) * 150) / 100
+	time_gen := time.Duration(cnt * period_nano)
 	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
 	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
 	fmt.Println("		-- cnt start= ", cnt)
@@ -893,6 +942,11 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 			c.WriteTo(b, addr)
 			if cnt <= 0 {
 				break
+			}
+			if cnt%100 == 0 {
+				if time.Since(gen_start) >= time_gen {
+					break
+				}
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
@@ -912,6 +966,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 }
 
 func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int, t_type uint16) (int, int64) {
+	var min_period = time.Duration(15) * time.Microsecond
 	time_to_Sleep := time.Duration(cnt) * min_period * 2
 	fmt.Println("time_to_Sleep= ", time_to_Sleep)
 	fmt.Println("cnt start= ", cnt)
