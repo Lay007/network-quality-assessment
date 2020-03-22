@@ -505,7 +505,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	period_test := 3 // период теста - 10 секунд
 	size := 64
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
-	period_nano := int64(size * 8 * 1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	period_nano := int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
 	packet_count := (int64(period_test * 1000000000)) / period_nano
 
 	fmt.Println("->> period_nano  = ", period_nano)
@@ -876,7 +876,7 @@ var min_period = time.Duration(15) * time.Microsecond
 
 func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 120) / 100
-	fmt.Println("		-- period_to_generate [ms] = ", (cnt *period_nano)/1000000)
+	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
 	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
 	fmt.Println("		-- cnt start= ", cnt)
 	gen_start := time.Now()
@@ -884,10 +884,10 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
 	go func() {
-		timer := time.NewTimer(time.Duration(period_nano))
+		ticker := time.NewTicker(time.Duration(period_nano))
 		//timer := time.NewTimer(time.Microsecond * 10)
 		//fmt.Println("Start")
-		for range timer.C {
+		for range ticker.C {
 			//for {
 			cnt--
 			c.WriteTo(b, addr)
@@ -896,6 +896,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
+		ticker.Stop()
 		fmt.Println("		 -*- rez_time = ", rez_time)
 	}()
 	//}
