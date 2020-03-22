@@ -505,8 +505,11 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	period_test := 3 // период теста - 10 секунд
 	size := 64
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
-	period_nano := int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
+	period_nano := int64(size * 8 * 1000000000) / (int64(test.thr_begin * 1000 * 1000))
 	packet_count := (int64(period_test * 1000000000)) / period_nano
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count)
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type)
 	//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
@@ -873,9 +876,9 @@ var min_period = time.Duration(15) * time.Microsecond
 
 func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 120) / 100
-	fmt.Println("period_to_generate [ms] = ", period_nano/1000000)
-	fmt.Println("time_to_gen= ", time_to_gen/1000000000)
-	fmt.Println("cnt start= ", cnt)
+	fmt.Println("		-- period_to_generate [ms] = ", (cnt *period_nano)/1000000)
+	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
+	fmt.Println("		-- cnt start= ", cnt)
 	gen_start := time.Now()
 	var rez_time int64
 	test.numberCounter = 0
@@ -893,7 +896,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
-		fmt.Println("rez_time = ", rez_time)
+		fmt.Println("		 -*- rez_time = ", rez_time)
 	}()
 	//}
 
@@ -902,7 +905,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	time.Sleep(time.Duration(time_to_gen))
 
 	rez_count := test.numberCounter
-	fmt.Println("rez_count= ", rez_count)
+	fmt.Println("		 --->> rez_count= ", rez_count)
 	quit <- 1
 	return int(rez_count), rez_time
 }
