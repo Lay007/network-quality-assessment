@@ -936,8 +936,8 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		ticker := time.NewTicker(time.Duration(period_nano))
 		//timer := time.NewTimer(time.Microsecond * 10)
 		//fmt.Println("Start")
-		for range ticker.C {
-			//for {
+		//for range ticker.C {
+		for {
 			cnt--
 			c.WriteTo(b, addr)
 			if cnt <= 0 {
