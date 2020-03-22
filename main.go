@@ -504,6 +504,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	period_test := 3 // период теста - 10 секунд
 	size := 64
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
 	period_nano := int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count := (int64(period_test * 1000000000)) / period_nano
 
