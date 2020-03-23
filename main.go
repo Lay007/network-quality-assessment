@@ -1326,6 +1326,9 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 
 func (test *testSLA) getJitter(in_solve int64) float32 {
 	var jitter float32
+	if len((*test).delay_solve) == 0 {
+		(*test).delay_solve = append((*test).delay_solve, in_solve)
+	}
 	jitter = float32((*test).delay_solve[0] - in_solve)
 	(*test).delay_solve[0] = in_solve
 	/*
@@ -1371,6 +1374,9 @@ func (test *testSLA) getJitter(in_solve int64) float32 {
 
 func (test *testSLA) getJitterto(in_solve int64) float32 {
 	var jitter float32
+	if len((*test).delay_solve_to) == 0 {
+		(*test).delay_solve_to = append((*test).delay_solve_to, in_solve)
+	}
 	jitter = float32((*test).delay_solve_to[0] - in_solve)
 	(*test).delay_solve_to[0] = in_solve
 	/*
@@ -1408,6 +1414,9 @@ func (test *testSLA) getJitterto(in_solve int64) float32 {
 
 func (test *testSLA) getJitterun(in_solve int64) float32 {
 	var jitter float32
+	if len((*test).delay_solve_un) == 0 {
+		(*test).delay_solve_un = append((*test).delay_solve_un, in_solve)
+	}
 	jitter = float32((*test).delay_solve_un[0] - in_solve)
 	(*test).delay_solve_un[0] = in_solve
 	/*
