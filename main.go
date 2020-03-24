@@ -941,7 +941,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		for {
 			//	select {
 			//	case <-ticker.C:
-			time.Sleep(period)
+			//time.Sleep(period)
 			cnt--
 			c.WriteTo(b, addr)
 			if cnt <= 0 {
