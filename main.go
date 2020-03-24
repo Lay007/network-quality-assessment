@@ -935,7 +935,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	go func() {
 		//ticker := time.NewTicker(time.Duration(period_nano))
 		//timer := time.NewTimer(time.Microsecond * 10)
-		period := time.Duration(period_nano)
+		//period := time.Duration(period_nano)
 		//fmt.Println("Start")
 		//for range ticker.C {
 		for {
