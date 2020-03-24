@@ -933,27 +933,29 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
 	go func() {
-		ticker := time.NewTicker(time.Duration(period_nano))
+		//ticker := time.NewTicker(time.Duration(period_nano))
 		//timer := time.NewTimer(time.Microsecond * 10)
+		period := time.Duration(period_nano)
 		//fmt.Println("Start")
 		//for range ticker.C {
 		for {
-			select {
-			case <-ticker.C:
-				cnt--
-				c.WriteTo(b, addr)
-				if cnt <= 0 {
+			//	select {
+			//	case <-ticker.C:
+			time.Sleep(period)
+			cnt--
+			c.WriteTo(b, addr)
+			if cnt <= 0 {
+				break
+			}
+			if cnt%100 == 0 {
+				if time.Since(gen_start) >= time_gen {
 					break
 				}
-				if cnt%100 == 0 {
-					if time.Since(gen_start) >= time_gen {
-						break
-					}
-				}
+				//		}
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
-		ticker.Stop()
+		//	ticker.Stop()
 		fmt.Println("		 -*- rez_time = ", rez_time)
 	}()
 	//}
