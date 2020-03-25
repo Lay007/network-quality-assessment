@@ -928,6 +928,32 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
 	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
 	fmt.Println("		-- cnt start= ", cnt)
+	
+	test_count:=10000
+	gen_test_pps_start := time.Now()
+	for {
+			test_count--
+		c.WriteTo(b, addr)
+		if test_count <= 0 {
+			break
+		}
+	}
+    pps_rez:=10000*1000000000/int(time.Since(gen_test_pps_start))
+	fmt.Println("		 -*- max pps = ", pps_rez)
+
+	test_count=1000
+	gen_test_min_period_start := time.Now()
+	ticker := time.NewTicker(time.Duration(1))
+	for range ticker.C {
+test_count--
+c.WriteTo(b, addr)
+		if test_count <= 0 {
+			break
+		}
+	}
+	min_per_rez:=int(time.Since(gen_test_min_period_start))/1000*1000
+	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
+	
 	gen_start := time.Now()
 	var rez_time int64
 	test.numberCounter = 0
