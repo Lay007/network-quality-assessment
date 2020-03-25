@@ -928,43 +928,43 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
 	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
 	fmt.Println("		-- cnt start= ", cnt)
-	
-	test_count:=10000
+
+	test_count := 10000
 	gen_test_pps_start := time.Now()
 	for {
-			test_count--
+		test_count--
 		c.WriteTo(b, addr)
 		if test_count <= 0 {
 			break
 		}
 	}
-    pps_rez:=10000*1000000000/int(time.Since(gen_test_pps_start))
+	pps_rez := 10000 * 1000000000 / int(time.Since(gen_test_pps_start))
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
-	test_count=1000
+	test_count = 1000
 	gen_test_min_period_start := time.Now()
 	ticker := time.NewTicker(time.Duration(1))
 	for range ticker.C {
-test_count--
-c.WriteTo(b, addr)
+		test_count--
+		c.WriteTo(b, addr)
 		if test_count <= 0 {
 			break
 		}
 	}
-	min_per_rez:=int(time.Since(gen_test_min_period_start))/1000*1000
+	min_per_rez := int(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
-	
+
 	gen_start := time.Now()
 	var rez_time int64
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
 	go func() {
-		//ticker := time.NewTicker(time.Duration(period_nano))
+		ticker := time.NewTicker(time.Duration(period_nano))
 		//timer := time.NewTimer(time.Microsecond * 10)
 		//period := time.Duration(period_nano)
 		//fmt.Println("Start")
-		//for range ticker.C {
-		for {
+		for range ticker.C {
+		//for {
 			//	select {
 			//	case <-ticker.C:
 			//time.Sleep(period)
@@ -981,7 +981,7 @@ c.WriteTo(b, addr)
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
-		//	ticker.Stop()
+		ticker.Stop()
 		fmt.Println("		 -*- rez_time = ", rez_time)
 	}()
 	//}
