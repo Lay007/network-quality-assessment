@@ -99,6 +99,12 @@ type testReal struct {
 	test_delay_1        bool
 	test_delay_1_jitter bool
 	datetime            string
-
-	status int
+	status              int
+}
+type testRealMax struct {
+	delayMax     float32
+	jitterMax    float32
+	delayOneMax  float32
+	jitterOneMax float32
+	lossMax      float32
 }

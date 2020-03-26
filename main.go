@@ -9,6 +9,7 @@ import (
 	"math"
 	"math/rand"
 	"net"
+	"runtime"
 	"time"
 	"unsafe"
 
@@ -74,6 +75,8 @@ func (h *iphdr) checksum() {
 
 func main() {
 
+	runtime.GOMAXPROCS(1024)
+
 	//time.Sleep(100 * time.Second)
 
 	// подключение к БД и обновление списка сетевых интерфейсов
@@ -110,7 +113,7 @@ func main() {
 
 	db.Close()
 
-	t := time.NewTicker(5 * time.Second) //проверка один раз в 30 секунд
+	t := time.NewTicker(10 * time.Second) //проверка один раз в 10 секунд
 	for range t.C {
 
 		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
@@ -289,7 +292,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		fmt.Println(" ----=====----")
 		return
 	}
-	db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 2, id) // Тест выполняется
+	db.Exec("UPDATE test_throughput SET status=?, datatime=? WHERE id=?", time.Now(), 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
@@ -681,8 +684,10 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}
 	}
 	var id_sfp1, id_sfp2 int
+	var testMax testRealMax
+
 	mac_dst := make([]byte, 6)
-	row, err = db.Query("SELECT module_first, module_second FROM test_sla_real WHERE id=?", id)
+	row, err = db.Query("SELECT module_first, module_second, delay_max, jitter_max, delay1_max, jitter1_max, loss_max FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
@@ -693,7 +698,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		return
 	}
 	for row.Next() {
-		err = row.Scan(&id_sfp1, &id_sfp2)
+		err = row.Scan(&id_sfp1, &id_sfp2, &testMax.delayMax, &testMax.jitterMax, &testMax.delayOneMax, &testMax.jitterOneMax, &testMax.lossMax)
 		if err != nil {
 
 			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
@@ -840,7 +845,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			c.WriteTo(b, addr)
 		}()
 
-		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type)
+		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax)
 
 		check_count--
 		if check_count < 0 {
@@ -964,7 +969,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		//period := time.Duration(period_nano)
 		//fmt.Println("Start")
 		for range ticker.C {
-		//for {
+			//for {
 			//	select {
 			//	case <-ticker.C:
 			//time.Sleep(period)
@@ -1226,7 +1231,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16) {
+func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 
@@ -1331,7 +1336,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 			var dt = time.Now()
 			//dt.Format(time.RFC3339)
-			rezul, err := db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, jitter, jitter1, jitter2, loss)
+			_, err = db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, jitter, jitter1, jitter2, loss)
 			if err != nil {
 				db.Close()
 				fmt.Println(" -!! Error !!-")
@@ -1339,9 +1344,32 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				fmt.Println(" ----=====----")
 				return
 			}
-			fmt.Println(rezul)
-			db.Close()
+			if (tMax.delayMax != 0) && (tMax.delayMax > delay) {
+				msg := fmt.Sprintf("!! Превышение порогового значения времени двусторонней задержки на %.4f мкс", delay-tMax.delayMax)
+				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
+			}
+			if (tMax.jitterMax != 0) && (tMax.jitterMax > float32(math.Abs(float64(jitter)))) {
+				msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени двусторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter)))-tMax.jitterMax)
+				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
+			}
+			if (tMax.lossMax != 0) && (tMax.lossMax > loss) {
+				msg := fmt.Sprintf("!! Превышение порогового значения вероятности ошибки на %.6f", loss-tMax.lossMax)
+				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
+			}
+			if (tMax.delayOneMax != 0) && ((tMax.delayOneMax > delay1) || (tMax.delayOneMax > delay2)) {
+				msg := fmt.Sprintf("!! Превышение порогового значения времени односторонней задержки на %.4f мкс", float32(math.Max(float64(delay1), float64(delay2)))-tMax.delayOneMax)
+				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
+			}
+			if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax > float32(math.Abs(float64(jitter1)))) {
+				msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter1)))-tMax.jitterOneMax)
+				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
+			}
+			if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax > float32(math.Abs(float64(jitter2)))) {
+				msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter2)))-tMax.jitterOneMax)
+				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
+			}
 
+			db.Close()
 			break
 		} else {
 			//	fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
