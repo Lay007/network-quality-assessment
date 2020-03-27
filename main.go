@@ -1344,27 +1344,27 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				fmt.Println(" ----=====----")
 				return
 			}
-			if (tMax.delayMax != 0) && (tMax.delayMax > delay) {
+			if (tMax.delayMax != 0) && (tMax.delayMax < delay) {
 				msg := fmt.Sprintf("!! Превышение порогового значения времени двусторонней задержки на %.4f мкс", delay-tMax.delayMax)
 				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
 			}
-			if (tMax.jitterMax != 0) && (tMax.jitterMax > float32(math.Abs(float64(jitter)))) {
+			if (tMax.jitterMax != 0) && (tMax.jitterMax < float32(math.Abs(float64(jitter)))) {
 				msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени двусторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter)))-tMax.jitterMax)
 				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
 			}
-			if (tMax.lossMax != 0) && (tMax.lossMax > loss) {
+			if (tMax.lossMax != 0) && (tMax.lossMax < loss) {
 				msg := fmt.Sprintf("!! Превышение порогового значения вероятности ошибки на %.6f", loss-tMax.lossMax)
 				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
 			}
-			if (tMax.delayOneMax != 0) && ((tMax.delayOneMax > delay1) || (tMax.delayOneMax > delay2)) {
+			if (tMax.delayOneMax != 0) && ((tMax.delayOneMax < delay1) || (tMax.delayOneMax < delay2)) {
 				msg := fmt.Sprintf("!! Превышение порогового значения времени односторонней задержки на %.4f мкс", float32(math.Max(float64(delay1), float64(delay2)))-tMax.delayOneMax)
 				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
 			}
-			if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax > float32(math.Abs(float64(jitter1)))) {
+			if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter1)))) {
 				msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter1)))-tMax.jitterOneMax)
 				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
 			}
-			if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax > float32(math.Abs(float64(jitter2)))) {
+			if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter2)))) {
 				msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter2)))-tMax.jitterOneMax)
 				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
 			}
