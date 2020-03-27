@@ -1354,7 +1354,14 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 			if (tMax.lossMax != 0) && (tMax.lossMax < loss) {
 				msg := fmt.Sprintf("!! Превышение порогового значения вероятности ошибки на %.6f", loss-tMax.lossMax)
-				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
+				_, err = db.Exec("INSERT INTO test_sla_real_alarm (id_test, datetime, message) VALUES(?, ?, ?)", id, dt, msg)
+				if err != nil {
+					
+					fmt.Println(" -!! Error !!-")
+					fmt.Println(err)
+					fmt.Println(" ----=====----")
+					
+				}
 			}
 			fmt.Println(" loss max =", tMax.lossMax )
 			fmt.Println(" loss     =", loss )
