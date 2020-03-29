@@ -201,6 +201,7 @@ func main() {
 
 		fmt.Println("Net_NAME: ", conf.net_interface_name)
 		fmt.Println("interface: ", ifi.Name)
+		fmt.Println("Time now: ", time.Now())
 
 		// проверка тестов пропускной способности
 		row_test_thr, err := db.Query("SELECT id FROM test_throughput WHERE status=1")
