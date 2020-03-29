@@ -1386,12 +1386,12 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(in_solve int64) int64 {
 
-	size_s := 512
+	size_s := 256
 	(*test).delay_solve = append((*test).delay_solve, in_solve)
-	if len((*test).delay_solve) < (size_s) {
+	if len((*test).delay_solve) < (size_s+1) {
 		return 0
 	}
-	test.delay_solve = (*test).delay_solve[1:(size_s)]
+	test.delay_solve = (*test).delay_solve[1:(size_s+1)]
 
 	mean := float32((*test).delay_solve[0]) / float32(size_s)
 
