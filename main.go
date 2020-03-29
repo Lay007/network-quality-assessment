@@ -1319,7 +1319,9 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 
 			if test_id.test_delay_1 == true {
-				delay1 = zabbix_delay_to(node_zabbix, markerSFP2-markerSFP11, host_zabbix, port_zabbix)
+				rez_delay := (*test).getOneDelay(markerSFP2 - markerSFP11)
+				delay1 = zabbix_delay_to(node_zabbix, rez_delay, host_zabbix, port_zabbix)
+				//delay1 = zabbix_delay_to(node_zabbix, markerSFP2-markerSFP11, host_zabbix, port_zabbix)
 				delay2 = zabbix_delay_un(node_zabbix, markerSFP12-markerSFP2, host_zabbix, port_zabbix)
 				if test_id.test_delay_1_jitter == true {
 					jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(markerSFP2-markerSFP11), host_zabbix, port_zabbix)
@@ -1356,9 +1358,9 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			if (tMax.lossMax != 0) && (tMax.lossMax < loss) {
 				msg := fmt.Sprintf("!! Превышение порогового значения вероятности ошибки на %.6f", loss-tMax.lossMax)
 				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
-				
+
 			}
-			
+
 			if (tMax.delayOneMax != 0) && ((tMax.delayOneMax < delay1) || (tMax.delayOneMax < delay2)) {
 				msg := fmt.Sprintf("!! Превышение порогового значения времени односторонней задержки на %.4f мкс", float32(math.Max(float64(delay1), float64(delay2)))-tMax.delayOneMax)
 				db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
@@ -1382,6 +1384,33 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 }
 
 //var mass_solve []int64
+func (test *testSLA) getOneDelay(in_solve int64) int64 {
+
+	size_s := 512
+	(*test).delay_solve = append((*test).delay_solve, in_solve)
+	if len((*test).delay_solve) < (size_s) {
+		return 0
+	}
+	test.delay_solve = (*test).delay_solve[1:(size_s)]
+
+	mean := float32((*test).delay_solve[0]) / float32(size_s)
+
+	for ind := 1; ind < size_s; ind++ {
+
+		mean = mean + (float32((*test).delay_solve[ind]) / float32(size_s))
+	}
+
+	/*
+		fmt.Printf(" --== Jitter debug ==-- \n")
+		fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
+		fmt.Printf(" --== Max = %x \n", max)
+		fmt.Printf(" --== Min = %x \n", min)
+		fmt.Printf(" --== Mean = %f \n", mean)
+		fmt.Printf(" --== Jitter = %f \n", jitter)
+		fmt.Printf(" --== End Jitter debug ==-- \n")
+	*/
+	return int64(mean)
+}
 
 func (test *testSLA) getJitter(in_solve int64) float32 {
 	var jitter float32
