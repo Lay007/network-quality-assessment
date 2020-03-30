@@ -515,7 +515,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println("->> period_nano  = ", period_nano)
 	fmt.Println("->> packet_count = ", packet_count)
 
-	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type)
+	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
 	//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	count_rez, per := test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
@@ -525,7 +525,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type, test.test_type)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
@@ -536,7 +536,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type, test.test_type)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
@@ -547,7 +547,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 512, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 512, number, test_type, test.test_type)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
@@ -558,7 +558,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1024)
@@ -567,7 +567,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1280)
@@ -576,7 +576,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	count_rez, per = test_c.testThrGen(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1518)
@@ -842,7 +842,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}
 		go func() {
 			number++
-			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type)
+			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 			c.WriteTo(b, addr)
 		}()
 
@@ -871,7 +871,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 }
 
-func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_dst []byte, size int, number uint32, test_type uint16) []byte {
+func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_dst []byte, size int, number uint32, test_type uint16, testWay int) []byte {
 	ip := iphdr{
 		vhl:   0x45,
 		tos:   0,
@@ -890,7 +890,13 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	sfpdat.number = number
 	sfpdat.test_type = test_type
 	//ip.iplen = uint16(20 + 26 + 4)
-
+	if testWay == 2 {
+		t_time := int64(time.Now().UnixNano())
+		for ind := 0; ind < 7; ind++ {
+			sfpdat.merkertime2[ind] = byte((t_time >> (8 * ind)) & 0xFF)
+		}
+		sfpdat.id = 0xFB
+	}
 	payloadAdd := make([]byte, 0)
 	if size > 66 {
 		payloadAdd = make([]byte, size-66)
@@ -1309,26 +1315,50 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			var delay, delay1, delay2, jitter, jitter1, jitter2, loss float32
 
 			if test_id.test_delay == true {
-				delay = zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
-				if test_id.test_delay_jitter == true {
-					jitter = zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
+				if test_id.test_type == 1 {
+					delay = zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
+					if test_id.test_delay_jitter == true {
+						jitter = zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
+					}
+				}
+				if test_id.test_type == 2 {
+					t_time := int64(time.Now().Nanosecond())
+					delay = zabbix_delay(node_zabbix, t_time-markerSFP2, host_zabbix, port_zabbix)
+					if test_id.test_delay_jitter == true {
+						jitter = zabbix_jitter(node_zabbix, (*test).getJitter(t_time-markerSFP2), host_zabbix, port_zabbix)
+					}
 				}
 			}
 			if test_id.test_loss == true {
 				loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
 			}
 
-			if test_id.test_delay_1 == true {
-				rez_delay := (*test).getOneDelay(markerSFP2 - markerSFP11)
-				delay1 = zabbix_delay_to(node_zabbix, rez_delay, host_zabbix, port_zabbix)
-				//delay1 = zabbix_delay_to(node_zabbix, markerSFP2-markerSFP11, host_zabbix, port_zabbix)
-				delay2 = zabbix_delay_un(node_zabbix, markerSFP12-markerSFP2, host_zabbix, port_zabbix)
-				if test_id.test_delay_1_jitter == true {
-					jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(markerSFP2-markerSFP11), host_zabbix, port_zabbix)
-					jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(markerSFP12-markerSFP2), host_zabbix, port_zabbix)
+			if test_id.test_type == 1 {
+				if test_id.test_delay_1 == true {
+					rez_delay := (*test).getOneDelay(markerSFP2 - markerSFP11)
+					delay1 = zabbix_delay_to(node_zabbix, rez_delay, host_zabbix, port_zabbix)
+					delay2 = zabbix_delay_un(node_zabbix, markerSFP12-markerSFP2, host_zabbix, port_zabbix)
+					if test_id.test_delay_1_jitter == true {
+						jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay), host_zabbix, port_zabbix)
+						jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(markerSFP12-markerSFP2), host_zabbix, port_zabbix)
 
+					}
 				}
 			}
+			if test_id.test_type == 2 {
+				t_time := int64(time.Now().Nanosecond())
+				if test_id.test_delay_1 == true {
+					rez_delay := (*test).getOneDelay(markerSFP2 - markerSFP12)
+					delay1 = zabbix_delay_to(node_zabbix, rez_delay, host_zabbix, port_zabbix)
+					delay2 = zabbix_delay_un(node_zabbix, markerSFP12-t_time, host_zabbix, port_zabbix)
+					if test_id.test_delay_1_jitter == true {
+						jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay), host_zabbix, port_zabbix)
+						jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(markerSFP12-t_time), host_zabbix, port_zabbix)
+
+					}
+				}
+			}
+
 			db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err != nil {
 				db.Close()
@@ -1386,18 +1416,18 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(in_solve int64) int64 {
 
-	size_s := 256
-	(*test).delay_solve = append((*test).delay_solve, in_solve)
-	if len((*test).delay_solve) < (size_s+1) {
+	size_s := 2048
+	(*test).delay_solve_to = append((*test).delay_solve_to, in_solve)
+	if len((*test).delay_solve_to) < (size_s + 1) {
 		return 0
 	}
-	test.delay_solve = (*test).delay_solve[1:(size_s+1)]
+	test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
 
-	mean := float32((*test).delay_solve[0]) / float32(size_s)
+	mean := float32((*test).delay_solve_to[0]) / float32(size_s)
 
 	for ind := 1; ind < size_s; ind++ {
 
-		mean = mean + (float32((*test).delay_solve[ind]) / float32(size_s))
+		mean = mean + (float32((*test).delay_solve_to[ind]) / float32(size_s))
 	}
 
 	/*

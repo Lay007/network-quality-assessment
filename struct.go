@@ -84,8 +84,10 @@ type testThroughput struct {
 }
 
 type testReal struct {
-	id                  int
-	test_type           int
+	id        int
+	test_type int //	1 - "SFP-SLA1 - SFP-SLA2"
+	//  2 - "Сервер - SFP-SLA1"
+	//  3 - "Сервер - SFP-SLA2"
 	name                string
 	module_first        int
 	module_second       int
