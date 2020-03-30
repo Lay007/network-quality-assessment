@@ -889,10 +889,11 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 
 	sfpdat.number = number
 	sfpdat.test_type = test_type
+	var ind uint
 	//ip.iplen = uint16(20 + 26 + 4)
 	if testWay == 2 {
 		t_time := int64(time.Now().UnixNano())
-		for ind := 0; ind < 7; ind++ {
+		for ind = 0; ind < 7; ind++ {
 			sfpdat.merkertime2[ind] = byte((t_time >> (8 * ind)) & 0xFF)
 		}
 		sfpdat.id = 0xFB
