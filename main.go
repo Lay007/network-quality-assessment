@@ -1324,7 +1324,9 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 					}
 				}
 				if test_id.test_type == 2 {
-					t_time := int64(time.Now().Nanosecond())
+					t_time := int64(float32(time.Now().Nanosecond())* 1000000 / float32(math.Pow(2, 32)))
+				
+
 					delay = zabbix_delay(node_zabbix, t_time-markerSFP2, host_zabbix, port_zabbix)
 					if test_id.test_delay_jitter == true {
 						jitter = zabbix_jitter(node_zabbix, (*test).getJitter(t_time-markerSFP2), host_zabbix, port_zabbix)
