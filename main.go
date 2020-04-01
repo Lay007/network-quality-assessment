@@ -906,7 +906,8 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	if size > 66 {
 		payloadAdd = make([]byte, size-66)
 	}
-	ip.iplen = uint16(unsafe.Sizeof(ip) + unsafe.Sizeof(sfpdat) + unsafe.Sizeof(payloadAdd))
+//	ip.iplen = uint16(unsafe.Sizeof(ip) + unsafe.Sizeof(sfpdat) + unsafe.Sizeof(payloadAdd))
+	ip.iplen = 80
 	ip.checksum()
 
 	var bin_buf bytes.Buffer
