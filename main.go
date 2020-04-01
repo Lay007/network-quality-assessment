@@ -11,7 +11,7 @@ import (
 	"net"
 	"runtime"
 	"time"
-	"unsafe"
+	//"unsafe"
 
 	"github.com/google/gopacket/pcap"
 
