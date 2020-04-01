@@ -892,8 +892,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	var ind uint
 	//ip.iplen = uint16(20 + 26 + 4)
 	if testWay == 2 {
-		t_time := int64(time.Now().UnixNano())
-		//* 1000000 / float32(math.Pow(2, 32))
+		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32) / 1000000000)) +11188800	
 
 		//t_time = t_time << (4*8)
 		for ind = 0; ind < 7; ind++ {
