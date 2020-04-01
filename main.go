@@ -883,7 +883,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	copy(ip.src[:], ipsrc.To4())
 	copy(ip.dst[:], ipdst1.To4())
 	sfpdat := sfpsla{
-	//	id: 0xFC,
+		//	id: 0xFC,
 	}
 	copy(sfpdat.dst[:], ipdst2.To4())
 
@@ -905,8 +905,11 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	payloadAdd := make([]byte, 0)
 	if size > 66 {
 		payloadAdd = make([]byte, size-66)
+		for h := 0; h < len(payloadAdd); h++ {
+			payloadAdd[h] = byte(h)
+		}
 	}
-//	ip.iplen = uint16(unsafe.Sizeof(ip) + unsafe.Sizeof(sfpdat) + unsafe.Sizeof(payloadAdd))
+	//	ip.iplen = uint16(unsafe.Sizeof(ip) + unsafe.Sizeof(sfpdat) + unsafe.Sizeof(payloadAdd))
 	ip.iplen = 52
 	ip.checksum()
 
@@ -982,7 +985,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		//period := time.Duration(period_nano)
 		//fmt.Println("Start")
 		//for range ticker.C {
-			for {
+		for {
 			//	select {
 			//	case <-ticker.C:
 			//time.Sleep(period)
