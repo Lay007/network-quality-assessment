@@ -883,7 +883,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	copy(ip.src[:], ipsrc.To4())
 	copy(ip.dst[:], ipdst1.To4())
 	sfpdat := sfpsla{
-		id: 0xFC,
+	//	id: 0xFC,
 	}
 	copy(sfpdat.dst[:], ipdst2.To4())
 
