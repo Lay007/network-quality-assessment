@@ -1327,8 +1327,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 					}
 				}
 				if test_id.test_type == 2 {
-					t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
-
+					//t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
+					t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 					delay = zabbix_delay(node_zabbix, t_time-markerSFP2, host_zabbix, port_zabbix)
 					if test_id.test_delay_jitter == true {
 						jitter = zabbix_jitter(node_zabbix, (*test).getJitter(t_time-markerSFP2), host_zabbix, port_zabbix)
@@ -1352,7 +1352,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				}
 			}
 			if test_id.test_type == 2 {
-				t_time := int64(time.Now().Nanosecond())
+				//t_time := int64(time.Now().Nanosecond())
+				t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 				if test_id.test_delay_1 == true {
 					rez_delay := (*test).getOneDelay(markerSFP2 - markerSFP12)
 					delay1 = zabbix_delay_to(node_zabbix, rez_delay, host_zabbix, port_zabbix)
