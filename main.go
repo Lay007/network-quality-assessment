@@ -892,7 +892,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	var ind uint
 	//ip.iplen = uint16(20 + 26 + 4)
 	if testWay == 2 {
-		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32) / 1000000000)) + 0xAABA4000000000	
+		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) + 0xAABA4000000000
 
 		//t_time = t_time << (4*8)
 		for ind = 0; ind < 7; ind++ {
@@ -1326,8 +1326,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 					}
 				}
 				if test_id.test_type == 2 {
-					t_time := int64(float32(time.Now().Nanosecond()))//* 1000000 / float32(math.Pow(2, 32)))
-				
+					t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
 
 					delay = zabbix_delay(node_zabbix, t_time-markerSFP2, host_zabbix, port_zabbix)
 					if test_id.test_delay_jitter == true {
