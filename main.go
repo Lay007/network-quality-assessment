@@ -892,9 +892,9 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	var ind uint
 	//ip.iplen = uint16(20 + 26 + 4)
 	if testWay == 2 {
-	//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) + 0xAABA4000000000
+		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) + 0xAABA4000000000
 		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
-	//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000))
+		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000))
 		//t_time = t_time << (4*8)
 		for ind = 0; ind < 7; ind++ {
 			sfpdat.merkertime2[6-ind] = byte((t_time >> (8 * ind)) & 0xFF)
@@ -1329,6 +1329,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				if test_id.test_type == 2 {
 					//t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
 					t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
+					t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 					delay = zabbix_delay(node_zabbix, t_time-markerSFP2, host_zabbix, port_zabbix)
 					if test_id.test_delay_jitter == true {
 						jitter = zabbix_jitter(node_zabbix, (*test).getJitter(t_time-markerSFP2), host_zabbix, port_zabbix)
@@ -1355,7 +1356,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				//t_time := int64(time.Now().Nanosecond())
 				t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 				if test_id.test_delay_1 == true {
-					rez_delay := (*test).getOneDelay(markerSFP2 - markerSFP12)
+					rez_delay := (*test).getOneDelay(markerSFP2 - t_time)
 					delay1 = zabbix_delay_to(node_zabbix, rez_delay, host_zabbix, port_zabbix)
 					delay2 = zabbix_delay_un(node_zabbix, markerSFP12-t_time, host_zabbix, port_zabbix)
 					if test_id.test_delay_1_jitter == true {
