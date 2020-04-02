@@ -984,12 +984,12 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
 	go func() {
-		//ticker := time.NewTicker(time.Duration(period_nano))
+		ticker := time.NewTicker(time.Duration(period_nano))
 		//timer := time.NewTimer(time.Microsecond * 10)
 		//period := time.Duration(period_nano)
 		//fmt.Println("Start")
-		//for range ticker.C {
-		for {
+		for range ticker.C {
+			//for {
 			//	select {
 			//	case <-ticker.C:
 			//time.Sleep(period)
@@ -1006,7 +1006,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
-		//ticker.Stop()
+		ticker.Stop()
 		fmt.Println("		 -*- rez_time = ", rez_time)
 	}()
 	//}
@@ -1263,6 +1263,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	// Keep receiving messages forever.
 	for {
 		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
+		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 		if time.Since(start) > time.Second*5 {
 			break
 		}
@@ -1338,7 +1339,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				if test_id.test_type == 2 {
 					//t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
 
-					t_time = t_time & int64(0xFFFFFFFFFFFFFF)
+					
 					delay = zabbix_delay(node_zabbix, t_time-markerSFP2, host_zabbix, port_zabbix)
 					if test_id.test_delay_jitter == true {
 						jitter = zabbix_jitter(node_zabbix, (*test).getJitter(t_time-markerSFP2), host_zabbix, port_zabbix)
@@ -1666,7 +1667,7 @@ func zabbix_jitter(host string, jitter float32, defaultHost string, defaultPort 
 		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
 	}
 	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "jitter", fmt.Sprint(jitter), time.Now().Unix()))
+	metrics = append(metrics, NewMetric(host, "jitter", fmt.Sprint(math.Abs(float64(jitter))), time.Now().Unix()))
 
 	// Create instance of Packet class
 	packet := NewPacket(metrics)
@@ -1683,7 +1684,7 @@ func zabbix_jitter_to(host string, jitter float32, defaultHost string, defaultPo
 		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
 	}
 	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "jitter_delay_SFP1_SFP2", fmt.Sprint(jitter), time.Now().Unix()))
+	metrics = append(metrics, NewMetric(host, "jitter_delay_SFP1_SFP2", fmt.Sprint(math.Abs(float64(jitter))), time.Now().Unix()))
 	packet := NewPacket(metrics)
 	z := NewSender(defaultHost, defaultPort)
 	z.Send(packet)
@@ -1696,7 +1697,7 @@ func zabbix_jitter_un(host string, jitter float32, defaultHost string, defaultPo
 		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
 	}
 	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "jitter_delay_SFP2_SFP1", fmt.Sprint(jitter), time.Now().Unix()))
+	metrics = append(metrics, NewMetric(host, "jitter_delay_SFP2_SFP1", fmt.Sprint(math.Abs(float64(jitter))), time.Now().Unix()))
 	packet := NewPacket(metrics)
 	z := NewSender(defaultHost, defaultPort)
 	z.Send(packet)
