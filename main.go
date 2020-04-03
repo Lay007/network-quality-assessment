@@ -834,7 +834,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	check_count := 10
 	counter := test.count
 	for range t.C {
-		fmt.Println(time.Now)
+		fmt.Println(time.Now())
 		if !circ {
 			counter--
 			if counter <= 0 {
