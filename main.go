@@ -825,6 +825,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	number = 1
 	//b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, test.block_size, number)
 	t := time.NewTicker(time.Duration(test.clock) * time.Millisecond)
+	defer t.Stop()
 	var circ bool
 	if test.count == 0 {
 		circ = true
@@ -851,7 +852,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}()
 
 		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax)
-		time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
+		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
 		if check_count < 0 {
 			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
