@@ -834,7 +834,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	check_count := 10
 	counter := test.count
 	for range t.C {
-		fmt.Println(t.C)
+		fmt.Println(time.Now)
 		if !circ {
 			counter--
 			if counter <= 0 {
@@ -844,14 +844,14 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		go func() {
 			number++
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
-			ByteRecive, err:=c.WriteTo(b, addr)
-			fmt.Println("\t>>>=== ",err)
-			fmt.Println("\t>>>=== ",ByteRecive)
+			ByteRecive, err := c.WriteTo(b, addr)
+			fmt.Println("\t>>>=== ", err)
+			fmt.Println("\t>>>=== ", ByteRecive)
 			fmt.Println("   -----   -------")
 		}()
 
 		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax)
-time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
+		time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
 		if check_count < 0 {
 			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
@@ -1343,15 +1343,14 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				if test_id.test_type == 2 {
 					//t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
 
-					
 					delay = zabbix_delay(node_zabbix, t_time-markerSFP2, host_zabbix, port_zabbix)
 					if test_id.test_delay_jitter == true {
 						jitter = zabbix_jitter(node_zabbix, (*test).getJitter(t_time-markerSFP2), host_zabbix, port_zabbix)
 					}
 				}
 			}
-			fmt.Println("==>> number_pack - ",numberR)
-			fmt.Println("==>> number_test - ",test.number)
+			fmt.Println("==>> number_pack - ", numberR)
+			fmt.Println("==>> number_test - ", test.number)
 			if test_id.test_loss == true {
 				loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
 			}
