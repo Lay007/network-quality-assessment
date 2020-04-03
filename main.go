@@ -1349,6 +1349,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 					}
 				}
 			}
+			fmt.Println("==>> number_pack - ",numberR)
+			fmt.Println("==>> number_test - ",test.number)
 			if test_id.test_loss == true {
 				loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
 			}
