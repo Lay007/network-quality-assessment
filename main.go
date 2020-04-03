@@ -851,7 +851,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}()
 
 		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax)
-
+time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
 		if check_count < 0 {
 			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
