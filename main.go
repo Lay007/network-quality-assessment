@@ -1269,7 +1269,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	for {
 		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
-		if time.Since(start) > time.Second*20 {
+		if time.Since(start) > (time.Second * 20) {
 			break
 		}
 		n, addr, err := c.ReadFrom(b)
