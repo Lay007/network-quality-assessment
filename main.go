@@ -843,7 +843,10 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		go func() {
 			number++
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
-			c.WriteTo(b, addr)
+			ByteRecive, err:=c.WriteTo(b, addr)
+			fmt.Println("\t>>>=== ",err)
+			fmt.Println("\t>>>=== ",ByteRecive)
+			fmt.Println("   -----   -------")
 		}()
 
 		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax)
