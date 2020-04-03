@@ -1274,11 +1274,14 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		}
 		n, addr, err := c.ReadFrom(b)
 		if err != nil {
+			fmt.Printf("failed to receive message: %v", err)
 			log.Fatalf("failed to receive message: %v", err)
+
 		}
 
 		// Unpack Ethernet II frame into Go representation.
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
+			fmt.Printf("failed to unmarshal ethernet frame: %v", err)
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
 		//fmt.Println("\n\n--=Test ==-- - ")
@@ -1300,6 +1303,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if (len(f.Payload)>=52)&&(f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 
 			(*test).number++
+			/*
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
 			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
@@ -1317,7 +1321,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
 			fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
 			fmt.Println(" --== End Packet ==--")
-
+*/
 			var markerSFP11, markerSFP12, markerSFP2 int64
 			var ind uint
 
