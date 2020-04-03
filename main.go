@@ -1360,7 +1360,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			if test_id.test_loss == true {
 				loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
 			}
-
+/*
 			if test_id.test_type == 1 {
 				if test_id.test_delay_1 == true {
 					rez_delay := (*test).getOneDelay(markerSFP2 - markerSFP11)
@@ -1387,7 +1387,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 					}
 				}
 			}
-
+*/
 			db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err != nil {
 				db.Close()
@@ -1434,7 +1434,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 
 			db.Close()
-			fmt.Printf("  ==>> %V  --> %s",id,time.Since(start))
+			fmt.Printf("  ==>> %V  --> %s\n",id,time.Since(start))
 			break
 		} else {
 			//	fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
