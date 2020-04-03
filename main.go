@@ -1297,7 +1297,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		//fmt.Println(" --== End Test ==--")
 
 		// Display source of message and message itself.
-		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+		if (len(f.Payload)>=52)&&(f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 
 			(*test).number++
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
