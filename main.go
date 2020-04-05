@@ -1272,8 +1272,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if time.Since(start) > (time.Second * 20) {
 			break
 		}
-		n, addr, err := c.ReadFrom(b)
-		//n, _, err := c.ReadFrom(b)
+		//n, addr, err := c.ReadFrom(b)
+		n, _, err := c.ReadFrom(b)
 		if err != nil {
 			fmt.Printf("failed to receive message: %v", err)
 			log.Fatalf("failed to receive message: %v", err)
