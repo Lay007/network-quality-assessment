@@ -1437,7 +1437,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			fmt.Printf("  ==>> %v  --> %s\n", id, time.Since(start))
 			break
 		} else {
-			fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
+			//fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
 
 		}
 	}
