@@ -1289,7 +1289,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		}
 		fmt.Printf(" ==> n = %v, packedSize= %v",len(f.Payload),packetSize)
 		if len(f.Payload) != packetSize {
-			break
+			continue
 		}
 		//fmt.Println("\n\n--=Test ==-- - ")
 		//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
