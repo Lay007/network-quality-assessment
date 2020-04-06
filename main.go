@@ -993,8 +993,8 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		//timer := time.NewTimer(time.Microsecond * 10)
 		//period := time.Duration(period_nano)
 		//fmt.Println("Start")
-		for range ticker.C {
-			//for {
+		//for range ticker.C {
+		for {
 			//	select {
 			//	case <-ticker.C:
 			//time.Sleep(period)
