@@ -846,11 +846,11 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
-		go func() {			
+		go func() {
 			c.WriteTo(b, addr)
 		}()
 
-		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax,b)
+		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
 		if check_count < 0 {
@@ -1276,12 +1276,12 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if time.Since(start) > (time.Second * 20) {
 			break
 		}
-		if (n!=packetSize){
+		if n != packetSize {
 			break
 		}
 		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
-		
+
 		//n, addr, err := c.ReadFrom(b)
 		// Unpack Ethernet II frame into Go representation.
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
