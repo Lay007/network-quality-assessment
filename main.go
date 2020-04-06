@@ -1273,7 +1273,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 
 		}
 
-		if (n-14) != packetSize {
+		if (n) != packetSize {
 			continue
 		}
 
