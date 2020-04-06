@@ -1290,7 +1290,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			fmt.Printf("failed to unmarshal ethernet frame: %v", err)
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-		//fmt.Printf(" ==> n = %v, packedSize= %v",len(f.Payload),packetSize)
+		fmt.Printf("\n ==> n = %v, packedSize= %v",len(f.Payload),packetSize)
 		
 		//fmt.Println("\n\n--=Test ==-- - ")
 		//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
