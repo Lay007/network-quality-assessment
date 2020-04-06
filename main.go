@@ -9,7 +9,7 @@ import (
 	"math"
 	"math/rand"
 	"net"
-	"runtime"
+	//"runtime"
 	"time"
 	//"unsafe"
 
@@ -75,7 +75,7 @@ func (h *iphdr) checksum() {
 
 func main() {
 
-	runtime.GOMAXPROCS(1024)
+	//runtime.GOMAXPROCS(1024)
 
 	//time.Sleep(100 * time.Second)
 
@@ -989,7 +989,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
 	go func() {
-		ticker := time.NewTicker(time.Duration(period_nano))
+		//ticker := time.NewTicker(time.Duration(period_nano))
 		//timer := time.NewTimer(time.Microsecond * 10)
 		//period := time.Duration(period_nano)
 		//fmt.Println("Start")
@@ -1003,7 +1003,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 			if cnt <= 0 {
 				break
 			}
-			if cnt%100 == 0 {
+			if cnt%1000 == 0 {
 				if time.Since(gen_start) >= time_gen {
 					break
 				}
@@ -1011,7 +1011,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
-		ticker.Stop()
+		//ticker.Stop()
 		fmt.Println("		 -*- rez_time = ", rez_time)
 	}()
 	//}
