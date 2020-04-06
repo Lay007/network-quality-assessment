@@ -1276,6 +1276,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if time.Since(start) > (time.Second * 20) {
 			break
 		}
+		fmt.Printf(" ==> n = %v, packedSize= %v",n,packetSize)
 		if n != packetSize {
 			break
 		}
