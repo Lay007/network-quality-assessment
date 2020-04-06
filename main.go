@@ -1273,12 +1273,12 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 
 		}
 
-		if (n) != packetSize {
-			continue
+		if time.Since(start) > (time.Millisecond * 500) {
+			break
 		}
 
-		if time.Since(start) > (time.Second * 20) {
-			break
+		if (n) != packetSize {
+			continue
 		}
 				
 		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
@@ -1290,8 +1290,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			fmt.Printf("failed to unmarshal ethernet frame: %v", err)
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-		fmt.Printf("\n ==> n = %v, packedSize= %v",len(f.Payload),packetSize)
-		
+				
 		//fmt.Println("\n\n--=Test ==-- - ")
 		//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 		//fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
