@@ -1369,12 +1369,12 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			//*
 			if test_id.test_type == 1 {
 				if test_id.test_delay_1 == true {
-					rez_delay := (*test).getOneDelay(markerSFP2 - markerSFP11)
-					delay1 = zabbix_delay_to(node_zabbix, rez_delay, host_zabbix, port_zabbix)
-					delay2 = zabbix_delay_un(node_zabbix, markerSFP12-markerSFP2, host_zabbix, port_zabbix)
+					rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP2 - markerSFP11, markerSFP12-markerSFP2)
+					delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
+					delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
 					if test_id.test_delay_1_jitter == true {
-						jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay), host_zabbix, port_zabbix)
-						jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(markerSFP12-markerSFP2), host_zabbix, port_zabbix)
+						jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
+						jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
 
 					}
 				}
@@ -1450,20 +1450,24 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 }
 
 //var mass_solve []int64
-func (test *testSLA) getOneDelay(in_solve int64) int64 {
+func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) int64,int64 {
 
 	size_s := 2048
-	(*test).delay_solve_to = append((*test).delay_solve_to, in_solve)
+	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
+	(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
 	if len((*test).delay_solve_to) < (size_s + 1) {
 		return 0
 	}
 	test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
+	test.delay_solve_un = (*test).delay_solve_un[1:(size_s + 1)]
 
-	mean := float32((*test).delay_solve_to[0]) / float32(size_s)
+	mean_to := float32((*test).delay_solve_to[0]) / float32(size_s)
+	mean_un := float32((*test).delay_solve_un[0]) / float32(size_s)
 
 	for ind := 1; ind < size_s; ind++ {
 
-		mean = mean + (float32((*test).delay_solve_to[ind]) / float32(size_s))
+		mean_to = mean_to+(float32((*test).delay_solve_to[ind]) / float32(size_s))
+		mean_un = mean_un + (float32((*test).delay_solve_un[ind]) / float32(size_s))
 	}
 
 	/*
@@ -1475,7 +1479,7 @@ func (test *testSLA) getOneDelay(in_solve int64) int64 {
 		fmt.Printf(" --== Jitter = %f \n", jitter)
 		fmt.Printf(" --== End Jitter debug ==-- \n")
 	*/
-	return int64(mean)
+	return int64(mean_to), int64(mean_un)
 }
 
 func (test *testSLA) getJitter(in_solve int64) float32 {
