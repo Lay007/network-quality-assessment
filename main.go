@@ -1280,7 +1280,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if (n) != packetSize {
 			continue
 		}
-				
+
 		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 
@@ -1290,7 +1290,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			fmt.Printf("failed to unmarshal ethernet frame: %v", err)
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 		}
-				
+
 		//fmt.Println("\n\n--=Test ==-- - ")
 		//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 		//fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
@@ -1369,7 +1369,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			//*
 			if test_id.test_type == 1 {
 				if test_id.test_delay_1 == true {
-					rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP2 - markerSFP11, markerSFP12-markerSFP2)
+					rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP2-markerSFP11, markerSFP12-markerSFP2)
 					delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
 					delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
 					if test_id.test_delay_1_jitter == true {
@@ -1383,12 +1383,12 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				//t_time := int64(time.Now().Nanosecond())
 				//t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 				if test_id.test_delay_1 == true {
-					rez_delay := (*test).getOneDelay(markerSFP12 - t_time)
-					delay1 = zabbix_delay_to(node_zabbix, rez_delay, host_zabbix, port_zabbix)
-					delay2 = zabbix_delay_un(node_zabbix, markerSFP12-t_time, host_zabbix, port_zabbix)
+					rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP12-markerSFP2, markerSFP12-t_time)
+					delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
+					delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
 					if test_id.test_delay_1_jitter == true {
-						jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay), host_zabbix, port_zabbix)
-						jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(markerSFP12-t_time), host_zabbix, port_zabbix)
+						jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
+						jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
 
 					}
 				}
@@ -1450,13 +1450,13 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 }
 
 //var mass_solve []int64
-func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) int64,int64 {
+func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, int64) {
 
 	size_s := 2048
 	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
 	(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
 	if len((*test).delay_solve_to) < (size_s + 1) {
-		return 0
+		return in_delay_to, in_delay_un
 	}
 	test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
 	test.delay_solve_un = (*test).delay_solve_un[1:(size_s + 1)]
@@ -1466,7 +1466,7 @@ func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) int64,int
 
 	for ind := 1; ind < size_s; ind++ {
 
-		mean_to = mean_to+(float32((*test).delay_solve_to[ind]) / float32(size_s))
+		mean_to = mean_to + (float32((*test).delay_solve_to[ind]) / float32(size_s))
 		mean_un = mean_un + (float32((*test).delay_solve_un[ind]) / float32(size_s))
 	}
 
