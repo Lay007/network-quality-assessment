@@ -1452,8 +1452,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, int64) {
 
-	fmt.Println(test.delay_solve_to)
-	if len((*test).delay_solve_to) < 2 {
+		if len((*test).delay_solve_to) < 2 {
 
 		(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
 		(*test).delay_solve_to = append((*test).delay_solve_to, 1)
@@ -1472,7 +1471,7 @@ func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, i
 
 	mean_un := float32((*test).delay_solve_un[0]) * float32((*test).delay_solve_un[1])
 	(*test).delay_solve_un[1] = (*test).delay_solve_un[1] + 1
-	mean_to = (mean_un + float32(in_delay_un)) / float32((*test).delay_solve_un[1])
+	mean_un = (mean_un + float32(in_delay_un)) / float32((*test).delay_solve_un[1])
 	(*test).delay_solve_un[0] = int64(mean_un)
 
 	/*
