@@ -1452,23 +1452,27 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, int64) {
 
-	size_s := 2048
-	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
-	(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
-	if len((*test).delay_solve_to) < (size_s + 1) {
+	if len((*test).delay_solve_to) < 2 {
+
+		(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
+		(*test).delay_solve_to = append((*test).delay_solve_to, 1)
+
+		(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
+		(*test).delay_solve_un = append((*test).delay_solve_un, 1)
+
 		return in_delay_to, in_delay_un
+
 	}
-	test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
-	test.delay_solve_un = (*test).delay_solve_un[1:(size_s + 1)]
 
-	mean_to := float32((*test).delay_solve_to[0]) / float32(size_s)
-	mean_un := float32((*test).delay_solve_un[0]) / float32(size_s)
+	mean_to := float32((*test).delay_solve_to[0]) * float32((*test).delay_solve_to[1])
+	(*test).delay_solve_to[1] = (*test).delay_solve_to[1] + 1
+	mean_to = (mean_to + float32(in_delay_to)) / float32((*test).delay_solve_to[1])
+	(*test).delay_solve_to[0] = int64(mean_to)
 
-	for ind := 1; ind < size_s; ind++ {
-
-		mean_to = mean_to + (float32((*test).delay_solve_to[ind]) / float32(size_s))
-		mean_un = mean_un + (float32((*test).delay_solve_un[ind]) / float32(size_s))
-	}
+	mean_un := float32((*test).delay_solve_un[0]) * float32((*test).delay_solve_un[1])
+	(*test).delay_solve_un[1] = (*test).delay_solve_un[1] + 1
+	mean_to = (mean_un + float32(in_delay_un)) / float32((*test).delay_solve_un[1])
+	(*test).delay_solve_un[0] = int64(mean_un)
 
 	/*
 		fmt.Printf(" --== Jitter debug ==-- \n")
