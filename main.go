@@ -1454,11 +1454,11 @@ func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, i
 
 	if len((*test).delay_solve_to) < 2 {
 
-		(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
-		(*test).delay_solve_to = append((*test).delay_solve_to, 1)
+		(test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
+		(test).delay_solve_to = append((*test).delay_solve_to, 1)
 
-		(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
-		(*test).delay_solve_un = append((*test).delay_solve_un, 1)
+		(test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
+		(test).delay_solve_un = append((*test).delay_solve_un, 1)
 
 		return in_delay_to, in_delay_un
 
