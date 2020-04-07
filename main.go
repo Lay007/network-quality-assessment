@@ -953,7 +953,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 
 func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 150) / 100
-	time_gen := time.Duration(cnt * period_nano)
+	//time_gen := time.Duration(cnt * period_nano)
 	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
 	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
 	fmt.Println("		-- cnt start= ", cnt)
@@ -983,39 +983,63 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	min_per_rez := int(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
 
-	gen_start := time.Now()
+	//gen_start := time.Now()
 	var rez_time int64
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
-	go func() {
-		//ticker := time.NewTicker(time.Duration(period_nano))
-		//timer := time.NewTimer(time.Microsecond * 10)
-		//period := time.Duration(period_nano)
-		//fmt.Println("Start")
-		//for range ticker.C {
-		for {
-			//	select {
-			//	case <-ticker.C:
-			//time.Sleep(period)
-			cnt--
-			c.WriteTo(b, addr)
-			if cnt <= 0 {
-				break
-			}
-			if cnt%1000 == 0 {
-				if time.Since(gen_start) >= time_gen {
+
+	/*
+
+		go func() {
+			//ticker := time.NewTicker(time.Duration(period_nano))
+			//timer := time.NewTimer(time.Microsecond * 10)
+			//period := time.Duration(period_nano)
+			//fmt.Println("Start")
+			//for range ticker.C {
+			for {
+				//	select {
+				//	case <-ticker.C:
+				//time.Sleep(period)
+				cnt--
+				c.WriteTo(b, addr)
+				if cnt <= 0 {
 					break
 				}
-				//		}
+				if cnt%1000 == 0 {
+					if time.Since(gen_start) >= time_gen {
+						break
+					}
+					//		}
+				}
+			}
+			rez_time = (int64)(time.Since(gen_start))
+			//ticker.Stop()
+			fmt.Println("		 -*- rez_time = ", rez_time)
+		}()
+		//}
+	*/
+	quit := make(chan int)
+	blen := len(b)
+	go func() {
+	ExitLoop:
+		for {
+			select {
+			case <-quit:
+				break ExitLoop
+			default:
+				n, err := c.WriteTo(b, addr)
+				if err != nil {
+					fmt.Printf("%v", err)
+					continue
+				}
+				if n < blen {
+					fmt.Printf("Partial write: %d", n)
+					continue
+				}
+
 			}
 		}
-		rez_time = (int64)(time.Since(gen_start))
-		//ticker.Stop()
-		fmt.Println("		 -*- rez_time = ", rez_time)
 	}()
-	//}
-
-	quit := make(chan int)
 	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit, t_type)
 	time.Sleep(time.Duration(time_to_gen))
 
@@ -1452,7 +1476,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, int64) {
 
-		if len((*test).delay_solve_to) < 2 {
+	if len((*test).delay_solve_to) < 2 {
 
 		(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
 		(*test).delay_solve_to = append((*test).delay_solve_to, 1)
@@ -1576,7 +1600,7 @@ func (test *testSLA) getJitterto(in_solve int64) float32 {
 
 func (test *testSLA) getJitterun(in_solve int64) float32 {
 	var jitter float32
-	if len((*test).delay_solve_un) <3 {
+	if len((*test).delay_solve_un) < 3 {
 		(*test).delay_solve_un = append((*test).delay_solve_un, in_solve)
 	}
 	jitter = float32((*test).delay_solve_un[2] - in_solve)
