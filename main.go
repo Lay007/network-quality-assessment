@@ -953,7 +953,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 
 func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 150) / 100
-	//time_gen := time.Duration(cnt * period_nano)
+	time_gen := time.Duration(cnt * period_nano)
 	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
 	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
 	fmt.Println("		-- cnt start= ", cnt)
@@ -983,7 +983,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	min_per_rez := int(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
 
-	//gen_start := time.Now()
+	gen_start := time.Now()
 	var rez_time int64
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
@@ -1005,7 +1005,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				if cnt <= 0 {
 					break
 				}
-				if cnt%1000 == 0 {
+				if cnt%10000 == 0 {
 					if time.Since(gen_start) >= time_gen {
 						break
 					}
@@ -1036,7 +1036,15 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 					fmt.Printf("Partial write: %d", n)
 					continue
 				}
-
+				cnt--
+				if cnt <= 0 {
+					break
+				}
+				if cnt%10000 == 0 {
+					if time.Since(gen_start) >= time_gen {
+						break
+					}					
+				}
 			}
 		}
 	}()
