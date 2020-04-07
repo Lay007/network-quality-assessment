@@ -1038,11 +1038,11 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				}
 				cnt--
 				if cnt <= 0 {
-					break
+					break ExitLoop
 				}
 				if cnt%10000 == 0 {
 					if time.Since(gen_start) >= time_gen {
-						break
+						break ExitLoop
 					}					
 				}
 			}
