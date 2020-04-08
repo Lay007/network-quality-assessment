@@ -1301,6 +1301,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	// Keep receiving messages forever.
 	for {
 		n, _, err := c.ReadFrom(b)
+
+
 		if err != nil {
 			fmt.Printf("failed to receive message: %v", err)
 			log.Fatalf("failed to receive message: %v", err)
@@ -1314,7 +1316,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if (n) != packetSize {
 			continue
 		}
-
+		
 		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 
@@ -1344,11 +1346,11 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 
 			(*test).number++
-			/*
+			//*
 				fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 				//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
 				fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-				fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+				//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 
 				fmt.Printf("size     %x \n", b[2:4])
 
@@ -1362,7 +1364,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
 				fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
 				fmt.Println(" --== End Packet ==--")
-			*/
+			//*/
 			var markerSFP11, markerSFP12, markerSFP2 int64
 			var ind uint
 
@@ -1438,7 +1440,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 			var dt = time.Now()
 			//dt.Format(time.RFC3339)
-			_, err = db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, jitter, jitter1, jitter2, loss)
+			_, err = db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, math.Abs(float64(jitter)), math.Abs(float64(jitter1)), math.Abs(float64(jitter2)), loss)
 			if err != nil {
 				db.Close()
 				fmt.Println(" -!! Error !!-")
