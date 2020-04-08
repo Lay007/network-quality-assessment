@@ -614,7 +614,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
-	
+
 	db.Close()
 }
 
@@ -1045,7 +1045,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				if cnt%10000 == 0 {
 					if time.Since(gen_start) >= time_gen {
 						break ExitLoop
-					}					
+					}
 				}
 			}
 		}
@@ -1302,7 +1302,6 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	for {
 		n, _, err := c.ReadFrom(b)
 
-
 		if err != nil {
 			fmt.Printf("failed to receive message: %v", err)
 			log.Fatalf("failed to receive message: %v", err)
@@ -1316,8 +1315,9 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if (n) != packetSize {
 			continue
 		}
-		
-		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
+
+		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
+
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 
 		//n, addr, err := c.ReadFrom(b)
@@ -1347,23 +1347,23 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 
 			(*test).number++
 			//*
-				fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
-				//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
-				fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-				//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
+			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
+			//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 
-				fmt.Printf("size     %x \n", b[2:4])
+			fmt.Printf("size     %x \n", b[2:4])
 
-				fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-				fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+			fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+			fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 
-				fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+			fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-				fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-				fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-				fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-				fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-				fmt.Println(" --== End Packet ==--")
+			fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+			fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+			fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+			fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+			fmt.Println(" --== End Packet ==--")
 			//*/
 			var markerSFP11, markerSFP12, markerSFP2 int64
 			var ind uint
@@ -1419,7 +1419,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 				//t_time := int64(time.Now().Nanosecond())
 				//t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 				if test_id.test_delay_1 == true {
-					rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP12-markerSFP2, markerSFP12-t_time)
+					rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP12-markerSFP2, t_time-markerSFP12)
 					delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
 					delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
 					if test_id.test_delay_1_jitter == true {
@@ -1483,6 +1483,35 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 
 		}
 	}
+}
+
+func (test *testSLA) getDelayAvg(in_solve int64) int64 {
+	var mean_delay float32
+	size_s := 100
+
+	(*test).delay_solve = append((*test).delay_solve, in_solve)
+	if len((*test).delay_solve) < (size_s + 1) {
+		size_s = len((*test).delay_solve) - 1
+	}
+	test.delay_solve = (*test).delay_solve[1:(size_s + 1)]
+
+	mean_delay = float32((*test).delay_solve[0]) / float32(size_s)
+
+	for ind := 1; ind < size_s; ind++ {
+
+		mean_delay = mean_delay + (float32((*test).delay_solve[ind]) / float32(size_s))
+	}
+
+	/*
+		fmt.Printf(" --== Jitter debug ==-- \n")
+		fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
+		fmt.Printf(" --== Max = %x \n", max)
+		fmt.Printf(" --== Min = %x \n", min)
+		fmt.Printf(" --== Mean = %f \n", mean)
+		fmt.Printf(" --== Jitter = %f \n", jitter)
+		fmt.Printf(" --== End Jitter debug ==-- \n")
+	*/
+	return int64(mean_delay)
 }
 
 //var mass_solve []int64
