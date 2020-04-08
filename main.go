@@ -1489,13 +1489,18 @@ func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 	var mean_delay float32
 	size_s := 100
 
+	if len((*test).delay_solve) < 2 {
+		(*test).delay_solve = append((*test).delay_solve, in_solve)
+		return in_solve
+	}
+
 	(*test).delay_solve = append((*test).delay_solve, in_solve)
 	if len((*test).delay_solve) < (size_s + 1) {
-		size_s = len((*test).delay_solve) - 1
+		size_s = len((*test).delay_solve)
 	}
 	test.delay_solve = (*test).delay_solve[1:(size_s + 1)]
 
-	mean_delay = float32((*test).delay_solve[0]) / float32(size_s+1)
+	mean_delay = float32((*test).delay_solve[0]) / float32(size_s)
 
 	for ind := 1; ind < size_s; ind++ {
 
@@ -1553,11 +1558,11 @@ func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, i
 
 func (test *testSLA) getJitter(in_solve int64) float32 {
 	var jitter float32
-	l:=len((*test).delay_solve)
+	l := len((*test).delay_solve)
 	if l == 0 {
 		(*test).delay_solve = append((*test).delay_solve, in_solve)
 	}
-	
+
 	jitter = float32((*test).delay_solve[l-1] - in_solve)
 	//(*test).delay_solve[0] = in_solve
 	/*
