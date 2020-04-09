@@ -899,7 +899,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	//ip.iplen = uint16(20 + 26 + 4)
 	if testWay == 2 {
 		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) + 0xAABA4000000000
-		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
+		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
 		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000))
 		//t_time = t_time << (4*8)
 		for ind = 0; ind < 7; ind++ {
@@ -1316,8 +1316,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			continue
 		}
 
-		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
 
+		t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 
 		//n, addr, err := c.ReadFrom(b)
