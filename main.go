@@ -849,11 +849,14 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
+		
+		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+		
 		go func() {
+			time.Sleep(time.Millisecond*2)
 			c.WriteTo(b, addr)
 		}()
-
-		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+		
 		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
 		if check_count < 0 {
@@ -1305,9 +1308,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 
 	start := time.Now()
-	fmt.Printf(" ==> Packet Rsv start - %s ", start)
 
-	// Keep receiving messages forever.
 	for {
 		n, _, err := c.ReadFrom(b)
 		cc++
