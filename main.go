@@ -1497,8 +1497,8 @@ func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 	(*test).delay_solve = append((*test).delay_solve, in_solve)
 	if len((*test).delay_solve) < (size_s + 1) {
 		size_s = len((*test).delay_solve)
-	}else {
-	test.delay_solve = (*test).delay_solve[1:(size_s + 1)]
+	} else {
+		(*test).delay_solve = (*test).delay_solve[1:(size_s + 1)]
 	}
 	mean_delay = float32((*test).delay_solve[0]) / float32(size_s)
 
