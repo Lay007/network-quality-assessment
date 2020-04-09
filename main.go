@@ -984,7 +984,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	var timerReal TimerR
 	timerReal.InitTimer()
 
-	findSFP(ipdst_1sfpsla_str,ipdst_1sfpsla_str)
+	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
 
 	test_count = 1000
 	gen_test_min_period_start := time.Now()

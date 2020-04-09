@@ -10,7 +10,7 @@ type TimerR struct {
 }
 
 func (t *TimerR) InitTimer() {
-
+	fmt.Println(" => InitHi <=")
 	start := time.Now()
 	var x []int64
 	for ind := 0; ind < 100000; ind++ {

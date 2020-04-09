@@ -1,4 +1,5 @@
 package serverSLA
+
 import (
 	"fmt"
 	"log"
@@ -6,12 +7,12 @@ import (
 	g "github.com/soniah/gosnmp"
 )
 
-func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string ) bool {
+func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string) bool {
 
-	
 	g.Default.Target = ip_1sfpsla_str
 	err := g.Default.Connect()
 	if err != nil {
+		fmt.Printf("Connect() err: %v", err)
 		log.Fatalf("Connect() err: %v", err)
 	}
 	defer g.Default.Conn.Close()
@@ -19,6 +20,7 @@ func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string ) bool {
 	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
 	result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
 	if err2 != nil {
+		fmt.Printf("Get() err: %v", err2)
 		log.Fatalf("Get() err: %v", err2)
 	}
 
