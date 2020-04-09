@@ -954,7 +954,7 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 		return []byte{}
 	}
 	fmt.Print(" ==> Packet Form - ")
-		fmt.Println(time.Now())
+	fmt.Println(time.Now())
 	return b
 }
 
@@ -1299,21 +1299,22 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
-
+	cc := 0
 	var t_ips [2]byte
 	t_ips[1] = byte(t_type & 0xFF)
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 
 	start := time.Now()
-	fmt.Print(" ==> Packet Rsv start - ")
-	
+	fmt.Printf(" ==> Packet Rsv start - %s ", start)
+
 	// Keep receiving messages forever.
 	for {
 		n, _, err := c.ReadFrom(b)
-
+		cc++
 		if err != nil {
 			fmt.Printf("failed to receive message: %v", err)
 			log.Fatalf("failed to receive message: %v", err)
+			continue
 
 		}
 
@@ -1335,6 +1336,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 			fmt.Printf("failed to unmarshal ethernet frame: %v", err)
 			log.Fatalf("failed to unmarshal ethernet frame: %v", err)
+			continue
 		}
 
 		//fmt.Println("\n\n--=Test ==-- - ")
@@ -1487,12 +1489,13 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			}
 
 			db.Close()
-			fmt.Printf("  ==>> %v  --> %s\n", id, time.Since(start))
+			fmt.Printf("  ==>> %v  --> %s  - count = %v\n", id, time.Since(start), cc)
 			break
-		} else {
-			//fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
-
 		}
+		//else {
+		//	//fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
+
+		//	}
 	}
 }
 
