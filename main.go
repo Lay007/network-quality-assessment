@@ -1,4 +1,4 @@
-package main
+package serverSLA
 
 import (
 	. "./go-zabbix"
@@ -849,14 +849,13 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
-		
 		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
-		
+
 		go func() {
-			time.Sleep(time.Millisecond*2)
+			time.Sleep(time.Millisecond * 2)
 			c.WriteTo(b, addr)
 		}()
-		
+
 		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
 		if check_count < 0 {
@@ -982,6 +981,11 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	pps_rez := 10000 * 1000000000 / int(time.Since(gen_test_pps_start))
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
+	var timerReal TimerR
+	timerReal.InitTimer()
+
+	findSFP(ipdst_1sfpsla_str,ipdst_1sfpsla_str)
+
 	test_count = 1000
 	gen_test_min_period_start := time.Now()
 	ticker := time.NewTicker(time.Duration(1))
@@ -1032,6 +1036,9 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	*/
 	quit := make(chan int)
 	blen := len(b)
+
+	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit, t_type)
+
 	go func() {
 	ExitLoop:
 		for {
@@ -1059,8 +1066,9 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				}
 			}
 		}
+		rez_time = (int64)(time.Since(gen_start))
 	}()
-	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit, t_type)
+
 	time.Sleep(time.Duration(time_to_gen))
 
 	rez_count := test.numberCounter
@@ -1196,6 +1204,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 		n, _, err := c.ReadFrom(b)
 		if err != nil {
 			log.Fatalf("failed to receive message: %v", err)
+			continue
 		}
 
 		// Unpack Ethernet II frame into Go representation.
@@ -1212,7 +1221,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 		//fmt.Printf("\n\n--=T_so %x - \n", ips)
 
 		// Display source of message and message itself.
-		if (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+		if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 			//count++
 			//	fmt.Printf("-->>Detect")
 			//	counter <-count

@@ -1,0 +1,41 @@
+package serverSLA
+import (
+	"fmt"
+	"log"
+
+	g "github.com/soniah/gosnmp"
+)
+
+func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string ) bool {
+
+	
+	g.Default.Target = ip_1sfpsla_str
+	err := g.Default.Connect()
+	if err != nil {
+		log.Fatalf("Connect() err: %v", err)
+	}
+	defer g.Default.Conn.Close()
+
+	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
+	result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+	if err2 != nil {
+		log.Fatalf("Get() err: %v", err2)
+	}
+
+	for i, variable := range result.Variables {
+		fmt.Printf("%d: oid: %s ", i, variable.Name)
+
+		// the Value of each variable returned by Get() implements
+		// interface{}. You could do a type switch...
+		switch variable.Type {
+		case g.OctetString:
+			fmt.Printf("string: %s\n", string(variable.Value.([]byte)))
+		default:
+			// ... or often you're just interested in numeric values.
+			// ToBigInt() will return the Value as a BigInt, for plugging
+			// into your calculations.
+			fmt.Printf("number: %d\n", g.ToBigInt(variable.Value))
+		}
+	}
+	return true
+}
