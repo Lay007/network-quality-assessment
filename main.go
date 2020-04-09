@@ -1488,7 +1488,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 	var mean_delay float32
 	size_s := 100
-
+	fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
 	if len((*test).delay_solve) == 0 {
 		(*test).delay_solve = append((*test).delay_solve, in_solve)
 		return in_solve
