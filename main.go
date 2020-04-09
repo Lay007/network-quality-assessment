@@ -837,6 +837,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	check_count := 10
 	counter := test.count
 	for range t.C {
+		fmt.Print(" ==> Start - ")
 		fmt.Println(time.Now())
 		if !circ {
 			counter--
@@ -902,8 +903,8 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 		//t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
 		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000))
 		//t_time = t_time << (4*8)
-		delta_nano := int64((2208988800) * 1000000000)
-		t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
+		delta_nano := int64((2208988800) * 1e9)
+		t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/float64(1e9)))
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 
 		for ind = 0; ind < 7; ind++ {
@@ -952,6 +953,8 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 		fmt.Println(" ----=====----")
 		return []byte{}
 	}
+	fmt.Print(" ==> Packet Form - ")
+		fmt.Println(time.Now())
 	return b
 }
 
@@ -1302,6 +1305,8 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 
 	start := time.Now()
+	fmt.Print(" ==> Packet Rsv start - ")
+	
 	// Keep receiving messages forever.
 	for {
 		n, _, err := c.ReadFrom(b)
@@ -1353,6 +1358,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 			(*test).number++
 			//*
 			fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+			fmt.Println(time.Now())
 			//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
 			fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
 			//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
