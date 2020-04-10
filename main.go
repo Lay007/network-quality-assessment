@@ -1044,6 +1044,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		for {
 			select {
 			case <-quit:
+				rez_time = (int64)(time.Since(gen_start))
 				break ExitLoop
 			default:
 				n, err := c.WriteTo(b, addr)
@@ -1057,16 +1058,18 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				}
 				cnt--
 				if cnt <= 0 {
+					rez_time = (int64)(time.Since(gen_start))
 					break ExitLoop
 				}
 				if cnt%10000 == 0 {
 					if time.Since(gen_start) >= time_gen {
+						rez_time = (int64)(time.Since(gen_start))
 						break ExitLoop
 					}
 				}
 			}
 		}
-		rez_time = (int64)(time.Since(gen_start))
+
 	}()
 
 	time.Sleep(time.Duration(time_to_gen))
