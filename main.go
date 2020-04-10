@@ -999,7 +999,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	min_per_rez := int(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
 
-	gen_start := time.Now()
+	gen_start := time.Now().Nanosecond()
 	rez_time := make(chan int64)
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
