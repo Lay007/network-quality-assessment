@@ -1018,8 +1018,9 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 
 	min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
-	gStart := time.Now()
-	fmt.Println(" == gStart ", gStart)
+	fmt.Println(time.Now())
+	g_start := time.Now()
+	fmt.Println(" == gStart ", g_start)
 	rez_time := make(chan int64)
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
@@ -1064,8 +1065,8 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		for {
 			select {
 			case <-quit:
-				fmt.Println(" == Quit ", (int64)(time.Since(gStart)))
-				rez_time <- (int64)(time.Since(gStart))
+				fmt.Println(" == Quit ", (int64)(time.Since(g_start)))
+				rez_time <- (int64)(time.Since(g_start))
 				break ExitLoop
 			default:
 				n, err := c.WriteTo(b, addr)
@@ -1079,14 +1080,14 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				}
 				cnt--
 				if cnt <= 0 {
-					fmt.Println(" == cnt<0 ", (int64)(time.Since(gStart)))
-					rez_time <- (int64)(time.Since(time.Time(gStart)))
+					fmt.Println(" == cnt<0 ", (int64)(time.Since(g_start)))
+					rez_time <- (int64)(time.Since(time.Time(g_start)))
 					break ExitLoop
 				}
 				if cnt%1000 == 0 {
 					if time.Since(gStart) >= time_gen {
-						fmt.Println(" == time out ", (int64)(time.Since(gStart)))
-						rez_time <- (int64)(time.Since(time.Time(gStart)))
+						fmt.Println(" == time out ", (int64)(time.Since(g_start)))
+						rez_time <- (int64)(time.Since(time.Time(g_start)))
 
 						break ExitLoop
 					}
