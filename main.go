@@ -1045,7 +1045,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		for {
 			select {
 			case <-quit:
-				fmt.Println(" == Quit ",(int64)(time.Since(gStart))
+				fmt.Println(" == Quit ",(int64)(time.Since(gStart)))
 				rez_time <- (int64)(time.Since(gStart))
 				break ExitLoop
 			default:
@@ -1060,13 +1060,13 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				}
 				cnt--
 				if cnt <= 0 {
-					fmt.Println(" == cnt<0 ",(int64)(time.Since(gStart))
+					fmt.Println(" == cnt<0 ",(int64)(time.Since(gStart)))
 					rez_time <- (int64)(time.Since(time.Time(gStart)))
 					break ExitLoop
 				}
 				if cnt%10000 == 0 {
 					if time.Since(gStart) >= time_gen {
-						fmt.Println(" == time out ",(int64)(time.Since(gStart))
+						fmt.Println(" == time out ",(int64)(time.Since(gStart)))
 						rez_time <- (int64)(time.Since(time.Time(gStart)))
 						
 						break ExitLoop
