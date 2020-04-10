@@ -1005,7 +1005,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
 
 	test_count = 1000
-	gen_test_min_period_start := time.Now()
+	//gen_test_min_period_start := time.Now()
 	ticker := time.NewTicker(time.Duration(1))
 	for range ticker.C {
 		test_count--
@@ -1016,9 +1016,9 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		}
 	}
 
-	min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
-	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
-	fmt.Println(time.Now())
+	//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
+	//fmt.Println("		 -*- min period [mks] = ", min_per_rez)
+	fmt.Print(time.Now())
 	g_start := time.Now()
 	fmt.Println(" == gStart ", g_start)
 	rez_time := make(chan int64)
