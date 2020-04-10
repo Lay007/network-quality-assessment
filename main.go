@@ -1000,7 +1000,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
 
 	gen_start := time.Now()
-	var rez_time int64
+	rez_time := make(chan int64)
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
 
@@ -1044,7 +1044,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		for {
 			select {
 			case <-quit:
-				rez_time = (int64)(time.Since(gen_start))
+				rez_time <- (int64)(time.Since(gen_start))
 				break ExitLoop
 			default:
 				n, err := c.WriteTo(b, addr)
@@ -1058,12 +1058,12 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				}
 				cnt--
 				if cnt <= 0 {
-					rez_time = (int64)(time.Since(gen_start))
+					rez_time <- (int64)(time.Since(gen_start))
 					break ExitLoop
 				}
 				if cnt%10000 == 0 {
 					if time.Since(gen_start) >= time_gen {
-						rez_time = (int64)(time.Since(gen_start))
+						rez_time <- (int64)(time.Since(gen_start))
 						break ExitLoop
 					}
 				}
@@ -1077,7 +1077,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	fmt.Println("		 --->> rez_count= ", rez_count)
 	quit <- 1
 	time.Sleep(time.Millisecond * 10)
-	return int(rez_count), rez_time
+	return int(rez_count), <-rez_time
 }
 
 func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int, t_type uint16) (int, int64) {
