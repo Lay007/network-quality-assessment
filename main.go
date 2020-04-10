@@ -1073,7 +1073,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	rez_count := test.numberCounter
 	fmt.Println("		 --->> rez_count= ", rez_count)
 	quit <- 1
-	time.Sleep(time.Millisecond*10))
+	time.Sleep(time.Millisecond * 10)
 	return int(rez_count), rez_time
 }
 
