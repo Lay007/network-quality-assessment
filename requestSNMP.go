@@ -8,7 +8,7 @@ import (
 )
 
 func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string) bool {
-
+fmt.Println(" ==> TEST SFP way ==")
 	g.Default.Target = ip_1sfpsla_str
 	err := g.Default.Connect()
 	if err != nil {

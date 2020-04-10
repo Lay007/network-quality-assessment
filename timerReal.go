@@ -1,5 +1,5 @@
 package serverSLA
-
+/*
 import (
 	"fmt"
 	"time"
@@ -21,3 +21,4 @@ func (t *TimerR) InitTimer() {
 	(*t).minPeriodNano = int64(longTimer) / 100000
 	fmt.Printf(" => Init timer - star: %s  end - %s  period - %v ns", start, longTimer, (*t).minPeriodNano)
 }
+*/

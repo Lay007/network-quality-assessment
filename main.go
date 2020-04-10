@@ -961,12 +961,31 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 }
 
 //var min_period = time.Duration(15) * time.Microsecond
+type TimerR struct {
+	minPeriodNano int64
+}
+
+func (t *TimerR) InitTimer() {
+	fmt.Println(" => InitHi <=")
+	start := time.Now()
+	var x []int64
+	for ind := 0; ind < 100000; ind++ {
+		k := float64(ind * ind)
+		x = append(x, int64(k))
+	}
+	longTimer := time.Since(start)
+	(*t).minPeriodNano = int64(longTimer) / 100000
+	fmt.Printf(" => Init timer - star: %s  end - %s  period - %v ns", start, longTimer, (*t).minPeriodNano)
+}
+
+
 
 func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 150) / 100
 	time_gen := time.Duration(cnt * period_nano)
 	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
 	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
+	fmt.Println("		-- time gen ",time_gen) 
 	fmt.Println("		-- cnt start= ", cnt)
 
 	test_count := 10000
@@ -1064,7 +1083,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 					rez_time <- (int64)(time.Since(time.Time(gStart)))
 					break ExitLoop
 				}
-				if cnt%10000 == 0 {
+				if cnt%1000 == 0 {
 					if time.Since(gStart) >= time_gen {
 						fmt.Println(" == time out ",(int64)(time.Since(gStart)))
 						rez_time <- (int64)(time.Since(time.Time(gStart)))
