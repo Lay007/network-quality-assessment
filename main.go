@@ -976,17 +976,15 @@ func (t *TimerR) InitTimer() int {
 	longTimer := time.Since(start)
 	(*t).minPeriodNano = int64(longTimer) / 100000
 	fmt.Printf(" => Init timer - star: %s  end - %s  period - %v ns", start, longTimer, (*t).minPeriodNano)
-return 0
+	return 0
 }
-
-
 
 func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 150) / 100
 	time_gen := time.Duration(cnt * period_nano)
 	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
 	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
-	fmt.Println("		-- time gen ",time_gen) 
+	fmt.Println("		-- time gen ", time_gen)
 	fmt.Println("		-- cnt start= ", cnt)
 
 	test_count := 10000
@@ -1013,14 +1011,15 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		test_count--
 		c.WriteTo(b, addr)
 		if test_count <= 0 {
+			ticker.Stop()
 			break
 		}
 	}
-	min_per_rez := int(time.Since(gen_test_min_period_start)) / (1000 * 1000)
-	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
 
+	min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
+	fmt.Println("		 -*- min period [mks] = ", min_per_rez)
 	gStart := time.Now()
-	fmt.Println(" == gStart ",gStart)
+	fmt.Println(" == gStart ", gStart)
 	rez_time := make(chan int64)
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
@@ -1065,7 +1064,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 		for {
 			select {
 			case <-quit:
-				fmt.Println(" == Quit ",(int64)(time.Since(gStart)))
+				fmt.Println(" == Quit ", (int64)(time.Since(gStart)))
 				rez_time <- (int64)(time.Since(gStart))
 				break ExitLoop
 			default:
@@ -1080,15 +1079,15 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 				}
 				cnt--
 				if cnt <= 0 {
-					fmt.Println(" == cnt<0 ",(int64)(time.Since(gStart)))
+					fmt.Println(" == cnt<0 ", (int64)(time.Since(gStart)))
 					rez_time <- (int64)(time.Since(time.Time(gStart)))
 					break ExitLoop
 				}
 				if cnt%1000 == 0 {
 					if time.Since(gStart) >= time_gen {
-						fmt.Println(" == time out ",(int64)(time.Since(gStart)))
+						fmt.Println(" == time out ", (int64)(time.Since(gStart)))
 						rez_time <- (int64)(time.Since(time.Time(gStart)))
-						
+
 						break ExitLoop
 					}
 				}
@@ -1102,7 +1101,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	fmt.Println("		 --->> rez_count= ", rez_count)
 	quit <- 1
 	time.Sleep(time.Millisecond * 10)
-	rez:=<-rez_time
+	rez := <-rez_time
 	return int(rez_count), rez
 }
 
