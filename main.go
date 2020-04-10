@@ -965,7 +965,7 @@ type TimerR struct {
 	minPeriodNano int64
 }
 
-func (t *TimerR) InitTimer() {
+func (t *TimerR) InitTimer() int {
 	fmt.Println(" => InitHi <=")
 	start := time.Now()
 	var x []int64
@@ -976,6 +976,7 @@ func (t *TimerR) InitTimer() {
 	longTimer := time.Since(start)
 	(*t).minPeriodNano = int64(longTimer) / 100000
 	fmt.Printf(" => Init timer - star: %s  end - %s  period - %v ns", start, longTimer, (*t).minPeriodNano)
+return 0
 }
 
 
@@ -1001,7 +1002,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
 	var timerReal TimerR
-	timerReal.InitTimer()
+	_ = timerReal.InitTimer()
 
 	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
 
@@ -1101,7 +1102,8 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 	fmt.Println("		 --->> rez_count= ", rez_count)
 	quit <- 1
 	time.Sleep(time.Millisecond * 10)
-	return int(rez_count), <-rez_time
+	rez:=<-rez_time
+	return int(rez_count), rez
 }
 
 func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int, t_type uint16) (int, int64) {
