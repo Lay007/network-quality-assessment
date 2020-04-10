@@ -1085,7 +1085,7 @@ func (test *testThr) testThrGen(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, 
 					break ExitLoop
 				}
 				if cnt%1000 == 0 {
-					if time.Since(gStart) >= time_gen {
+					if time.Since(g_start) >= time_gen {
 						fmt.Println(" == time out ", (int64)(time.Since(g_start)))
 						rez_time <- (int64)(time.Since(time.Time(g_start)))
 
