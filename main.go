@@ -1377,7 +1377,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	for {
 		select {
 		case <-quit:
-			catchDetect <- 1
+			//catchDetect <- 1
 			fmt.Println("Chanel go")
 			return
 			//break ExitLoop
