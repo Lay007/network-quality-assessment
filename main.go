@@ -807,7 +807,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 	var netConf *raw.Config
 
-	netConf.Filter, _ = bpf.Assemble([]bpf.Instruction{
+	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
 		// Load "EtherType" field from the ethernet header.
 		bpf.LoadAbsolute{Off: 12, Size: 2},
 		// Skip over the next instruction if EtherType is not ARP.
