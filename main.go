@@ -849,12 +849,18 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
-		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
-		go func() {
-			time.Sleep(time.Millisecond * 1)
+		func() {
+		//	time.Sleep(time.Millisecond * 1)
 			c.WriteTo(b, addr)
 		}()
+
+		test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+
+	//	go func() {
+	//		time.Sleep(time.Millisecond * 1)
+	//		c.WriteTo(b, addr)
+	//	}()
 
 		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
