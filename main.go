@@ -12,6 +12,7 @@ import (
 	//"runtime"
 	"time"
 	//"unsafe"
+	"golang.org/x/net/bpf"
 
 	"github.com/google/gopacket/pcap"
 
@@ -804,7 +805,20 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var test_type uint16
 	test_type = 0x2000 + (uint16(id) & 0x1FFF)
 
-	c, err := raw.ListenPacket(ifi, etherType, nil)
+	var netConf *raw.Config
+
+	netConf.Filter, _ = bpf.Assemble([]bpf.Instruction{
+		// Load "EtherType" field from the ethernet header.
+		bpf.LoadAbsolute{Off: 12, Size: 2},
+		// Skip over the next instruction if EtherType is not ARP.
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0x08000, SkipTrue: 1},
+		// Verdict is "send up to 4k of the packet to userspace."
+		bpf.RetConstant{Val: 1518},
+		// Verdict is "ignore packet."
+		bpf.RetConstant{Val: 0},
+	})
+
+	c, err := raw.ListenPacket(ifi, etherType, netConf)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 		db.Close()
@@ -849,18 +863,17 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
-
 		func() {
-		//	time.Sleep(time.Millisecond * 1)
+			//	time.Sleep(time.Millisecond * 1)
 			c.WriteTo(b, addr)
 		}()
 
 		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
-	//	go func() {
-	//		time.Sleep(time.Millisecond * 1)
-	//		c.WriteTo(b, addr)
-	//	}()
+		//	go func() {
+		//		time.Sleep(time.Millisecond * 1)
+		//		c.WriteTo(b, addr)
+		//	}()
 
 		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
