@@ -852,7 +852,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 	check_count := 10
 	counter := test.count
-	detectPack := make(chan int)
+	detectPack := make(chan int, 1)
 	for range t.C {
 		fmt.Print(" ==> Start - ")
 		fmt.Println(time.Now())
@@ -875,7 +875,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			}
 		}
 		//fmt.Println("Wait")
-		//fmt.Println(<-detectPack)
+		fmt.Println(<-detectPack)
 		//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		//	go func() {
@@ -1371,7 +1371,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	t_ips[1] = byte(t_type & 0xFF)
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 	start := time.Now()
-	quit := make(chan int)
+	quit := make(chan int, 1)
 
 	//ExitLoop:
 	for {
