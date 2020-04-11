@@ -1373,14 +1373,14 @@ func (test *testSLA) receiveMessages(quit chan int, id int, c net.PacketConn, ip
 	start := time.Now()
 	//quit := make(chan int)
 
-	//ExitLoop:
+	ExitLoop:
 	for {
 		select {
 		case <-quit:
 			//	catchDetect <- key
 			fmt.Println("Chanel go")
-			return
-			//break ExitLoop
+	//		return
+			break ExitLoop
 		default:
 			n, _, err := c.ReadFrom(b)
 			cc++
