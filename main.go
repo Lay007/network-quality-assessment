@@ -1383,194 +1383,194 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			//break ExitLoop
 		default:
 			n, _, err := c.ReadFrom(b)
-			func() {
-				cc++
-				if err != nil {
-					fmt.Printf("failed to receive message: %v", err)
-					log.Fatalf("failed to receive message: %v", err)
-					return
 
-				}
+			cc++
+			if err != nil {
+				fmt.Printf("failed to receive message: %v", err)
+				log.Fatalf("failed to receive message: %v", err)
+				continue
 
-				if time.Since(start) > (time.Millisecond * 3000) {
-					quit <- 1
-					return
-				}
+			}
 
-				if (n) != packetSize {
-					return
-				}
+			if time.Since(start) > (time.Millisecond * 3000) {
+				quit <- 1
+				continue
+			}
 
-				//t_time := int64(float64(time.Now().UnixNano() - delta_nano )*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
-				delta_nano := int64((2208988800) * 1000000000)
-				t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
-				t_time = t_time & int64(0xFFFFFFFFFFFFFF)
+			if (n) != packetSize {
+				continue
+			}
 
-				//n, addr, err := c.ReadFrom(b)
-				// Unpack Ethernet II frame into Go representation.
-				if err := (&f).UnmarshalBinary(b[:n]); err != nil {
-					fmt.Printf("failed to unmarshal ethernet frame: %v", err)
-					log.Fatalf("failed to unmarshal ethernet frame: %v", err)
-					return
-				}
+			//t_time := int64(float64(time.Now().UnixNano() - delta_nano )*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
+			delta_nano := int64((2208988800) * 1000000000)
+			t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
+			t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 
-				//fmt.Println("\n\n--=Test ==-- - ")
+			//n, addr, err := c.ReadFrom(b)
+			// Unpack Ethernet II frame into Go representation.
+			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
+				fmt.Printf("failed to unmarshal ethernet frame: %v", err)
+				log.Fatalf("failed to unmarshal ethernet frame: %v", err)
+				continue
+			}
+
+			//fmt.Println("\n\n--=Test ==-- - ")
+			//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+			//fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+			//fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+			var ips [4]byte
+			copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
+			//fmt.Printf("\n--=T_so ip dst    %v.%v.%v.%v \n", ips[0], ips[1], ips[2], ips[3])
+			//fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+
+			//fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+			//fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+			//fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+
+			//fmt.Println(" --== End Test ==--")
+
+			// Display source of message and message itself.
+			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+
+				(*test).number++
+				//*
+				fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+				fmt.Println(time.Now())
+				//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
+				fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
 				//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
-				//fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-				//fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
-				var ips [4]byte
-				copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
-				//fmt.Printf("\n--=T_so ip dst    %v.%v.%v.%v \n", ips[0], ips[1], ips[2], ips[3])
-				//fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-				//fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-				//fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-				//fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+				fmt.Printf("size     %x \n", b[2:4])
 
-				//fmt.Println(" --== End Test ==--")
+				fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+				fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 
-				// Display source of message and message itself.
-				if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+				fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-					(*test).number++
-					//*
-					fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
-					fmt.Println(time.Now())
-					//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
-					fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-					//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+				fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+				fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+				fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+				fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+				fmt.Println(" --== End Packet ==--")
+				//*/
+				var markerSFP11, markerSFP12, markerSFP2 int64
+				var ind uint
 
-					fmt.Printf("size     %x \n", b[2:4])
+				for ind = 0; ind < 7; ind++ {
+					markerSFP11 = markerSFP11 + int64(f.Payload[31-ind])<<(8*ind)
+					markerSFP2 = markerSFP2 + int64(f.Payload[38-ind])<<(8*ind)
+					markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
+				}
 
-					fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-					fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+				var numberR uint32
+				for ind = 0; ind < 4; ind++ {
+					numberR += uint32(f.Payload[49-ind]) << (8 * ind)
+				}
 
-					fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+				var delay, delay1, delay2, jitter, jitter1, jitter2, loss float32
 
-					fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-					fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-					fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-					fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-					fmt.Println(" --== End Packet ==--")
-					//*/
-					var markerSFP11, markerSFP12, markerSFP2 int64
-					var ind uint
-
-					for ind = 0; ind < 7; ind++ {
-						markerSFP11 = markerSFP11 + int64(f.Payload[31-ind])<<(8*ind)
-						markerSFP2 = markerSFP2 + int64(f.Payload[38-ind])<<(8*ind)
-						markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
-					}
-
-					var numberR uint32
-					for ind = 0; ind < 4; ind++ {
-						numberR += uint32(f.Payload[49-ind]) << (8 * ind)
-					}
-
-					var delay, delay1, delay2, jitter, jitter1, jitter2, loss float32
-
-					if test_id.test_delay == true {
-						if test_id.test_type == 1 {
-							delay = zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
-							if test_id.test_delay_jitter == true {
-								jitter = zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
-							}
-						}
-						if test_id.test_type == 2 {
-							//t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
-							delay_avg := (*test).getDelayAvg(t_time - markerSFP2)
-							delay = zabbix_delay(node_zabbix, delay_avg, host_zabbix, port_zabbix)
-							if test_id.test_delay_jitter == true {
-								jitter = zabbix_jitter(node_zabbix, (*test).getJitter(delay_avg), host_zabbix, port_zabbix)
-							}
-						}
-					}
-					fmt.Println("==>> number_pack - ", numberR)
-					fmt.Println("==>> number_test - ", test.number)
-					if test_id.test_loss == true {
-						loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
-					}
-					//*
+				if test_id.test_delay == true {
 					if test_id.test_type == 1 {
-						if test_id.test_delay_1 == true {
-							rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP2-markerSFP11, markerSFP12-markerSFP2)
-							delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
-							delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
-							if test_id.test_delay_1_jitter == true {
-								jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
-								jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
-							}
+						delay = zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
+						if test_id.test_delay_jitter == true {
+							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
 						}
 					}
 					if test_id.test_type == 2 {
-						//t_time := int64(time.Now().Nanosecond())
-						//t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
-						if test_id.test_delay_1 == true {
-							rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP12-markerSFP2, t_time-markerSFP12)
-							delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
-							delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
-							if test_id.test_delay_1_jitter == true {
-								jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
-								jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
-
-							}
+						//t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
+						delay_avg := (*test).getDelayAvg(t_time - markerSFP2)
+						delay = zabbix_delay(node_zabbix, delay_avg, host_zabbix, port_zabbix)
+						if test_id.test_delay_jitter == true {
+							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(delay_avg), host_zabbix, port_zabbix)
 						}
 					}
-					//*/
-					db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-					if err != nil {
-						db.Close()
-						fmt.Println(" -!! Error !!-")
-						fmt.Println(err)
-						fmt.Println(" ----=====----")
-						return
-					}
-					var dt = time.Now()
-					//dt.Format(time.RFC3339)
-					_, err = db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, math.Abs(float64(jitter)), math.Abs(float64(jitter1)), math.Abs(float64(jitter2)), loss)
-					if err != nil {
-						db.Close()
-						fmt.Println(" -!! Error !!-")
-						fmt.Println(err)
-						fmt.Println(" ----=====----")
-						return
-					}
-					if (tMax.delayMax != 0) && (tMax.delayMax < delay) {
-						msg := fmt.Sprintf("!! Превышение порогового значения времени двусторонней задержки на %.4f мкс", delay-tMax.delayMax)
-						db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
-					}
-					if (tMax.jitterMax != 0) && (tMax.jitterMax < float32(math.Abs(float64(jitter)))) {
-						msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени двусторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter)))-tMax.jitterMax)
-						db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
-					}
-					if (tMax.lossMax != 0) && (tMax.lossMax < loss) {
-						msg := fmt.Sprintf("!! Превышение порогового значения вероятности ошибки на %.6f", loss-tMax.lossMax)
-						db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
-
-					}
-
-					if (tMax.delayOneMax != 0) && ((tMax.delayOneMax < delay1) || (tMax.delayOneMax < delay2)) {
-						msg := fmt.Sprintf("!! Превышение порогового значения времени односторонней задержки на %.4f мкс", float32(math.Max(float64(delay1), float64(delay2)))-tMax.delayOneMax)
-						db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
-					}
-					if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter1)))) {
-						msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter1)))-tMax.jitterOneMax)
-						db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
-					}
-					if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter2)))) {
-						msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter2)))-tMax.jitterOneMax)
-						db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
-					}
-
-					db.Close()
-					fmt.Printf("  ==>> %v  --> %s  - count = %v\n", id, time.Since(start), cc)
-					quit <- 1
 				}
-				//else {
-				//	//fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
+				fmt.Println("==>> number_pack - ", numberR)
+				fmt.Println("==>> number_test - ", test.number)
+				if test_id.test_loss == true {
+					loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
+				}
+				//*
+				if test_id.test_type == 1 {
+					if test_id.test_delay_1 == true {
+						rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP2-markerSFP11, markerSFP12-markerSFP2)
+						delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
+						delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
+						if test_id.test_delay_1_jitter == true {
+							jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
+							jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
+						}
+					}
+				}
+				if test_id.test_type == 2 {
+					//t_time := int64(time.Now().Nanosecond())
+					//t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
+					if test_id.test_delay_1 == true {
+						rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP12-markerSFP2, t_time-markerSFP12)
+						delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
+						delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
+						if test_id.test_delay_1_jitter == true {
+							jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
+							jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
 
-				//	}
-			}()
+						}
+					}
+				}
+				//*/
+				db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+				if err != nil {
+					db.Close()
+					fmt.Println(" -!! Error !!-")
+					fmt.Println(err)
+					fmt.Println(" ----=====----")
+					return
+				}
+				var dt = time.Now()
+				//dt.Format(time.RFC3339)
+				_, err = db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt, id, delay, delay1, delay2, math.Abs(float64(jitter)), math.Abs(float64(jitter1)), math.Abs(float64(jitter2)), loss)
+				if err != nil {
+					db.Close()
+					fmt.Println(" -!! Error !!-")
+					fmt.Println(err)
+					fmt.Println(" ----=====----")
+					return
+				}
+				if (tMax.delayMax != 0) && (tMax.delayMax < delay) {
+					msg := fmt.Sprintf("!! Превышение порогового значения времени двусторонней задержки на %.4f мкс", delay-tMax.delayMax)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+				}
+				if (tMax.jitterMax != 0) && (tMax.jitterMax < float32(math.Abs(float64(jitter)))) {
+					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени двусторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter)))-tMax.jitterMax)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+				}
+				if (tMax.lossMax != 0) && (tMax.lossMax < loss) {
+					msg := fmt.Sprintf("!! Превышение порогового значения вероятности ошибки на %.6f", loss-tMax.lossMax)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+
+				}
+
+				if (tMax.delayOneMax != 0) && ((tMax.delayOneMax < delay1) || (tMax.delayOneMax < delay2)) {
+					msg := fmt.Sprintf("!! Превышение порогового значения времени односторонней задержки на %.4f мкс", float32(math.Max(float64(delay1), float64(delay2)))-tMax.delayOneMax)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+				}
+				if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter1)))) {
+					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter1)))-tMax.jitterOneMax)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+				}
+				if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter2)))) {
+					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter2)))-tMax.jitterOneMax)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+				}
+
+				db.Close()
+				fmt.Printf("  ==>> %v  --> %s  - count = %v\n", id, time.Since(start), cc)
+				quit <- 1
+			}
+			//else {
+			//	//fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
+
+			//	}
+
 		}
 	}
 }
