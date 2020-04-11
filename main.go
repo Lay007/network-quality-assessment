@@ -1353,7 +1353,7 @@ ExitLoop:
 			break ExitLoop
 		default:
 			n, _, err := c.ReadFrom(b)
-			go func() {
+			func() {
 				cc++
 				if err != nil {
 					fmt.Printf("failed to receive message: %v", err)
