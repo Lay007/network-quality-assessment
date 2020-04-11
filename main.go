@@ -1364,6 +1364,7 @@ ExitLoop:
 
 				if time.Since(start) > (time.Millisecond * 1500) {
 					quit <- 1
+					return
 				}
 
 				if (n) != packetSize {
