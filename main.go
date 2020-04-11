@@ -1564,7 +1564,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 
 				db.Close()
 				fmt.Printf("  ==>> %v  --> %s  - count = %v\n", id, time.Since(start), cc)
-				quit <- 1
+				//quit <- 1
 			}
 			//else {
 			//	//fmt.Printf("\n\n\r[%s] %v %x", addr.String(), len(f.Payload), f.Payload[:25])
