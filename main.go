@@ -1363,7 +1363,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test *testSLA) receiveMessages(quit chan int, id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
+func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 	cc := 0
@@ -1371,16 +1371,16 @@ func (test *testSLA) receiveMessages(quit chan int, id int, c net.PacketConn, ip
 	t_ips[1] = byte(t_type & 0xFF)
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 	start := time.Now()
-	//quit := make(chan int)
+	quit := make(chan int)
 
-	ExitLoop:
+	//ExitLoop:
 	for {
 		select {
-		case <-quit:
-			//	catchDetect <- key
+		case key := <-quit:
+			catchDetect <- key
 			fmt.Println("Chanel go")
-	//		return
-			break ExitLoop
+			return
+			//break ExitLoop
 		default:
 			n, _, err := c.ReadFrom(b)
 			cc++
