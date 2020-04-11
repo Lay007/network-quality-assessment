@@ -852,7 +852,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 	check_count := 10
 	counter := test.count
-	catch := make(chan bool)
+	catch := make(chan int)
 	for range t.C {
 		fmt.Print(" ==> Start - ")
 		fmt.Println(time.Now())
@@ -1362,7 +1362,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test *testSLA) receiveMessages(catch chan bool, id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
+func (test *testSLA) receiveMessages(catch chan int, id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 	cc := 0
@@ -1376,7 +1376,7 @@ ExitLoop:
 	for {
 		select {
 		case <-quit:
-			catch <- true
+			catch <- 1
 			break ExitLoop
 		default:
 			n, _, err := c.ReadFrom(b)
