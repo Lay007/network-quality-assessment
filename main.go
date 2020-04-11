@@ -830,7 +830,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		fmt.Println(" ----=====----")
 		return
 	}
-	c.SetReadDeadline(time.Now().Add(time.Millisecond * 3000))
+	//c.SetReadDeadline(time.Now().Add(time.Millisecond * 3000))
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
@@ -1371,7 +1371,7 @@ func (test *testSLA) receiveMessages(catch chan<- int, id int, c net.PacketConn,
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 	start := time.Now()
 	quit := make(chan int)
-	fmt.Println(" => XZ <=")
+
 	//ExitLoop:
 	for {
 		select {
