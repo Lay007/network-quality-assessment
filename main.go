@@ -874,8 +874,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				break
 			}
 		}
-		fmt.Println("Wait")
-		fmt.Println(<-detectPack)
+		//fmt.Println("Wait")
+		//fmt.Println(<-detectPack)
 		//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		//	go func() {
