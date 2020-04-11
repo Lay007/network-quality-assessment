@@ -811,7 +811,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		// Load "EtherType" field from the ethernet header.
 		bpf.LoadAbsolute{Off: 12, Size: 2},
 		// Skip over the next instruction if EtherType is not ARP.
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0x08000, SkipTrue: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0x0800, SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
 		bpf.RetConstant{Val: 1518},
 		// Verdict is "ignore packet."
