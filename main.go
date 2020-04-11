@@ -1371,12 +1371,12 @@ func (test *testSLA) receiveMessages(catch chan<- int, id int, c net.PacketConn,
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 	start := time.Now()
 	quit := make(chan int)
-
+	fmt.Println(" => XZ <=")
 	//ExitLoop:
 	for {
 		select {
 		case <-quit:
-			catch <- 1
+			catch <- 3
 			fmt.Println("Chanel go")
 			return
 			//break ExitLoop
