@@ -852,7 +852,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		go func() {
-			time.Sleep(time.Millisecond * 2)
+			time.Sleep(time.Millisecond * 1)
 			c.WriteTo(b, addr)
 		}()
 
@@ -1357,7 +1357,7 @@ func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str
 
 		}
 
-		if time.Since(start) > (time.Millisecond * 500) {
+		if time.Since(start) > (time.Millisecond * 1500) {
 			break
 		}
 
