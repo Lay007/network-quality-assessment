@@ -805,7 +805,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var test_type uint16
 	test_type = 0x2000 + (uint16(id) & 0x1FFF)
 
-	var netConf *raw.Config
+	var netConf *raw.Config = new(raw.Config)
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
 		// Load "EtherType" field from the ethernet header.
