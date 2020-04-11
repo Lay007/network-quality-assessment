@@ -830,7 +830,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		fmt.Println(" ----=====----")
 		return
 	}
-
+	c.SetReadDeadline(time.Now().Add(time.Millisecond * 3000))
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
@@ -861,11 +861,11 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				break
 			}
 		}
-
+		catch := make(chan bool)
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
-		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+		go test_this.receiveMessages(catch, id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		for { //	time.Sleep(time.Millisecond * 1)
 			n, err := c.WriteTo(b, addr)
@@ -873,8 +873,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				break
 			}
 		}
-
-	//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+		<-catch
+		//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		//	go func() {
 		//		time.Sleep(time.Millisecond * 1)
@@ -1361,7 +1361,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test *testSLA) receiveMessages(id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
+func (test *testSLA) receiveMessages(catch chan bool, id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 	cc := 0
@@ -1387,7 +1387,7 @@ ExitLoop:
 
 				}
 
-				if time.Since(start) > (time.Millisecond * 1500) {
+				if time.Since(start) > (time.Millisecond * 3000) {
 					quit <- 1
 					return
 				}
@@ -1569,6 +1569,7 @@ ExitLoop:
 			}()
 		}
 	}
+	catch <- true
 }
 
 func (test *testSLA) getDelayAvg(in_solve int64) int64 {
