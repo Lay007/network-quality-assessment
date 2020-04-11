@@ -502,7 +502,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 	var number uint32
 	var test_type uint16
-	test_type = 0xA000 + (uint16(id) & 0x1FFF)
+	test_type = 0x2000 + (uint16(id) & 0x1FFF)
 
 	var test_c testThr
 	test_c.numberCounter = uint32(test.count)
@@ -803,7 +803,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var test_this testSLA
 
 	var test_type uint16
-	test_type = 0x2000 + (uint16(id) & 0x1FFF)
+	test_type = 0x0000 + (uint16(id) & 0x1FFF)
 
 	var netConf *raw.Config = new(raw.Config)
 
@@ -865,10 +865,14 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
-		func() {
-			//	time.Sleep(time.Millisecond * 1)
-			c.WriteTo(b, addr)
-		}()
+		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+
+		for { //	time.Sleep(time.Millisecond * 1)
+			n, err := c.WriteTo(b, addr)
+			if n == len(b) && err == nil {
+				break
+			}
+		}
 
 		go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
