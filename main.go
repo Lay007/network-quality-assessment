@@ -809,11 +809,11 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
 		// Load "EtherType" field from the ethernet header.
-		bpf.LoadAbsolute{Off: 12, Size: 2},
+		bpf.LoadAbsolute{Off: 38, Size: 1},
 		// Skip over the next instruction if EtherType is not ARP.
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0x0800, SkipTrue: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
-		bpf.RetConstant{Val: 66},
+		bpf.RetConstant{Val: 4096},
 		// Verdict is "ignore packet."
 		bpf.RetConstant{Val: 0},
 	})
