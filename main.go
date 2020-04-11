@@ -852,6 +852,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 	check_count := 10
 	counter := test.count
+	catch := make(chan bool)
 	for range t.C {
 		fmt.Print(" ==> Start - ")
 		fmt.Println(time.Now())
@@ -861,7 +862,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				break
 			}
 		}
-		catch := make(chan bool)
+		//catch := make(chan bool)
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
