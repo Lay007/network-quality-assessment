@@ -852,7 +852,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 	check_count := 10
 	counter := test.count
-	catch := make(chan int)
+	detectPack := make(chan int)
 	for range t.C {
 		fmt.Print(" ==> Start - ")
 		fmt.Println(time.Now())
@@ -866,18 +866,16 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
-		go test_this.receiveMessages(catch, id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+		go test_this.receiveMessages(detectPack, id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		for { //	time.Sleep(time.Millisecond * 1)
 			n, err := c.WriteTo(b, addr)
 			if n == len(b) && err == nil {
-				
-				catch <- 1
 				break
 			}
 		}
 		fmt.Println("Wait")
-		fmt.Println(" Chan out - ", <-catch)
+		fmt.Println(<-detectPack)
 		//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		//	go func() {
@@ -1365,7 +1363,7 @@ func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test *testSLA) receiveMessages(catch chan<- int, id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
+func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 	cc := 0
@@ -1379,7 +1377,7 @@ func (test *testSLA) receiveMessages(catch chan<- int, id int, c net.PacketConn,
 	for {
 		select {
 		case <-quit:
-			catch <- 1
+			catchDetect <- 1
 			fmt.Println("Chanel go")
 			return
 			//break ExitLoop
@@ -1501,7 +1499,6 @@ func (test *testSLA) receiveMessages(catch chan<- int, id int, c net.PacketConn,
 							if test_id.test_delay_1_jitter == true {
 								jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
 								jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
-
 							}
 						}
 					}
