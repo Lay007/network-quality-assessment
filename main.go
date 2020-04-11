@@ -1377,6 +1377,7 @@ ExitLoop:
 		select {
 		case <-quit:
 			catch <- 1
+			fmt.Println("Chanel go")
 			break ExitLoop
 		default:
 			n, _, err := c.ReadFrom(b)
