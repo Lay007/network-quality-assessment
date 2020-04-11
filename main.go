@@ -808,10 +808,12 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var netConf *raw.Config = new (raw.Config)
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Load "EtherType" field from the ethernet header.
-		bpf.LoadAbsolute{Off: 34, Size: 1},
-		// Skip over the next instruction if EtherType is not ARP.
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 1},
+		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+		bpf.LoadAbsolute{Off: 34, Size: 1},		
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+        // Проверка идентификатора теста 
+		bpf.LoadAbsolute{Off: 64, Size: 2},		
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: test_type, SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
 		bpf.RetConstant{Val: 4096},
 		// Verdict is "ignore packet."
