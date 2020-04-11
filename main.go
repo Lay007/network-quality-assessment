@@ -1376,6 +1376,7 @@ ExitLoop:
 	for {
 		select {
 		case <-quit:
+			catch <- true
 			break ExitLoop
 		default:
 			n, _, err := c.ReadFrom(b)
@@ -1570,7 +1571,6 @@ ExitLoop:
 			}()
 		}
 	}
-	catch <- true
 }
 
 func (test *testSLA) getDelayAvg(in_solve int64) int64 {
