@@ -850,7 +850,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
 
-		func() {
+		go func() {
 		//	time.Sleep(time.Millisecond * 1)
 			c.WriteTo(b, addr)
 		}()
