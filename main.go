@@ -871,8 +871,9 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		for { //	time.Sleep(time.Millisecond * 1)
 			n, err := c.WriteTo(b, addr)
 			if n == len(b) && err == nil {
-				break
+				
 				catch <- 1
+				break
 			}
 		}
 		fmt.Println("Wait")
