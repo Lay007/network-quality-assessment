@@ -471,7 +471,9 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 		}()
 		//}
 	*/
-	quit := make(chan int)
+K := 8
+
+	quit := make(chan int, K)
 	blen := len(b)
 
 	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit, t_type)
@@ -497,7 +499,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	counter := mutexCounter{}
 	counter.Set(cnt)
 
-	for i := 0; i < 8; i++ {
+	for i := 0; i < K; i++ {
 		go func() {
 
 			con, err := raw.ListenPacket(ifi, etherType, netConf)
@@ -550,7 +552,9 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	time.Sleep(time.Duration(time_to_gen))
 	rez_count := test.numberCounter
 	fmt.Println("		 --->> rez_count= ", rez_count)
+	for i:=0;i<K;i++{
 	quit <- 1
+	}
 	time.Sleep(time.Millisecond * 10)
 	rez := <-rez_time
 	return int(rez_count), rez
