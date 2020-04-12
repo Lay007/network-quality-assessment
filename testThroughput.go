@@ -361,7 +361,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now(),test.status, id)
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now(), test.status, id)
 
 	db.Close()
 }
@@ -434,7 +434,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	//fmt.Println("		 -*- min period [mks] = ", min_per_rez)
-	
+
 	g_start := time.Now()
 	fmt.Println(" == gStart ", g_start)
 	rez_time := make(chan int64)
@@ -473,7 +473,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	*/
 	K := 4
 
-	quit := make(chan int, K)
+	quit := make(chan int, K+1)
 	blen := len(b)
 
 	var test_type uint16
@@ -484,10 +484,13 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
 		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 		bpf.LoadAbsolute{Off: 34, Size: 1},
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
 		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
+		// Выбор одного из 1000
+		bpf.LoadExtension{Num: bpf.ExtRand},
+		bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 2 ^ 32/1000, SkipFalse: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
 		bpf.RetConstant{Val: 4096},
 		// Verdict is "ignore packet."
@@ -497,8 +500,6 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	conRcv, err := raw.ListenPacket(ifi, etherType, netConfRecive)
 
 	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
-
-
 
 	var netConf *raw.Config = new(raw.Config)
 
@@ -576,6 +577,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	}
 	time.Sleep(time.Millisecond * 10)
 	rez := <-rez_time
+	fmt.Println("		 --->> rez_counterRez= ", cnt-counter.Value())
 	return int(rez_count), rez
 }
 
