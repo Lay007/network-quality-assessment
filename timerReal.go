@@ -1,10 +1,9 @@
-package serverSLA
+package main
 
 import (
 	"fmt"
 	"time"
 )
-
 
 type TimerR struct {
 	minPeriodNano int64

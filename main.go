@@ -1,4 +1,4 @@
-package serverSLA
+package main //serverSLA
 
 import (
 	. "./go-zabbix"

@@ -1,4 +1,4 @@
-package serverSLA
+package main
 
 import (
 	"fmt"
