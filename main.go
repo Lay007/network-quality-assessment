@@ -852,7 +852,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 	check_count := 10
 	counter := test.count
-	detectPack := make(chan int, 1)
+	detectPack := make(chan int, 10)
 	for range t.C {
 		fmt.Print(" ==> Start - ")
 		fmt.Println(time.Now())
@@ -873,7 +873,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			if n == len(b) && err == nil {
 				break
 			}
-			time.Sleep(time.Millisecond*1)
+			time.Sleep(time.Millisecond * 1)
 			fmt.Println(" !!Error write")
 		}
 		//fmt.Println("Wait")
@@ -1373,8 +1373,8 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	t_ips[1] = byte(t_type & 0xFF)
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 	start := time.Now()
-	quit := make(chan int, 1)
-
+	quit := make(chan int, 10)
+	fmt.Println("-> Begin Catch - ", start)
 	//ExitLoop:
 	for {
 		select {
@@ -1524,7 +1524,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 					fmt.Println(err)
 					fmt.Println(" ----=====----")
 					quit <- 1
-					return
+					continue
 				}
 				var dt = time.Now()
 				//dt.Format(time.RFC3339)
@@ -1535,7 +1535,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 					fmt.Println(err)
 					fmt.Println(" ----=====----")
 					quit <- 1
-					return
+					continue
 				}
 				if (tMax.delayMax != 0) && (tMax.delayMax < delay) {
 					msg := fmt.Sprintf("!! Превышение порогового значения времени двусторонней задержки на %.4f мкс", delay-tMax.delayMax)
