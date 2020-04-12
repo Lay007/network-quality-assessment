@@ -361,7 +361,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now(),test.status, id)
 
 	db.Close()
 }
@@ -471,15 +471,34 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 		}()
 		//}
 	*/
-K := 8
+	K := 4
 
 	quit := make(chan int, K)
 	blen := len(b)
 
-	go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit, t_type)
-
 	var test_type uint16
 	test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
+
+	var netConfRecive *raw.Config = new(raw.Config)
+
+	(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
+		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+		bpf.LoadAbsolute{Off: 34, Size: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+		// Проверка идентификатора теста
+		bpf.LoadAbsolute{Off: 64, Size: 2},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
+		// Verdict is "send up to 4k of the packet to userspace."
+		bpf.RetConstant{Val: 4096},
+		// Verdict is "ignore packet."
+		bpf.RetConstant{Val: 0},
+	})
+
+	conRcv, err := raw.ListenPacket(ifi, etherType, netConfRecive)
+
+	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
+
+
 
 	var netConf *raw.Config = new(raw.Config)
 
@@ -552,8 +571,8 @@ K := 8
 	time.Sleep(time.Duration(time_to_gen))
 	rez_count := test.numberCounter
 	fmt.Println("		 --->> rez_count= ", rez_count)
-	for i:=0;i<K;i++{
-	quit <- 1
+	for i := 0; i < K; i++ {
+		quit <- 1
 	}
 	time.Sleep(time.Millisecond * 10)
 	rez := <-rez_time
