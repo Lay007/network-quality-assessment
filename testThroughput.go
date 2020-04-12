@@ -490,7 +490,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
 		// Выбор одного из 1000
 		bpf.LoadExtension{Num: bpf.ExtRand},
-		bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 2 ^ 32/1000, SkipFalse: 1},
+		bpf.JumpIf{Cond: bpf.JumpLessThan, Val: (2 ^ 32)/1000, SkipFalse: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
 		bpf.RetConstant{Val: 4096},
 		// Verdict is "ignore packet."
