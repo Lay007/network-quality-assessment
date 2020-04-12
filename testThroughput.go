@@ -434,7 +434,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	//fmt.Println("		 -*- min period [mks] = ", min_per_rez)
-	fmt.Print(time.Now())
+	
 	g_start := time.Now()
 	fmt.Println(" == gStart ", g_start)
 	rez_time := make(chan int64)
