@@ -874,6 +874,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				break
 			}
 			time.Sleep(time.Millisecond*1)
+			fmt.Println(" !!Error write")
 		}
 		//fmt.Println("Wait")
 		fmt.Println(<-detectPack)
@@ -1522,6 +1523,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 					fmt.Println(" -!! Error !!-")
 					fmt.Println(err)
 					fmt.Println(" ----=====----")
+					quit <- 1
 					return
 				}
 				var dt = time.Now()
@@ -1532,6 +1534,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 					fmt.Println(" -!! Error !!-")
 					fmt.Println(err)
 					fmt.Println(" ----=====----")
+					quit <- 1
 					return
 				}
 				if (tMax.delayMax != 0) && (tMax.delayMax < delay) {
