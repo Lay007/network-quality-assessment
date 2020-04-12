@@ -1375,7 +1375,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	start := time.Now()
 	quit := make(chan int, 10)
 	fmt.Println("-> Begin Catch - ", start)
-	c.SetReadDeadline(start.Add(time.Microsecond*3000))
+	c.SetReadDeadline(start.Add(time.Microsecond * 3000))
 	//ExitLoop:
 	for {
 		select {
@@ -1385,13 +1385,14 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			return
 			//break ExitLoop
 		default:
-			
+
 			n, _, err := c.ReadFrom(b)
 			cc++
 			if err != nil {
 				fmt.Printf("failed to receive message: %v", err)
 				log.Fatalf("failed to receive message: %v", err)
-				quit<-1
+				c.SetReadDeadline(start.Add(time.Hour * 24))
+				quit <- 1
 				continue
 			}
 
