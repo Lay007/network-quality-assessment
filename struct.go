@@ -10,6 +10,7 @@ type testSLA struct {
 }
 
 type testThr struct {
+	testID        int
 	numberTx      uint32
 	numberCounter uint32
 }
