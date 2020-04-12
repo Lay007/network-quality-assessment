@@ -36,7 +36,7 @@ func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string) bool {
 			// ... or often you're just interested in numeric values.
 			// ToBigInt() will return the Value as a BigInt, for plugging
 			// into your calculations.
-			fmt.Printf("number: %v б/с\n", g.ToBigInt(variable.Value)) //*8)/1000000)
+			fmt.Printf("number: %v   Byte/s\n", g.ToBigInt(variable.Value)) //*8)/1000000)
 		}
 	}
 	return true
