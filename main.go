@@ -1260,7 +1260,8 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 		}
 		n, _, err := c.ReadFrom(b)
 		if err != nil {
-			log.Fatalf("failed to receive message: %v", err)
+			//log.Fatalf("failed to receive message: %v", err)
+			fmt.Println(" -****- ")
 			continue
 		}
 
@@ -1390,7 +1391,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			cc++
 			if err != nil {
 				fmt.Printf("failed to receive message: %v", err)
-				log.Fatalf("failed to receive message: %v", err)
+				//log.Fatalf("failed to receive message: %v", err)
 				c.SetReadDeadline(start.Add(time.Hour * 24))
 				quit <- 1
 				continue
