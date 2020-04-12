@@ -497,7 +497,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	counter := mutexCounter{}
 	counter.Set(cnt)
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 8; i++ {
 		go func() {
 
 			con, err := raw.ListenPacket(ifi, etherType, netConf)
