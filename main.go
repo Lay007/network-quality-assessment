@@ -873,6 +873,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			if n == len(b) && err == nil {
 				break
 			}
+			time.Sleep(time.Millisecond*1)
 		}
 		//fmt.Println("Wait")
 		fmt.Println(<-detectPack)
