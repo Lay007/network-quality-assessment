@@ -12,7 +12,7 @@ type TimerR struct {
 
 func (t *TimerR) InitTimer() int {
 	start := time.Now()
-	countTimer := 1000000
+	countTimer := 10000000
 	var x []int64
 	for ind := 0; ind < countTimer; ind++ {
 		k := float64(ind * ind)
