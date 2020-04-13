@@ -9,7 +9,7 @@ type TimerR struct {
 	minPeriodNano int64
 }
 
-/*
+
 func (t *TimerR) InitTimer() int {
 	start := time.Now()
 	countTimer := 1000000
@@ -23,8 +23,8 @@ func (t *TimerR) InitTimer() int {
 	fmt.Printf(" => Init timer - star: %s  end - %s  period - %v ns\n", start, longTimer, (*t).minPeriodNano)
 	return 0
 }
-*/
 
+/*
 const loops = 500
 const workAmt = 250 // 250us
 var workAdj int
@@ -87,7 +87,7 @@ func doTests() {
 				fmt.Print("  ... + work:  ")
 			}
 			for _, i := range []time.Duration{0, 1, 500 * time.Microsecond, 1 * time.Millisecond,
-				/**/ 1500 * time.Microsecond, 2 * time.Millisecond} {
+				 1500 * time.Microsecond, 2 * time.Millisecond} {
 				now := time.Now()
 				for j := 0; j < loops; j++ {
 					if work {
@@ -120,3 +120,4 @@ func doWork(us int) (junk int) {
 	}
 	return x
 }
+*/
