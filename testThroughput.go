@@ -476,20 +476,23 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 			//period := time.Duration(period_nano)
 			//fmt.Println("Start")
 			//for range ticker.C {
+		ExitLoop:
 			for {
 				select {
+				case <-quit:
+					break ExitLoop
 				case <-ticker.C:
 					//time.Sleep(period)
 					counter.Inc()
 					c.WriteTo(b, addr)
 					if counter.Value() <= 0 {
 						//	rez_time <- (int64)(time.Since(time.Time(g_start)))
-						break
+						break ExitLoop
 					}
-					if counter.Value()%10000 == 0 {
+					if counter.Value()%100 == 0 {
 						if time.Since(g_start) >= time_gen {
 							//rez_time <- (int64)(time.Since(time.Time(g_start)))
-							break
+							break ExitLoop
 						}
 						//		}
 					}
