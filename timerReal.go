@@ -24,7 +24,7 @@ func (t *TimerR) InitTimer() int {
 	(*t).minPeriodNano = 1
 	countTimer := 1000000000
 	start := time.Now()
-	(*t).timerDelayNano(int64(countTimer))
+	t.timerDelayNano(int64(countTimer))
 	longTimer := time.Since(start)
 	(*t).minPeriodNano = int64(longTimer) / int64(countTimer)
 	fmt.Printf(" => Init timer - star: %s  end - %s  period - %v ns\n", start, longTimer, (*t).minPeriodNano)
