@@ -416,7 +416,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
 	var timerReal TimerR
-	_ = timerReal.InitTimer()
+	//_ = timerReal.InitTimer()
 
 	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
 
