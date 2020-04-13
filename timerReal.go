@@ -21,7 +21,7 @@ func (t *TimerR) timerDelayNano(delay int64) {
 }
 
 func (t *TimerR) InitTimer() int {
-	t.minPeriodNano = 1
+	(*t).minPeriodNano = 1
 	countTimer := 1000000000
 	start := time.Now()
 	(*t).timerDelayNano(int64(countTimer))
