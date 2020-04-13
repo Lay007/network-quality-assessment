@@ -11,11 +11,11 @@ type TimerR struct {
 
 func (t *TimerR) timerDelayNano(delay int64) {
 	countTimer := delay / t.minPeriodNano
-	var x []int64
+	var x int64
 	var ind int64
 	for ind = 0; ind < countTimer; ind++ {
 		k := float64(ind * ind)
-		x = append(x, int64(k))
+		x = x * int64(k)
 	}
 
 }
