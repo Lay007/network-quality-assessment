@@ -415,7 +415,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	pps_rez := 10000 * 1000000000 / int(time.Since(gen_test_pps_start))
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
-	var timerReal TimerR
+	//var timerReal TimerR
 	//_ = timerReal.InitTimer()
 
 	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
