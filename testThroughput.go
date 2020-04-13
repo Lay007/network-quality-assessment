@@ -483,15 +483,15 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
 		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
-		//	bpf.LoadAbsolute{Off: 34, Size: 1},
-		//	bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+			bpf.LoadAbsolute{Off: 34, Size: 1},
+			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
 		// Проверка идентификатора теста
-		//	bpf.LoadAbsolute{Off: 64, Size: 2},
-		//	bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
+			bpf.LoadAbsolute{Off: 64, Size: 2},
+			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
 		// Выбор одного из 1000
 		bpf.LoadExtension{Num: bpf.ExtRand},
 		//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
-		bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x3FFFFF, SkipTrue: 1},
+		bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x1FFFFF, SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
 		bpf.RetConstant{Val: 4096},
 		// Verdict is "ignore packet."
