@@ -9,18 +9,27 @@ type TimerR struct {
 	minPeriodNano int64
 }
 
-
-func (t *TimerR) InitTimer() int {
-	start := time.Now()
-	countTimer := 10000000
+func (t TimerR) timerDelayNano(delay int64) {
+	countTimer := delay / t.minPeriodNano
 	var x []int64
-	for ind := 0; ind < countTimer; ind++ {
+	var ind int64
+	for ind = 0; ind < countTimer; ind++ {
 		k := float64(ind * ind)
 		x = append(x, int64(k))
 	}
+
+}
+
+func (t *TimerR) InitTimer() int {
+	t.minPeriodNano = 1
+
+	countTimer := 1000000000
+	start := time.Now()
+	t.timerDelayNano(int64(countTimer))
 	longTimer := time.Since(start)
 	(*t).minPeriodNano = int64(longTimer) / int64(countTimer)
 	fmt.Printf(" => Init timer - star: %s  end - %s  period - %v ns\n", start, longTimer, (*t).minPeriodNano)
+
 	return 0
 }
 
