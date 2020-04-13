@@ -415,22 +415,17 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	pps_rez := 10000 * 1000000000 / int(time.Since(gen_test_pps_start))
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
+	var addDelay bool
+	addDelay = false
+
+	if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
+		addDelay = true
+	}
+
 	var timerReal TimerR
 	_ = timerReal.InitTimer()
 
 	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
-
-	test_count = 1000
-	//gen_test_min_period_start := time.Now()
-	ticker := time.NewTicker(time.Duration(1))
-	for range ticker.C {
-		test_count--
-		c.WriteTo(b, addr)
-		if test_count <= 0 {
-			ticker.Stop()
-			break
-		}
-	}
 
 	//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	//fmt.Println("		 -*- min period [mks] = ", min_per_rez)
@@ -543,6 +538,9 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 					break ExitLoop
 				default:
 					n, err := con.WriteTo(b, addr)
+					if addDelay {
+						timerReal.timerDelayNano(period_nano)
+					}
 					if err != nil {
 						fmt.Printf("%v", err)
 						continue
