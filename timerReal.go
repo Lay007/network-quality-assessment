@@ -13,7 +13,7 @@ func (t *TimerR) timerDelayNano(delay int64) {
 	countTimer := delay / t.minPeriodNano
 	var x int64
 	var ind int64
-	for ind = 1; ind < countTimer*100; ind++ {
+	for ind = 1; ind < countTimer*10; ind++ {
 		k := float64(ind * ind)/float64(ind)
 		x = x * int64(k)*(x+123)
 	}
