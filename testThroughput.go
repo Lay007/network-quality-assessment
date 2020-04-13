@@ -434,138 +434,172 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	fmt.Println(" == gStart ", g_start)
 	rez_time := make(chan int64)
 	test.numberCounter = 0
-	//for i := 0; i < 32; i++ {
 
-	/*
+	K := 1
+	quit := make(chan int, K+1)
+
+	counter := mutexCounter{}
+
+	if period_nano > 15000 {
+		counter.Set(cnt)
+		//for i := 0; i < 32; i++ {
+
+		var test_type uint16
+		test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
+
+		var netConfRecive *raw.Config = new(raw.Config)
+
+		(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
+			// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+			bpf.LoadAbsolute{Off: 34, Size: 1},
+			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
+			// Проверка идентификатора теста
+			bpf.LoadAbsolute{Off: 64, Size: 2},
+			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
+			// Выбор одного из 1000
+			bpf.LoadExtension{Num: bpf.ExtRand},
+			//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
+			bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
+			// Verdict is "send up to 4k of the packet to userspace."
+			bpf.RetConstant{Val: 4096},
+			// Verdict is "ignore packet."
+			bpf.RetConstant{Val: 0},
+		})
+
+		conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
+
+		go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
 		go func() {
-			//ticker := time.NewTicker(time.Duration(period_nano))
+			ticker := time.NewTicker(time.Duration(period_nano))
 			//timer := time.NewTimer(time.Microsecond * 10)
 			//period := time.Duration(period_nano)
 			//fmt.Println("Start")
 			//for range ticker.C {
 			for {
-				//	select {
-				//	case <-ticker.C:
-				//time.Sleep(period)
-				cnt--
-				c.WriteTo(b, addr)
-				if cnt <= 0 {
-					break
-				}
-				if cnt%10000 == 0 {
-					if time.Since(gen_start) >= time_gen {
+				select {
+				case <-ticker.C:
+					//time.Sleep(period)
+					counter.Inc()
+					c.WriteTo(b, addr)
+					if counter.Value() <= 0 {
+						//	rez_time <- (int64)(time.Since(time.Time(g_start)))
 						break
 					}
-					//		}
+					if counter.Value()%10000 == 0 {
+						if time.Since(g_start) >= time_gen {
+							//rez_time <- (int64)(time.Since(time.Time(g_start)))
+							break
+						}
+						//		}
+					}
 				}
 			}
-			rez_time = (int64)(time.Since(gen_start))
-			//ticker.Stop()
-			fmt.Println("		 -*- rez_time = ", rez_time)
+			rez_time <- (int64)(time.Since(time.Time(g_start)))
+			ticker.Stop()
+			//fmt.Println("		 -*- rez_time = ", rez_t)
 		}()
 		//}
-	*/
-	K := 1
+	} else {
 
-	quit := make(chan int, K+1)
-	blen := len(b)
+		blen := len(b)
 
-	var test_type uint16
-	test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
+		var test_type uint16
+		test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
 
-	var netConfRecive *raw.Config = new(raw.Config)
+		var netConfRecive *raw.Config = new(raw.Config)
 
-	(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
-		bpf.LoadAbsolute{Off: 34, Size: 1},
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
-		// Проверка идентификатора теста
-		bpf.LoadAbsolute{Off: 64, Size: 2},
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
-		// Выбор одного из 1000
-		bpf.LoadExtension{Num: bpf.ExtRand},
-		//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
-		bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
-		// Verdict is "send up to 4k of the packet to userspace."
-		bpf.RetConstant{Val: 4096},
-		// Verdict is "ignore packet."
-		bpf.RetConstant{Val: 0},
-	})
+		(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
+			// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+			bpf.LoadAbsolute{Off: 34, Size: 1},
+			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
+			// Проверка идентификатора теста
+			bpf.LoadAbsolute{Off: 64, Size: 2},
+			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
+			// Выбор одного из 1000
+			bpf.LoadExtension{Num: bpf.ExtRand},
+			//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
+			bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
+			// Verdict is "send up to 4k of the packet to userspace."
+			bpf.RetConstant{Val: 4096},
+			// Verdict is "ignore packet."
+			bpf.RetConstant{Val: 0},
+		})
 
-	conRcv, err := raw.ListenPacket(ifi, etherType, netConfRecive)
+		conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
 
-	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
+		go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
-	var netConf *raw.Config = new(raw.Config)
+		var netConf *raw.Config = new(raw.Config)
 
-	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
-		bpf.LoadAbsolute{Off: 34, Size: 1},
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
-		// Проверка идентификатора теста
-		bpf.LoadAbsolute{Off: 64, Size: 2},
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
-		// Verdict is "send up to 4k of the packet to userspace."
-		bpf.RetConstant{Val: 4096},
-		// Verdict is "ignore packet."
-		bpf.RetConstant{Val: 0},
-	})
+		(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
+			// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+			bpf.LoadAbsolute{Off: 34, Size: 1},
+			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+			// Проверка идентификатора теста
+			bpf.LoadAbsolute{Off: 64, Size: 2},
+			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
+			// Verdict is "send up to 4k of the packet to userspace."
+			bpf.RetConstant{Val: 4096},
+			// Verdict is "ignore packet."
+			bpf.RetConstant{Val: 0},
+		})
 
-	counter := mutexCounter{}
-	counter.Set(cnt)
+		counter.Set(cnt)
 
-	for i := 0; i < K; i++ {
-		go func() {
+		for i := 0; i < K; i++ {
+			go func() {
 
-			con, err := raw.ListenPacket(ifi, etherType, netConf)
-			defer con.Close()
+				con, err := raw.ListenPacket(ifi, etherType, netConf)
+				defer con.Close()
 
-			if err != nil {
+				if err != nil {
 
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
-				return
-			}
+					fmt.Println(" -!! Error !!-")
+					fmt.Println(err)
+					fmt.Println(" ----=====----")
+					return
+				}
 
-		ExitLoop:
-			for {
-				select {
-				case <-quit:
-					fmt.Println(" == Quit ", (int64)(time.Since(g_start)))
-					rez_time <- (int64)(time.Since(g_start))
-					break ExitLoop
-				default:
-					n, err := con.WriteTo(b, addr)
-					if addDelay {
-						timerReal.timerDelayNano(period_nano)
-					}
-					if err != nil {
-						fmt.Printf("%v", err)
-						continue
-					}
-					if n < blen {
-						fmt.Printf("Partial write: %d", n)
-						continue
-					}
-					counter.Inc()
-					if counter.Value() <= 0 {
-						fmt.Println(" == cnt<0 ", (int64)(time.Since(g_start)))
-						rez_time <- (int64)(time.Since(time.Time(g_start)))
+			ExitLoop:
+				for {
+					select {
+					case <-quit:
+						fmt.Println(" == Quit ", (int64)(time.Since(g_start)))
+						rez_time <- (int64)(time.Since(g_start))
 						break ExitLoop
-					}
-					if counter.Value()%1000 == 0 {
-						if time.Since(g_start) >= time_gen {
-							fmt.Println(" == time out ", (int64)(time.Since(g_start)))
+					default:
+						n, err := con.WriteTo(b, addr)
+						if addDelay {
+							timerReal.timerDelayNano(period_nano)
+						}
+						if err != nil {
+							fmt.Printf("%v", err)
+							continue
+						}
+						if n < blen {
+							fmt.Printf("Partial write: %d", n)
+							continue
+						}
+						counter.Inc()
+						if counter.Value() <= 0 {
+							fmt.Println(" == cnt<0 ", (int64)(time.Since(g_start)))
 							rez_time <- (int64)(time.Since(time.Time(g_start)))
 							break ExitLoop
 						}
+						if counter.Value()%1000 == 0 {
+							if time.Since(g_start) >= time_gen {
+								fmt.Println(" == time out ", (int64)(time.Since(g_start)))
+								rez_time <- (int64)(time.Since(time.Time(g_start)))
+								break ExitLoop
+							}
+						}
 					}
 				}
-			}
 
-		}()
+			}()
+		}
+
 	}
 
 	time.Sleep(time.Duration(time_to_gen))
