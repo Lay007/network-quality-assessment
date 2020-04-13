@@ -9,7 +9,7 @@ import (
 	"math"
 	"math/rand"
 	"net"
-	"runtime"
+	//"runtime"
 	"time"
 	//"unsafe"
 	"golang.org/x/net/bpf"
@@ -76,7 +76,7 @@ func (h *iphdr) checksum() {
 
 func main() {
 
-	runtime.GOMAXPROCS(1024)
+	//runtime.GOMAXPROCS(1024)
 
 	//time.Sleep(100 * time.Second)
 
