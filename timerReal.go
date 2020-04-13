@@ -10,8 +10,8 @@ type TimerR struct {
 }
 
 func (t *TimerR) timerDelayNano(delay int64) {
-	countTimer := (delay * 6) / t.minPeriodNano
-//	countTimer := (delay * 10) / t.minPeriodNano
+	countTimer := (delay * 18) / t.minPeriodNano
+	//	countTimer := (delay * 10) / t.minPeriodNano
 	var x int64
 	var ind int64
 	for ind = 1; ind < countTimer; ind++ {

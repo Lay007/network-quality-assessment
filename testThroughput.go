@@ -466,7 +466,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 		}()
 		//}
 	*/
-	K := 4
+	K := 1
 
 	quit := make(chan int, K+1)
 	blen := len(b)
