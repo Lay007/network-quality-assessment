@@ -12,9 +12,8 @@ import (
 	"github.com/mdlayher/raw"
 
 	"golang.org/x/net/bpf"
-
-	"github.com/intel-go/nff-go/flow"
-	"github.com/intel-go/nff-go/packet"
+	//	"github.com/intel-go/nff-go/flow"
+	//	"github.com/intel-go/nff-go/packet"
 )
 
 func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
@@ -557,6 +556,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 			go func() {
 
 				con, err := raw.ListenPacket(ifi, etherType, netConf)
+
 				defer con.Close()
 
 				if err != nil {
@@ -661,25 +661,27 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 		}
 	}
 }
+
+/*
 func genDPDK(){
 	func main() {
 		output := flag.Int("port", 1, "output port")
 		flag.Parse()
 		outputPort := uint16(*output)
-	
+
 		flow.SystemInit(nil)
-	
+
 			firstFlow, genChannel, _ := flow.SetFastGenerator(generatePacket, 3500, nil)
 			flow.CheckFatal(flow.SetSender(firstFlow, outputPort))
 			go updateSpeed(genChannel)
 			flow.SystemStart()
 		}
-	
+
 	func generatePacket(pkt *packet.Packet, context flow.UserContext) {
 		packet.InitEmptyIPv4Packet(pkt, 1300)
 		pkt.Ether.DAddr = [6]uint8{0x00, 0x11, 0x22, 0x33, 0x44, 0x55}
 	}
-			
+
 	func updateSpeed(genChannel chan uint64) {
 		var load int
 		for {
@@ -690,3 +692,4 @@ func genDPDK(){
 		}
 	}
 }
+//*/

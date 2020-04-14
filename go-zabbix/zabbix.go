@@ -146,7 +146,7 @@ func (s *Sender) Send(packet *Packet) (res []byte, err error) {
 
 	dataPacket, _ := json.Marshal(packet)
 
-	/*
+	//*
 	   fmt.Printf("HEADER: % x (%s)\n", s.getHeader(), s.getHeader())
 	   fmt.Printf("DATALEN: % x, %d byte\n", packet.DataLen(), len(packet.DataLen()))
 	   fmt.Printf("BODY: %s\n", string(dataPacket))
