@@ -958,6 +958,10 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				if test_id.test_delay == true {
 					if test_id.test_type == 1 {
 						delay = zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
+						if len((*test).delay_solve) == 0 {
+							(*test).delay_solve = append((*test).delay_solve, markerSFP12-markerSFP11)
+						}
+						(*test).delay_solve[0] = markerSFP12 - markerSFP11
 						if test_id.test_delay_jitter == true {
 							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
 						}
@@ -1143,8 +1147,8 @@ func (test *testSLA) getJitter(in_solve int64) float32 {
 
 	jitter = float32((*test).delay_solve[l-1] - in_solve)
 
-	fmt.Println("-->> (*test).delay_solve -> ",(*test).delay_solve)
-	//(*test).delay_solve[0] = in_solve
+	fmt.Println("-->> (*test).delay_solve -> ", (*test).delay_solve)
+
 	/*
 		var jitter, mean float32
 		var size_s int
