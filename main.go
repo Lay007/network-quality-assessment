@@ -1142,6 +1142,8 @@ func (test *testSLA) getJitter(in_solve int64) float32 {
 	}
 
 	jitter = float32((*test).delay_solve[l-1] - in_solve)
+
+	fmt.Println("-->> (*test).delay_solve -> ",(*test).delay_solve)
 	//(*test).delay_solve[0] = in_solve
 	/*
 		var jitter, mean float32
