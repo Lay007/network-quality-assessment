@@ -958,12 +958,14 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				if test_id.test_delay == true {
 					if test_id.test_type == 1 {
 						delay = zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
-						if len((*test).delay_solve) == 0 {
+						if len((*test).delay_solve) < 2 {
 							(*test).delay_solve = append((*test).delay_solve, markerSFP12-markerSFP11)
+						} else {
+							(*test).delay_solve[0] = (*test).delay_solve[1]
+							(*test).delay_solve[1] = markerSFP12 - markerSFP11
 						}
-						(*test).delay_solve[0] = markerSFP12 - markerSFP11
 						if test_id.test_delay_jitter == true {
-							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(markerSFP12-markerSFP11), host_zabbix, port_zabbix)
+							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(), host_zabbix, port_zabbix)
 						}
 					}
 					if test_id.test_type == 2 {
@@ -971,7 +973,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 						delay_avg := (*test).getDelayAvg(t_time - markerSFP2)
 						delay = zabbix_delay(node_zabbix, delay_avg, host_zabbix, port_zabbix)
 						if test_id.test_delay_jitter == true {
-							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(delay_avg), host_zabbix, port_zabbix)
+							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(), host_zabbix, port_zabbix)
 						}
 					}
 				}
@@ -1137,15 +1139,15 @@ func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, i
 	return int64(mean_to), int64(mean_un)
 }
 
-func (test *testSLA) getJitter(in_solve int64) float32 {
+func (test *testSLA) getJitter() float32 {
 	var jitter float32
 	l := len((*test).delay_solve)
-	if l == 0 {
-		(*test).delay_solve = append((*test).delay_solve, in_solve)
+	if l < 2 {
+		//(*test).delay_solve = append((*test).delay_solve, in_solve)
 		return 0
 	}
 
-	jitter = float32((*test).delay_solve[l-1] - in_solve)
+	jitter = float32((*test).delay_solve[l-1] - (*test).delay_solve[l-2])
 
 	fmt.Println("-->> (*test).delay_solve -> ", (*test).delay_solve)
 
