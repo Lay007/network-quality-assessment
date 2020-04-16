@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"syscall"
-	"os"
+	//set "syscall"
+	//"os"
 
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
@@ -410,7 +410,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	if err != nil {
 		return 0, 0
 	}
-ifi.Index
+//ifi.Index
 	test_count := 10000
 	gen_test_pps_start := time.Now()
 	for {
@@ -679,7 +679,7 @@ func genSocket(ifiIndex int,b []byte){
 	}
 
 	for ind:=0;ind<128;ind++{
-		zs. WriteToBuffer(b,len(b))
+		zs. WriteToBuffer(b,64)
 	}
 zs.FlushFrames()
 	
