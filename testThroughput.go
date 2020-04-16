@@ -558,8 +558,10 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 		counter.Set(cnt)
 
-		genSocket(ifi.Index, b)
-
+		go genSocket(ifi.Index, b)
+		go genSocket(ifi.Index, b)
+		go genSocket(ifi.Index, b)
+		
 		for i := 0; i < K; i++ {
 			go func() {
 
