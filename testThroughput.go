@@ -673,7 +673,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 
 func genSocket(ifiIndex int, b []byte) {
 
-	size_p := 2000
+	size_p := 2048
 	packet := make([]byte, size_p)
 	for i := 0; i < len(b); i++ {
 		packet[i] = b[i]
@@ -686,10 +686,10 @@ func genSocket(ifiIndex int, b []byte) {
 		panic(err)
 	}
 
-	for ind := 0; ind < 1; ind++ {
-		tx, err := zs.WriteToBuffer(packet, 0)
+	for ind := 0; ind < 64; ind++ {
+		tx, err := zs.WriteToBuffer(packet, 2048)
 		fmt.Println(" -- Socket_Generator --")
-		fmt.Println(" -- >> Packet = ", packet)
+	//	fmt.Println(" -- >> Packet = ", packet)
 		fmt.Println(" -- >> Tx = ", tx)
 		fmt.Println(" -- >> Error = ", err)
 
