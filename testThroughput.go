@@ -673,7 +673,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 
 func genSocket(ifiIndex int, b []byte) {
 
-	size_p := 128
+	size_p := len(b)+14
 	packet := make([]byte, size_p)
 	packet[12] = 0x8
 	packet[13] = 0
@@ -723,10 +723,10 @@ func genSocket(ifiIndex int, b []byte) {
 			//	fmt.Println(" -- >> Error = ", err)
 
 		}
-		//zs.FlushFrames()
+		zs.FlushFrames()
 		//fl_l, err, err_sl := zs.FlushFrames()
-		fl_l, _, _ := zs.FlushFrames()
-		fmt.Println(" -- >> Flash Tx = ", fl_l)
+		//fl_l, _, _ := zs.FlushFrames()
+		//fmt.Println(" -- >> Flash Tx = ", fl_l)
 		//fmt.Println(" -- >> Error = ", err)
 		//fmt.Println(" -- >> Error slice = ", err_sl)
 	}
