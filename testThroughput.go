@@ -689,8 +689,8 @@ func genSocket(ifiIndex int, b []byte) {
 	zs.Listen(func(f *nettypes.Frame, frameLen, capturedLen uint16) {
 		fmt.Println(" -- Socket_Read --")
 		//fmt.Println(" -- >> Packet = ", packet)
-		fmt.Println(len(f))
-		fmt.Println(f)
+		fmt.Println(len(*f))
+		fmt.Println()
 		fmt.Printf(f.String(capturedLen, 0))
 	})
 	/*
