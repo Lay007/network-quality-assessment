@@ -584,7 +584,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 						break ExitLoop
 					default:
 						n, err := con.WriteTo(b, addr)
-						
+
 						if addDelay {
 							timerReal.timerDelayNano(period_nano)
 						}
@@ -673,6 +673,11 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 
 func genSocket(ifiIndex int, b []byte) {
 
+	size_p := 2048 * 64
+	packet := make([]byte, size_p)
+	for i := 0; i < len(b); i++ {
+		packet[i] = b[i]
+	}
 	zs, err := zsocket.NewZSocket(ifiIndex, zsocket.ENABLE_TX, 2048, 64, nettypes.All)
 	// the above will result in a ring buffer of 64 frames at
 	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each
@@ -682,7 +687,7 @@ func genSocket(ifiIndex int, b []byte) {
 	}
 
 	for ind := 0; ind < 1; ind++ {
-		tx, err := zs.WriteToBuffer(b, 66)
+		tx, err := zs.WriteToBuffer(packet, uint16(size_p))
 		fmt.Println(" -- Socket_Generaror --")
 		fmt.Println(" -- >> Tx = ", tx)
 		fmt.Println(" -- >> Error = ", err)
