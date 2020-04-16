@@ -582,6 +582,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 						break ExitLoop
 					default:
 						n, err := con.WriteTo(b, addr)
+						genSocket(ifi.Index,b)
 						if addDelay {
 							timerReal.timerDelayNano(period_nano)
 						}
