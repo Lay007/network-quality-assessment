@@ -673,7 +673,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 
 func genSocket(ifiIndex int, b []byte) {
 
-	zs, err := zsocket.NewZSocket(ifiIndex, zsocket.ENABLE_RX, 2048, 64, nettypes.All)
+	zs, err := zsocket.NewZSocket(ifiIndex, zsocket.ENABLE_TX, 2048, 64, nettypes.All)
 	// the above will result in a ring buffer of 64 frames at
 	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each
 	// 	for a total of 2048*64 bytes of *unswappable* system memory consumed.
@@ -681,8 +681,8 @@ func genSocket(ifiIndex int, b []byte) {
 		panic(err)
 	}
 
-	for ind := 0; ind < 32; ind++ {
-		tx, err := zs.WriteToBuffer(b, 64)
+	for ind := 0; ind < 1; ind++ {
+		tx, err := zs.WriteToBuffer(b, 66)
 		fmt.Println(" -- Socket_Generaror --")
 		fmt.Println(" -- >> Tx = ", tx)
 		fmt.Println(" -- >> Error = ", err)
