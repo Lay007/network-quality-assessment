@@ -723,7 +723,8 @@ func genSocket(ifiIndex int, b []byte) {
 			//	fmt.Println(" -- >> Error = ", err)
 
 		}
-		fl_l, err, err_sl := zs.FlushFrames()
+		zs.FlushFrames()
+		//fl_l, err, err_sl := zs.FlushFrames()
 		//fmt.Println(" -- >> Flash Tx = ", fl_l)
 		//fmt.Println(" -- >> Error = ", err)
 		//fmt.Println(" -- >> Error slice = ", err_sl)
