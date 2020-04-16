@@ -673,7 +673,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 
 func genSocket(ifiIndex int, b []byte) {
 
-	size_p := 2048 * 64
+	size_p := 2000
 	packet := make([]byte, size_p)
 	for i := 0; i < len(b); i++ {
 		packet[i] = b[i]
