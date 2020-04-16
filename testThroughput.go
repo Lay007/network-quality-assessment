@@ -678,14 +678,20 @@ func genSocket(ifiIndex int, b []byte) {
 	for i := 0; i < len(b); i++ {
 		packet[i] = b[i]
 	}
-	zs, err := zsocket.NewZSocket(ifiIndex, zsocket.ENABLE_TX, 2048, 64, nettypes.All)
+	zs, err := zsocket.NewZSocket(ifiIndex, zsocket.ENABLE_RX, 2048, 64, nettypes.All)
 	// the above will result in a ring buffer of 64 frames at
 	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each
 	// 	for a total of 2048*64 bytes of *unswappable* system memory consumed.
 	if err != nil {
 		panic(err)
 	}
-
+	zs.Listen(func(f *nettypes.Frame, frameLen, capturedLen uint16) {
+		fmt.Println(" -- Socket_Read --")
+	//	fmt.Println(" -- >> Packet = ", packet)
+	fmt.Println(f)
+		fmt.Printf(f.String(capturedLen, 0))
+	})
+	/*
 	for ind := 0; ind < 1; ind++ {
 		tx, err := zs.WriteToBuffer(packet, 512)
 		fmt.Println(" -- Socket_Generator --")
@@ -698,7 +704,7 @@ func genSocket(ifiIndex int, b []byte) {
 	fmt.Println(" -- >> Flash Tx = ", fl_l)
 	fmt.Println(" -- >> Error = ", err)
 	fmt.Println(" -- >> Error slice = ", err_sl)
-
+*/
 	//var conn poll.FD
 	// MyCon := syscall.Socket()
 	//var	 socket net.Conn
