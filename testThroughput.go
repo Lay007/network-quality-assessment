@@ -690,7 +690,7 @@ func genSocket(ifiIndex int, b []byte) {
 	packet[8] = 0x22
 	packet[9] = 0x33
 	packet[10] = 0x44
-	packet[11] = 0x00
+	packet[11] = 0x01
 
 	for i := 0; i < len(b); i++ {
 		packet[14+i] = b[i]
@@ -713,7 +713,7 @@ func genSocket(ifiIndex int, b []byte) {
 		})
 	*/
 	//*
-	for count_cir := 0; count_cir < 1000000; count_cir++ {
+	for count_cir := 0; count_cir < 10000; count_cir++ {
 		for ind := 0; ind < 512; ind++ {
 			zs.WriteToBuffer(packet, uint16(size_p))
 			//	tx, err := zs.WriteToBuffer(packet, uint16(size_p))
@@ -723,9 +723,10 @@ func genSocket(ifiIndex int, b []byte) {
 			//	fmt.Println(" -- >> Error = ", err)
 
 		}
-		zs.FlushFrames()
+		//zs.FlushFrames()
 		//fl_l, err, err_sl := zs.FlushFrames()
-		//fmt.Println(" -- >> Flash Tx = ", fl_l)
+		fl_l, _, _ := zs.FlushFrames()
+		fmt.Println(" -- >> Flash Tx = ", fl_l)
 		//fmt.Println(" -- >> Error = ", err)
 		//fmt.Println(" -- >> Error slice = ", err_sl)
 	}
