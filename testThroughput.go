@@ -8,12 +8,18 @@ import (
 	"sync"
 	"time"
 
+	"syscall"
+	"os"
+
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 
 	"golang.org/x/net/bpf"
 	//	"github.com/intel-go/nff-go/flow"
 	//	"github.com/intel-go/nff-go/packet"
+
+	"github.com/newtools/zsocket"
+	"github.com/newtools/zsocket/nettypes"
 )
 
 func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
@@ -404,7 +410,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	if err != nil {
 		return 0, 0
 	}
-
+ifi.Index
 	test_count := 10000
 	gen_test_pps_start := time.Now()
 	for {
@@ -660,6 +666,61 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 			(*test).numberCounter++
 		}
 	}
+}
+
+func genSocket(ifiIndex int,b []byte){
+
+	zs, err := zsocket.NewZSocket(ifiIndex, zsocket.ENABLE_RX, 2048, 64, nettypes.All)
+	// the above will result in a ring buffer of 64 frames at
+	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each
+	// 	for a total of 2048*64 bytes of *unswappable* system memory consumed.
+	if err != nil {
+		panic(err)
+	}
+
+	for ind:=0;ind<128;ind++{
+		zs. WriteToBuffer(b,len(b))
+	}
+zs.FlushFrames()
+	
+
+	//var conn poll.FD
+	// MyCon := syscall.Socket()
+//var	 socket net.Conn
+//MyConn, _:= rawsocketcall()
+
+/*
+fd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_IP)
+if err != nil {
+	fmt.Println(err)
+}
+
+file := os.NewFile(uintptr(fd), "")
+
+for {
+	buffer := make([]byte, 1024)
+	num, _ := file.Write(buffer)
+
+	fmt.Printf("% X\n", buffer[:num])
+}
+
+// Called in init() in package raw
+/*
+net.RegisterSocket(
+	syscall.AF_PACKET,
+	&syscall.SockaddrLinklayer{},
+	&Addr{},
+	// internal conversion functions for syscall.SockaddrLinklayer <-> raw.Addr
+	convertSockaddr,
+	convertNetAddr,
+	)
+	sock, _ := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_RAW, proto)
+	_ = syscall.Bind(sock, &syscall.SockaddrLinklayer{
+	Protocol: pbe,
+	Ifindex: ifi.Index,
+	})
+	f := os.NewFile(uintptr(sock), "linklayer")// c is type net.SocketConn, backed by raw socket (uses raw.Addr for addressing)c := net.FilePacketConn(f)
+*/
 }
 
 /*
