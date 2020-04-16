@@ -673,24 +673,24 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 
 func genSocket(ifiIndex int, b []byte) {
 
-	size_p := 958
+	size_p := 128
 	packet := make([]byte, size_p)
-	packet[12]=0x8
-	packet[13]=0
+	packet[12] = 0x8
+	packet[13] = 0
 
-	packet[0]=0x28
-	packet[1]=0x3b
-	packet[2]=0x82
-	packet[3]=0xc7
-	packet[4]=0xd3
-	packet[5]=0x82
+	packet[0] = 0x28
+	packet[1] = 0x3b
+	packet[2] = 0x82
+	packet[3] = 0xc7
+	packet[4] = 0xd3
+	packet[5] = 0x82
 
-	packet[6]=0x5a
-	packet[7]=0x11
-	packet[8]=0x22
-	packet[9]=0x33
-	packet[10]=0x44
-	packet[11]=0x00
+	packet[6] = 0x5a
+	packet[7] = 0x11
+	packet[8] = 0x22
+	packet[9] = 0x33
+	packet[10] = 0x44
+	packet[11] = 0x00
 
 	for i := 0; i < len(b); i++ {
 		packet[14+i] = b[i]
@@ -704,28 +704,31 @@ func genSocket(ifiIndex int, b []byte) {
 		panic(err)
 	}
 	/*
-	zs.Listen(func(f *nettypes.Frame, frameLen, capturedLen uint16) {
-		fmt.Println(" -- Socket_Read --")
-		//fmt.Println(" -- >> Packet = ", packet)
-		fmt.Println(len(*f))
-		fmt.Println()
-		fmt.Printf(f.String(capturedLen, 0))
-	})
+		zs.Listen(func(f *nettypes.Frame, frameLen, capturedLen uint16) {
+			fmt.Println(" -- Socket_Read --")
+			//fmt.Println(" -- >> Packet = ", packet)
+			fmt.Println(len(*f))
+			fmt.Println()
+			fmt.Printf(f.String(capturedLen, 0))
+		})
 	*/
 	//*
-	for ind := 0; ind < 512; ind++ {
-		tx, err := zs.WriteToBuffer(packet, uint16(size_p))
-		fmt.Println(" -- Socket_Generator --")
-	//	fmt.Println(" -- >> Packet = ", packet)
-		fmt.Println(" -- >> Tx = ", tx)
-		fmt.Println(" -- >> Error = ", err)
+	for count_cir := 0; count_cir < 1000000; count_cir++ {
+		for ind := 0; ind < 512; ind++ {
+			zs.WriteToBuffer(packet, uint16(size_p))
+			//	tx, err := zs.WriteToBuffer(packet, uint16(size_p))
+			//	fmt.Println(" -- Socket_Generator --")
+			//	fmt.Println(" -- >> Packet = ", packet)
+			//	fmt.Println(" -- >> Tx = ", tx)
+			//	fmt.Println(" -- >> Error = ", err)
 
+		}
+		fl_l, err, err_sl := zs.FlushFrames()
+		//fmt.Println(" -- >> Flash Tx = ", fl_l)
+		//fmt.Println(" -- >> Error = ", err)
+		//fmt.Println(" -- >> Error slice = ", err_sl)
 	}
-	fl_l, err, err_sl := zs.FlushFrames()
-	fmt.Println(" -- >> Flash Tx = ", fl_l)
-	fmt.Println(" -- >> Error = ", err)
-	fmt.Println(" -- >> Error slice = ", err_sl)
-//*/
+	//*/
 	//var conn poll.FD
 	// MyCon := syscall.Socket()
 	//var	 socket net.Conn
