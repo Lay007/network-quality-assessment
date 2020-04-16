@@ -688,7 +688,8 @@ func genSocket(ifiIndex int, b []byte) {
 
 	for ind := 0; ind < 1; ind++ {
 		tx, err := zs.WriteToBuffer(packet, uint16(size_p))
-		fmt.Println(" -- Socket_Generaror --")
+		fmt.Println(" -- Socket_Generator --")
+		fmt.Println(" -- >> Packet = ", packet)
 		fmt.Println(" -- >> Tx = ", tx)
 		fmt.Println(" -- >> Error = ", err)
 
