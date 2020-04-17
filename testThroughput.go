@@ -559,9 +559,12 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 		counter.Set(cnt)
 
-		genSocket(ifi.Index, b)
+		go genSocket(ifi.Index, b)
+		go genSocket(ifi.Index, b)
+		go genSocket(ifi.Index, b)
+		go genSocket(ifi.Index, b)
 
-		time.Sleep(time.Millisecond * 3000)
+		time.Sleep(time.Millisecond * 10000)
 
 		for i := 0; i < K; i++ {
 			go func() {
