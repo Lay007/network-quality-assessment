@@ -10,7 +10,7 @@ import (
 
 	//set "syscall"
 	//"os"
-"unix"
+	"golang.org/x/sys/unix"
 
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
