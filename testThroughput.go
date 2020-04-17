@@ -436,9 +436,9 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
 
-	genSocket(ifi.Index, b)
+	//genSocket(ifi.Index, b)
 	//go genSocket(ifi.Index, b)
-	time.Sleep(time.Millisecond * 3000)
+	//time.Sleep(time.Millisecond * 3000)
 
 	//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
 	//fmt.Println("		 -*- min period [mks] = ", min_per_rez)
