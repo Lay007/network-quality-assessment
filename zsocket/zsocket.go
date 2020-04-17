@@ -274,10 +274,15 @@ func (zs *ZSocket) MaxPackets() int32 {
 }
 
 func (zs *ZSocket) SetMAX()  {
-	if errReusePort := SetsockoptInt(clientsock, SOL_SOCKET, unix.SO_REUSEPORT, 1); errReusePort != nil {
+	if errReusePort := SetsockoptInt(zs.socket, unix.SOL_SOCKET, unix.SO_REUSEPORT, 1); errReusePort != nil {
 		fmt.Printf("reuse port error: %v\n", errReusePort)
 		return
 	}
+	if errReusePort := SetsockoptInt(zs.socket, unix.SOL_SOCKET, unix.SO_REUSEADDR, 1); errReusePort != nil {
+		fmt.Printf("reuse port error: %v\n", errReusePort)
+		return
+	}
+
 }
 
 // Returns the frame size in bytes
