@@ -682,8 +682,8 @@ func genSocket(ifiIndex int, packet []byte) {
 	zs, err := zsocket.NewZSocket(ifiIndex, zsocket.ENABLE_TX, 2048, 128, nettypes.All)
 	
 	
-	err = unix.SetsockoptInt(int((zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
-	err = unix.SetsockoptInt(int((zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
+	err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
+	err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
 
 	// the above will result in a ring buffer of 64 frames at
 	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each (2048 - min)
