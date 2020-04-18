@@ -283,8 +283,11 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	fmt.Println("->> period_nano  = ", period_nano)
 	fmt.Println("->> packet_count = ", packet_count)
-	/*
+	
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
+
+		genSocket(ifi.Index, b, period_test, test.thr_begin)
+
 		//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 		count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 		test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
@@ -296,16 +299,18 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		test_c.numberCounter = 0
 		b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type, test.test_type)
 
+		genSocket(ifi.Index, b, period_test, test.thr_begin)
+
 		//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 		count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 		test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 		fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
-	*/
+	
 	size = 256
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type, test.test_type)
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type, test.test_type)
 
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
@@ -320,6 +325,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	test_c.numberCounter = 0
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 512, number, test_type, test.test_type)
 
+	genSocket(ifi.Index, b, period_test, test.thr_begin)
+
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
@@ -330,6 +337,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+
+	genSocket(ifi.Index, b, period_test, test.thr_begin)
+
 	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1024)
@@ -339,6 +349,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	genSocket(ifi.Index, b, period_test, test.thr_begin)
+
 	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1280)
@@ -348,6 +360,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	genSocket(ifi.Index, b, period_test, test.thr_begin)
 	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1518)
