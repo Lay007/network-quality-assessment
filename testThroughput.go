@@ -315,7 +315,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_256)
 
