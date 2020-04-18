@@ -220,7 +220,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	test_counter:=10^9
 	start_test_ticker := time.Now()
-	t := time.NewTicker(time.Duration(0))
+	t := time.NewTicker(time.Duration(1))
 	//t := time.NewTicker(1 * time.Second)
 		for range t.C {
 			test_counter--
