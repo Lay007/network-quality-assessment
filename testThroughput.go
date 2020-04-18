@@ -630,7 +630,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 					default:
 						n, err := con.WriteTo(b, addr)
 
-						if addDelay {
+						if (addDelay>0) {
 							timerReal.timerDelayNano(period_nano)
 						}
 						if err != nil {
