@@ -418,7 +418,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	fmt.Println("		-- all_time_to_gen [ms]        = ", time_to_gen/1000000)
 	fmt.Println("		-- time gen ", time_gen)
 	fmt.Println("		-- cnt start= ", cnt)
-	fmt.Println("		-- pps = ",int64(10^9)/period_nano)
+	fmt.Println("		-- pps = ",1000000000/period_nano)
 
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
@@ -436,7 +436,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	}
 	pps_rez := 100000 * 1000000000 / int(time.Since(gen_test_pps_start))
 	fmt.Println("		 -*- max pps = ", pps_rez)
-time_to_write_pack_nano:=(10^9)/pps_rez
+time_to_write_pack_nano:=1000000000/pps_rez
 fmt.Println("		 -*- time write [ns] = ", time_to_write_pack_nano)
 
 	var counter_test_ticket int
@@ -459,14 +459,14 @@ fmt.Println("		 -*- time write [ns] = ", time_to_write_pack_nano)
 	ticker_test.Stop()
 	done_tiker_test <- true
 	fmt.Println("Ticker test [3s] : ", counter_test_ticket)
-	min_period_ticket_nano := int64(3500000 / counter_test_ticket)
+	min_period_ticket_nano := int64(3500000000 / counter_test_ticket)
 	fmt.Println("Ticker min [ns] : ", min_period_ticket_nano)
 
 	var addDelay bool
 	addDelay = false
 
 	//if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
-	if int64(10^9)/period_nano > int64(pps_rez) {
+	if 1000000000/period_nano > int64(pps_rez) {
 		addDelay = true
 		fmt.Println("		 -*- Delay - true ")
 	}
