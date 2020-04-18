@@ -734,6 +734,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	}
 
 	var counter_rez int64
+	fmt.Printf(" ifi_index = %d, ring = %d", ifiIndex, Ring_col)
 
 	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 2048, Ring_col, nettypes.All)
 	if err != nil {
@@ -746,7 +747,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	// the above will result in a ring buffer of 64 frames at
 	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each (2048 - min)
 	// 	for a total of 2048*64 bytes of *unswappable* system memory consumed.
-	
+
 	/*
 		zs.Listen(func(f *nettypes.Frame, frameLen, capturedLen uint16) {
 			fmt.Println(" -- Socket_Read --")
