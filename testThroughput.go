@@ -735,10 +735,10 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 
 	size_p := len(packet)
-	period_nano := int64(size_p * 8 * 1000 / (thr))
+	period_nano := int64(size_p * 8 * 1000 / thr)
 
 	fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
-	fmt.Printf("\n - thr = %d\n", thr)
+	fmt.Printf("\n   period_nano = %d \n   thr = %d\n",period_nano, thr)
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
 	Ring_col = 16
