@@ -274,9 +274,7 @@ func (zs *ZSocket) MaxPackets() int32 {
 	return zs.frameNum
 }
 
-func (zs *ZSocket) SetMAX()  {
-
-	
+func (zs *ZSocket) SetMAX()  {	
 
 	if errReusePort := syscall.SetsockoptInt(zs.socket, unix.SOL_SOCKET, unix.SO_REUSEPORT, 1); errReusePort != nil {
 		fmt.Printf("reuse port error: %v\n", errReusePort)

@@ -725,8 +725,8 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	period_nano := int64(size_p * 8 * 1000000000 / (thr * 1000 * 1000))
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
-	Ring_col = 2 ^ 12
-	for i := 1; i <= 12; i++ {
+	Ring_col = 2 ^ 11
+	for i := 1; i <= 11; i++ {
 		if (period_nano * int64(2^i)) > (10 ^ 6) {
 			Ring_col = uint(2 ^ i)
 			break
@@ -736,6 +736,9 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	var counter_rez int64
 
 	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 2048, Ring_col, nettypes.All)
+	if err != nil {
+		fmt.Println(err)
+	}
 	zs.SetMAX()
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
@@ -743,9 +746,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	// the above will result in a ring buffer of 64 frames at
 	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each (2048 - min)
 	// 	for a total of 2048*64 bytes of *unswappable* system memory consumed.
-	if err != nil {
-		panic(err)
-	}
+	
 	/*
 		zs.Listen(func(f *nettypes.Frame, frameLen, capturedLen uint16) {
 			fmt.Println(" -- Socket_Read --")
