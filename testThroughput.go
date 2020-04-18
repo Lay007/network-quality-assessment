@@ -234,26 +234,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
 	*/
 	
-	var counter int
-	
-	ticker := time.NewTicker(10 * time.Nanosecond)
-    done := make(chan bool)
-    go func() {
-        for {
-            select {
-            case <-done:
-                return
-            case t := <-ticker.C:
-				fmt.Println("Tick at", t)
-				counter++
-            }
-        }
-	}()
-	
-	time.Sleep(3000 * time.Millisecond)
-    ticker.Stop()
-    done <- true
-    fmt.Println("Ticker test [3s] : ",counter)
+
 	
 	
 	//fmt.Println("period_min= ", period_min)
@@ -457,6 +438,28 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	}
 	pps_rez := 100000 * 1000000000 / int(time.Since(gen_test_pps_start))
 	fmt.Println("		 -*- max pps = ", pps_rez)
+
+
+	var counter int
+	
+	ticker := time.NewTicker(10 * time.Nanosecond)
+    done := make(chan bool)
+    go func() {
+        for {
+            select {
+            case <-done:
+                return
+            case t := <-ticker.C:
+				c.WriteTo(b, addr)
+				counter++
+            }
+        }
+	}()
+	
+	time.Sleep(3000 * time.Millisecond)
+    ticker.Stop()
+    done <- true
+    fmt.Println("Ticker test [3s] : ",counter)
 
 	var addDelay bool
 	addDelay = false
