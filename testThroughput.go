@@ -283,29 +283,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	fmt.Println("->> period_nano  = ", period_nano)
 	fmt.Println("->> packet_count = ", packet_count)
-	
-		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
 
-		genSocket(ifi.Index, b, period_test, test.thr_begin)
+	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
 
-		//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-		count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
-		test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-		fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
-		size = 128
-		period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
-		packet_count = (int64(period_test * 1000000000)) / period_nano
-		test_c.numberCounter = 0
-		b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type, test.test_type)
+	//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
+	count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
 
-		genSocket(ifi.Index, b, period_test, test.thr_begin)
+	size = 128
+	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
+	packet_count = (int64(period_test * 1000000000)) / period_nano
+	test_c.numberCounter = 0
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type, test.test_type)
 
-		//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-		count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
-		test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-		fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
-	
+	genSocket(ifi.Index, b, period_test, test.thr_begin)
+
+	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+	fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
+
 	size = 256
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
@@ -738,10 +738,10 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	period_nano := int64(size_p * 8 * 1000 / thr)
 
 	fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
-	fmt.Printf("\n   period_nano = %d \n   thr = %d\n",period_nano, thr)
+	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
-	Ring_col = 256
+	Ring_col = 16
 
 	for i := 1; i <= 8; i++ {
 		if (period_nano * int64(Ring_col)) > (1000000) {
@@ -789,7 +789,11 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 				return
 			case <-ticker.C:
 				for ind := 0; ind < int(Ring_col); ind++ {
-					zs.WriteToBuffer(packet, uint16(size_p))
+					_, ee := zs.WriteToBuffer(packet, uint16(size_p))
+					if ee != nil {
+						fmt.Println("-Write buff error - ", ee)
+						return
+					}
 				}
 				cc, err, e := zs.FlushFrames()
 				if err != nil {
