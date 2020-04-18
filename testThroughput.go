@@ -440,26 +440,26 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
 
-	var counter int
+	var counter_test_ticket int
 	
-	ticker := time.NewTicker(10 * time.Nanosecond)
-    done := make(chan bool)
+	ticker_test := time.NewTicker(10 * time.Nanosecond)
+    done_tiker_test := make(chan bool)
     go func() {
         for {
             select {
-            case <-done:
+            case <-done_tiker_test:
                 return
-            case t := <-ticker.C:
+            case <-ticker_test.C:
 				c.WriteTo(b, addr)
-				counter++
+				counter_test_ticket++
             }
         }
 	}()
 	
 	time.Sleep(3000 * time.Millisecond)
-    ticker.Stop()
-    done <- true
-    fmt.Println("Ticker test [3s] : ",counter)
+    ticker_test.Stop()
+    done_tiker_test <- true
+    fmt.Println("Ticker test [3s] : ",counter_test_ticket)
 
 	var addDelay bool
 	addDelay = false
