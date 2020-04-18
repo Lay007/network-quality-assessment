@@ -725,8 +725,8 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	period_nano := int64(size_p * 8 * 1000000000 / (thr * 1000 * 1000))
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
-	Ring_col = 2 ^ 11
-	for i := 1; i <= 11; i++ {
+	Ring_col = 2 ^ 9
+	for i := 1; i <= 9; i++ {
 		if (period_nano * int64(2^i)) > (10 ^ 6) {
 			Ring_col = uint(2 ^ i)
 			break
