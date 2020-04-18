@@ -751,7 +751,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 		}
 	}
 
-	period_nano = period_nano / int64(Ring_col)
+	period_nano = period_nano * int64(Ring_col)
 
 	var counter_rez int64
 	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
