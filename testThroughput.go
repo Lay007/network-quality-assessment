@@ -723,6 +723,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 
 	size_p := len(packet)
 	period_nano := int64(size_p * 8 * 1000000000 / (thr * 1000 * 1000))
+	fmt.Printf("\n - gen Socket -\n   period_nano = %d\n", period_nano)
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
 	Ring_col = 2
