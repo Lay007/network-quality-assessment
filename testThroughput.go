@@ -219,24 +219,21 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//period_gen := time.Duration(10 * time.Second)
 
 	/*
-	test_counter:=10^9
-	start_test_ticker := time.Now()
-	t := time.NewTicker(time.Duration(1))
-	//t := time.NewTicker(1 * time.Second)
-		for range t.C {
-			test_counter--
-			if test_counter<0{
-				t.Stop()
-				break
+		test_counter:=10^9
+		start_test_ticker := time.Now()
+		t := time.NewTicker(time.Duration(1))
+		//t := time.NewTicker(1 * time.Second)
+			for range t.C {
+				test_counter--
+				if test_counter<0{
+					t.Stop()
+					break
+				}
 			}
-		}
-		min_ticker:=time.Since(start_test_ticker)
-	fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
+			min_ticker:=time.Since(start_test_ticker)
+		fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
 	*/
-	
 
-	
-	
 	//fmt.Println("period_min= ", period_min)
 	//	numberTX++
 	addr := &raw.Addr{
@@ -439,33 +436,33 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	pps_rez := 100000 * 1000000000 / int(time.Since(gen_test_pps_start))
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
-
 	var counter_test_ticket int
-	
+
 	ticker_test := time.NewTicker(10 * time.Nanosecond)
-    done_tiker_test := make(chan bool)
-    go func() {
-        for {
-            select {
-            case <-done_tiker_test:
-                return
-            case <-ticker_test.C:
+	done_tiker_test := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-done_tiker_test:
+				return
+			case <-ticker_test.C:
 				c.WriteTo(b, addr)
 				counter_test_ticket++
-            }
-        }
+			}
+		}
 	}()
-	
+
 	time.Sleep(3000 * time.Millisecond)
-    ticker_test.Stop()
-    done_tiker_test <- true
-    fmt.Println("Ticker test [3s] : ",counter_test_ticket)
+	ticker_test.Stop()
+	done_tiker_test <- true
+	fmt.Println("Ticker test [3s] : ", counter_test_ticket)
+	min_period_ticket_nano := int64(2500000 / counter_test_ticket)
 
 	var addDelay bool
 	addDelay = false
 
 	//if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
-		if int64(10^9)/period_nano > int64(pps_rez) {
+	if int64(10^9)/period_nano < int64(pps_rez) {
 		addDelay = true
 		fmt.Println("		 -*- Delay - true ")
 	}
@@ -492,7 +489,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	counter := mutexCounter{}
 
-	if period_nano > 15000 {
+	if period_nano > min_period_ticket_nano {
 		counter.Set(cnt)
 		//for i := 0; i < 32; i++ {
 
