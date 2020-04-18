@@ -726,14 +726,15 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	fmt.Printf("\n - gen Socket -\n   period_nano = %d\n", period_nano)
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
-	Ring_col = 2
+	Ring_col = 512
+	/*
 	for i := 1; i <= 9; i++ {
 		if (period_nano * int64(Ring_col)) > (1000000) {
 			Ring_col = Ring_col * 2
 			break
 		}
 	}
-
+*/
 	var counter_rez int64
 	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
 
