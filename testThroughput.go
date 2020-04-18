@@ -788,7 +788,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 			case <-done:
 				return
 			case <-ticker.C:
-				for ind := 0; ind < 128; ind++ {
+				for ind := 0; ind < int(Ring_col); ind++ {
 					zs.WriteToBuffer(packet, uint16(size_p))
 				}
 				cc, err, e := zs.FlushFrames()
