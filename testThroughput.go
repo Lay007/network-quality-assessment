@@ -275,6 +275,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 
 	period_test := test.count // период теста - 10 секунд
+
 	size := 64
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
 	period_nano := int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
@@ -282,32 +283,34 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	fmt.Println("->> period_nano  = ", period_nano)
 	fmt.Println("->> packet_count = ", packet_count)
+	/*
+		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
+		//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
+		count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+		test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+		fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
 
-	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
-	//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
-	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+		size = 128
+		period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
+		packet_count = (int64(period_test * 1000000000)) / period_nano
+		test_c.numberCounter = 0
+		b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type, test.test_type)
 
-	size = 128
-	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
-	packet_count = (int64(period_test * 1000000000)) / period_nano
-	test_c.numberCounter = 0
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type, test.test_type)
-
-	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
-	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-	fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
-
+		//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
+		count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+		test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+		fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
+	*/
 	size = 256
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
 	test_c.numberCounter = 0
-	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type, test.test_type)
+	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type, test.test_type)
+
+	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
 	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_256)
 
@@ -479,7 +482,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
 
 	//genSocket(ifi.Index, b)
-	//go genSocket(ifi.Index, b)
+	//genSocket(ifi.Index, b, 1000)
 	//time.Sleep(time.Millisecond * 3000)
 
 	//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
@@ -630,8 +633,8 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 					default:
 						n, err := con.WriteTo(b, addr)
 
-						if (addDelay==true) {
-							timerReal.timerDelayNano(period_nano-int64(time_to_write_pack_nano))
+						if addDelay == true {
+							timerReal.timerDelayNano(period_nano - int64(time_to_write_pack_nano))
 						}
 						if err != nil {
 							fmt.Printf("%v", err)
@@ -716,12 +719,23 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 	}
 }
 
-func genSocket(ifiIndex int, packet []byte) {
+func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 
 	size_p := len(packet)
+	period_nano := int64(size_p * 8 * 1000000000 / (thr * 1000 * 1000))
+	//packet_count := (int64(period_nano * 1000000000)) / period_nano
+	var Ring_col uint //128
+	Ring_col = 2 ^ 12
+	for i := 1; i <= 12; i++ {
+		if (period_nano * int64(2^i)) > (10 ^ 6) {
+			Ring_col = uint(2 ^ i)
+			break
+		}
+	}
 
-	//packet:=[]byte{204, 45, 224, 48, 241, 136, 40, 59, 130, 199, 211, 130, 8, 0, 69, 0, 0, 44, 0, 0, 64, 0, 64, 6, 5, 67, 192, 168, 100, 142, 91, 240, 180, 98, 0, 80, 114, 95, 96, 136, 68, 227, 75, 20, 58, 29, 96, 18, 250, 240, 202, 79, 0, 0, 2, 4, 5, 180, 0, 0, 51, 53, 56, 44, 49, 57, 49, 32, 76, 51, 53, 57, 44, 49, 57, 49, 32, 76, 51, 54, 48, 44, 49, 57, 49, 32, 76, 51, 54, 49, 44, 49, 57, 49, 32, 76, 51, 54, 50, 44, 49, 57, 49, 32, 76, 51, 54, 51, 44, 49, 57, 49, 32, 76, 51, 54, 52, 44, 49, 57, 49, 32, 76, 51, 54, 52, 44, 49, 57, 49, 32, 76, 51, 54, 53, 44, 49, 57, 49, 32, 76, 51, 54, 54, 44, 49, 57, 49, 32, 76, 51, 54, 55, 44, 49,57 49 32 76 51 54 56 44 49 57 49 32 76 51 54 57 44 49 57 49 32 76 51 55 48 44 49 57 49 32 76 51 55 49 44 49 57 49 32 76 51 55 49 44 49 57 49 32 76 51 55 50 44 49 57 49 32 76 51 55 51 44 49 57 49 32 76 51 55 52 44 49 57 49 32 76 51 55 53 44 49 57 49 32 76 51 55 54 44 49 57 49 32 76 51 55 55 44 49 57 49 32 76 51 55 56 44 49 57 48 32 76 51 55 56 44 49 57 49 32 76 51 55 57 44 49 57 49 32 76 51 56 48 44 49 57 48 32 76 51 56 49 44 49 57 49 32 76 51 56 50 44 49 57 49 32 76 51 56 51 44 49 57 49 32 76 51 56 52 44 49 57 49 32 76 51 56 52 44 49 57 49 32 76 51 56 53 44 49 57 49 32 76 51 56 54 44 49 57 49 32 76 51 56 55 44 49 57 49 32 76 51 56 56 44 49 57 49 32 76 51 56 57 44 49 57 49 32 76 51 57 48 44 49 57 49 32 76 51 57 49 44 49 57 49 32 76 51 57 49 44 49 57 49 32 76 51 57 50 44 49 57 49 32 76 51 57 51 44 49 57 49 32 76 51 57 52 44 49 57 49 32 76 51 57 53 44 49 57 49 32 76 51 57 54 44 49 57 49 32 76 51 57 55 44 49 57 49 32 76 51 57 56 44 49 57 49 32 76 51 57 56 44 49 57 49 32 76 51 57 57 44 49 57 49 32 76 52 48 48 44 49 57 49 32 76 52 48 49 44 49 57 49 32 76 52 48 50 44 49 57 49 32 76 52 48 51 44 49 57 49 32 76 52 48 52 44 49 57 49 32 76 52 48 52 44 49 57 49 32 76 52 48 53 44 49 57 49 32 76 52 48 54 44 49 57 49 32 76 52 48 55 44 49 57 49 32 76 52 48 56 44 49 57 48 32 76 52 48 57 44 49 57 49 32 76 52 49 48 44 49 57 49 32 76 52 49 49 44 49 57 49 32 76 52 49 49 44 49 57 49 32 76 52 49 50 44 49 57 48 32 76 52 49 51 44 49 57 49 32 76 52 49 52 44 49 57 49 32 76 52 49 53 44 49 57 48 32 76 52 49 54 44 49 57 49 32 76 52 49 55 44 49 57 49 32 76 52 49 55 44 49 57 49 32 76 52 49 56 44 49 57 49 32 76 52 49 57 44 49 57 49 32 76 52 50 48 44 49 57 49 32 76 52 50 49 44 49 57 49 32 76 52 50 50 44 49 57 48 32 76 52 50 51 44 49 57 49 32 76 52 50 52 44 49 57 49 32 76 52 50 52 44 49 57 49 32 76 52 50 53 44 49 57 49 32 76 52 50 54 44 49 57 49 32 76 52 50 55 44 49 57 49 32 76 52 50 56 44 49 57 49 32 76 52 50 57 44 49 57 49 32 76 52 51 48 44 49 57 49 32 76 52 51 49 44 49 57 49 32 76 52 51 49 44 49 57 49 32 76 52 51 50 44 49 57 49 32 76 52 51 51 44 49 57 49 32 76 52 51 52 44 49 57 49 32 76 52 51 53 44 49 57 49 32 76 52 51 54 44 49 57 49 32 76 52 51 55 44 49 57 49 32 76 52 51 55 44 49 57 49 32 76 52 51 56 44 49 57 49 32 76 52 51 57 44 49 57 49 32 76 52 52 48 44 49 57 49 32 76 52 52 49 44 49 57 49 32 76 52 52 50 44 49 57 49 32 76 52 52 51 44 49 57 49 32 76 52 52 52 44 49 57 49 32 76 52 52 52 44 49 57 49}
-	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 2048, 128, nettypes.All)
+	var counter_rez int64
+
+	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 2048, Ring_col, nettypes.All)
 	zs.SetMAX()
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
@@ -742,62 +756,91 @@ func genSocket(ifiIndex int, packet []byte) {
 		})
 	*/
 	//*
-	for count_cir := 0; count_cir < 10000; count_cir++ {
-		for ind := 0; ind < 128; ind++ {
-			zs.WriteToBuffer(packet, uint16(size_p))
-			//	tx, err := zs.WriteToBuffer(packet, uint16(size_p))
-			//	fmt.Println(" -- Socket_Generator --")
-			//	fmt.Println(" -- >> Packet = ", packet)
-			//	fmt.Println(" -- >> Tx = ", tx)
-			//	fmt.Println(" -- >> Error = ", err)
 
+	ticker := time.NewTicker(time.Duration(period_nano))
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				for ind := 0; ind < 128; ind++ {
+					zs.WriteToBuffer(packet, uint16(size_p))
+				}
+				cc, err, e := zs.FlushFrames()
+				if err != nil {
+					fmt.Println("- Flush error - ", e)
+					return
+				}
+				counter_rez = counter_rez + int64(cc)
+			}
 		}
-		zs.FlushFrames()
-		//fl_l, err, err_sl := zs.FlushFrames()
-		//fl_l, _, _ := zs.FlushFrames()
-		//fmt.Println(" -- >> Flash Tx = ", fl_l)
-		//fmt.Println(" -- >> Error = ", err)
-		//fmt.Println(" -- >> Error slice = ", err_sl)
-	}
-	//*/
-	//var conn poll.FD
-	// MyCon := syscall.Socket()
-	//var	 socket net.Conn
-	//MyConn, _:= rawsocketcall()
+	}()
+	time.Sleep(time.Duration(period_sec) * time.Millisecond)
+	ticker.Stop()
+	done <- true
+	time.Sleep(3 * time.Second)
+	fmt.Println("Packed send - ", counter_rez)
 
-	/*
-	   fd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_IP)
-	   if err != nil {
-	   	fmt.Println(err)
-	   }
-
-	   file := os.NewFile(uintptr(fd), "")
-
-	   for {
-	   	buffer := make([]byte, 1024)
-	   	num, _ := file.Write(buffer)
-
-	   	fmt.Printf("% X\n", buffer[:num])
-	   }
-
-	   // Called in init() in package raw
-	   /*
-	   net.RegisterSocket(
-	   	syscall.AF_PACKET,
-	   	&syscall.SockaddrLinklayer{},
-	   	&Addr{},
-	   	// internal conversion functions for syscall.SockaddrLinklayer <-> raw.Addr
-	   	convertSockaddr,
-	   	convertNetAddr,
-	   	)
-	   	sock, _ := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_RAW, proto)
-	   	_ = syscall.Bind(sock, &syscall.SockaddrLinklayer{
-	   	Protocol: pbe,
-	   	Ifindex: ifi.Index,
-	   	})
-	   	f := os.NewFile(uintptr(sock), "linklayer")// c is type net.SocketConn, backed by raw socket (uses raw.Addr for addressing)c := net.FilePacketConn(f)
-	*/
 }
+
+//for count_cir := 0; count_cir < 10000; count_cir++ {
+//	for ind := 0; ind < 128; ind++ {
+//		zs.WriteToBuffer(packet, uint16(size_p))
+//	tx, err := zs.WriteToBuffer(packet, uint16(size_p))
+//	fmt.Println(" -- Socket_Generator --")
+//	fmt.Println(" -- >> Packet = ", packet)
+//	fmt.Println(" -- >> Tx = ", tx)
+//	fmt.Println(" -- >> Error = ", err)
+
+//	}
+//	zs.FlushFrames()
+//fl_l, err, err_sl := zs.FlushFrames()
+//fl_l, _, _ := zs.FlushFrames()
+//fmt.Println(" -- >> Flash Tx = ", fl_l)
+//fmt.Println(" -- >> Error = ", err)
+//fmt.Println(" -- >> Error slice = ", err_sl)
+//
+//*/
+//var conn poll.FD
+// MyCon := syscall.Socket()
+//var	 socket net.Conn
+//MyConn, _:= rawsocketcall()
+
+/*
+   fd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_IP)
+   if err != nil {
+   	fmt.Println(err)
+   }
+
+   file := os.NewFile(uintptr(fd), "")
+
+   for {
+   	buffer := make([]byte, 1024)
+   	num, _ := file.Write(buffer)
+
+   	fmt.Printf("% X\n", buffer[:num])
+   }
+
+   // Called in init() in package raw
+   /*
+   net.RegisterSocket(
+   	syscall.AF_PACKET,
+   	&syscall.SockaddrLinklayer{},
+   	&Addr{},
+   	// internal conversion functions for syscall.SockaddrLinklayer <-> raw.Addr
+   	convertSockaddr,
+   	convertNetAddr,
+   	)
+   	sock, _ := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_RAW, proto)
+   	_ = syscall.Bind(sock, &syscall.SockaddrLinklayer{
+   	Protocol: pbe,
+   	Ifindex: ifi.Index,
+   	})
+   	f := os.NewFile(uintptr(sock), "linklayer")// c is type net.SocketConn, backed by raw socket (uses raw.Addr for addressing)c := net.FilePacketConn(f)
+*/
+//}
 
 /*
 func genDPDK(){
