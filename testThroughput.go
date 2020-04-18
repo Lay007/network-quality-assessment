@@ -722,27 +722,31 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 
 	size_p := len(packet)
-	period_nano := int64(size_p * 8 * 1000000000 / (thr * 1000 * 1000))
+	period_nano := int64(size_p * 8 * 1000 / (thr))
 
-	fmt.Printf("\n - gen Socket -\n   period_sec = %d\n", period_nano)
+	fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
 	fmt.Printf("\n - thr = %d\n", thr)
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
-	Ring_col = 512
-	/*
-	for i := 1; i <= 9; i++ {
+	Ring_col = 16
+
+	for i := 1; i <= 8; i++ {
 		if (period_nano * int64(Ring_col)) > (1000000) {
-			Ring_col = Ring_col * 2
 			break
+		} else {
+			Ring_col = Ring_col * 2
 		}
 	}
-*/
+
+	period_nano = period_nano / int64(Ring_col)
+
 	var counter_rez int64
 	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
 
 	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 2048, Ring_col, nettypes.All)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	zs.SetMAX()
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
@@ -783,7 +787,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 			}
 		}
 	}()
-	time.Sleep(time.Duration(period_sec) * time.Millisecond)
+	time.Sleep(time.Duration(period_sec) * time.Second)
 	ticker.Stop()
 	done <- true
 	time.Sleep(3 * time.Second)
