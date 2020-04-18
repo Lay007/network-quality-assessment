@@ -402,8 +402,9 @@ func (c *mutexCounter) Set(val int64) {
 func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 150) / 100
 	time_gen := time.Duration(cnt * period_nano)
-	fmt.Println("		-- period_to_generate [ms] = ", (cnt*period_nano)/1000000)
-	fmt.Println("		-- time_to_gen [ms]        = ", time_to_gen/1000000)
+	fmt.Println("		-- time_to_generate [ms] = ", (cnt*period_nano)/1000000)
+	fmt.Println("		-- period_nano [ns] = ", period_nano)
+	fmt.Println("		-- all_time_to_gen [ms]        = ", time_to_gen/1000000)
 	fmt.Println("		-- time gen ", time_gen)
 	fmt.Println("		-- cnt start= ", cnt)
 
