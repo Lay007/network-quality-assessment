@@ -428,8 +428,10 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	var addDelay bool
 	addDelay = false
 
-	if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
+	//if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
+		if int64(10^9)/period_nano > int64(pps_rez) {
 		addDelay = true
+		fmt.Println("		 -*- Delay - true ")
 	}
 
 	var timerReal TimerR
