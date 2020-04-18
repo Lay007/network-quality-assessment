@@ -218,11 +218,18 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//period_min := time.Duration(time.Duration(int(period_nano)) * time.Nanosecond)
 	//period_gen := time.Duration(10 * time.Second)
 
-	//t := time.NewTicker(time.Duration(int(period_nano)) * time.Nanosecond)
+	test_counter:=10^9
+	start_test_ticker := time.Now()
+	t := time.NewTicker(time.Duration(0))
 	//t := time.NewTicker(1 * time.Second)
-	//	for range t.C {
-	//		counter--
-	//fmt.Println("counter= ", counter)
+		for range t.C {
+			test_counter--
+			if test_counter<0{
+				t.Stop()
+				break
+			}
+		}
+	fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
 	//fmt.Println("period_min= ", period_min)
 	//	numberTX++
 	addr := &raw.Addr{
