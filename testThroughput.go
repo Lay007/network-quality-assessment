@@ -462,14 +462,14 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	min_period_ticket_nano := int64(3500000000 / counter_test_ticket)
 	fmt.Println("Ticker min [ns] : ", min_period_ticket_nano)
 
-	var addDelay int
-	addDelay = 0
+	var addDelay bool
+	addDelay = false
 
 	//if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
 	fmt.Println("   Max pps- ", int64(1000000000/period_nano))
 	fmt.Println("   Rez pps- ", int64(pps_rez))
-	if (int64(1000000000 / period_nano)) > (int64(pps_rez)) {
-		addDelay = 1
+	if (int64(1000000000 / period_nano)) < (int64(pps_rez)) {
+		addDelay = true
 		fmt.Println("		 -*- Delay - true ")
 	}
 
@@ -630,7 +630,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 					default:
 						n, err := con.WriteTo(b, addr)
 
-						if (addDelay>0) {
+						if (addDelay==true) {
 							timerReal.timerDelayNano(period_nano)
 						}
 						if err != nil {
