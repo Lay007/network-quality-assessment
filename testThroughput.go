@@ -413,7 +413,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 		return 0, 0
 	}
 	//ifi.Index
-	test_count := 10000
+	test_count := 100000
 	gen_test_pps_start := time.Now()
 	for {
 		test_count--
@@ -422,7 +422,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 			break
 		}
 	}
-	pps_rez := 10000 * 1000000000 / int(time.Since(gen_test_pps_start))
+	pps_rez := 100000 * 1000000000 / int(time.Since(gen_test_pps_start))
 	fmt.Println("		 -*- max pps = ", pps_rez)
 
 	var addDelay bool
