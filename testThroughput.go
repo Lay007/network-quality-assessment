@@ -466,7 +466,9 @@ fmt.Println("		 -*- time write [ns] = ", time_to_write_pack_nano)
 	addDelay = false
 
 	//if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
-	if (1000000000/period_nano) > int64(pps_rez) {
+fmt.Println("   Max pps- ",int64(1000000000/period_nano))
+fmt.Println("   Rez pps- ",int64(pps_rez))
+	if int64(1000000000/period_nano) > int64(pps_rez) {
 		addDelay = true
 		fmt.Println("		 -*- Delay - true ")
 	}
