@@ -631,7 +631,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 						n, err := con.WriteTo(b, addr)
 
 						if (addDelay==true) {
-							timerReal.timerDelayNano(period_nano)
+							timerReal.timerDelayNano(period_nano-int64(time_to_write_pack_nano))
 						}
 						if err != nil {
 							fmt.Printf("%v", err)
