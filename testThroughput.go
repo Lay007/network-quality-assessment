@@ -289,7 +289,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
 
@@ -302,7 +302,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
 
@@ -315,7 +315,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_256)
 
@@ -328,7 +328,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_512)
 
@@ -340,7 +340,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1024)
 
@@ -351,7 +351,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
 
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1280)
 
@@ -361,7 +361,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	test_c.numberCounter = 0
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	genSocket(ifi.Index, b, period_test, test.thr_begin)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1518)
 	/*
@@ -407,7 +407,7 @@ type mutexCounter struct {
 	x  int64
 }
 
-func (c *mutexCounter) Inc() {
+func (c *mutexCounter) Dec() {
 	c.mu.Lock()
 	c.x -= 1
 	c.mu.Unlock()
@@ -426,7 +426,7 @@ func (c *mutexCounter) Set(val int64) {
 	c.mu.Unlock()
 }
 
-func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, t_type uint16) (int, int64) {
+func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, thr int, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 150) / 100
 	time_gen := time.Duration(cnt * period_nano)
 	fmt.Println("		-- time_to_generate [ms] = ", (cnt*period_nano)/1000000)
@@ -440,254 +440,297 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	if err != nil {
 		return 0, 0
 	}
+
+	var test_type uint16
+	test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
+
+	var netConfRecive *raw.Config = new(raw.Config)
+
+	(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
+		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+		bpf.LoadAbsolute{Off: 34, Size: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
+		// Проверка идентификатора теста
+		bpf.LoadAbsolute{Off: 64, Size: 2},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
+		// Выбор одного из 1000
+		bpf.LoadExtension{Num: bpf.ExtRand},
+		//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
+		bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
+		// Verdict is "send up to 4k of the packet to userspace."
+		bpf.RetConstant{Val: 4096},
+		// Verdict is "ignore packet."
+		bpf.RetConstant{Val: 0},
+	})
+
+	conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
+
+	quit := make(chan int)
+
+	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
+
+	counter := make(chan int64)
+
+	counter <- genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr)
+
+	quit <- 1
+
+	time.Sleep(time.Second * 3)
+	rez := <-counter
+	fmt.Println("		 --->> rez_counterRez= ", rez)
+	return int(rez), cnt * period_nano
+
 	//ifi.Index
-	test_count := 100000
-	gen_test_pps_start := time.Now()
-	for {
-		test_count--
-		c.WriteTo(b, addr)
-		if test_count <= 0 {
-			break
-		}
-	}
-	pps_rez := 100000 * 1000000000 / int(time.Since(gen_test_pps_start))
-	fmt.Println("		 -*- max pps = ", pps_rez)
-	time_to_write_pack_nano := 1000000000 / pps_rez
-	fmt.Println("		 -*- time write [ns] = ", time_to_write_pack_nano)
 
-	var counter_test_ticket int
-
-	ticker_test := time.NewTicker(10 * time.Nanosecond)
-	done_tiker_test := make(chan bool)
-	go func() {
+	/*
+		test_count := 100000
+		gen_test_pps_start := time.Now()
 		for {
-			select {
-			case <-done_tiker_test:
-				return
-			case <-ticker_test.C:
-				c.WriteTo(b, addr)
-				counter_test_ticket++
+			test_count--
+			c.WriteTo(b, addr)
+			if test_count <= 0 {
+				break
 			}
 		}
-	}()
+		pps_rez := 100000 * 1000000000 / int(time.Since(gen_test_pps_start))
+		fmt.Println("		 -*- max pps = ", pps_rez)
+		time_to_write_pack_nano := 1000000000 / pps_rez
+		fmt.Println("		 -*- time write [ns] = ", time_to_write_pack_nano)
 
-	time.Sleep(3000 * time.Millisecond)
-	ticker_test.Stop()
-	done_tiker_test <- true
-	fmt.Println("Ticker test [3s] : ", counter_test_ticket)
-	min_period_ticket_nano := int64(3500000000 / counter_test_ticket)
-	fmt.Println("Ticker min [ns] : ", min_period_ticket_nano)
+		var counter_test_ticket int
 
-	var addDelay bool
-	addDelay = false
-
-	//if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
-	fmt.Println("   Max pps- ", int64(1000000000/period_nano))
-	fmt.Println("   Rez pps- ", int64(pps_rez))
-	if (int64(1000000000 / period_nano)) < (int64(pps_rez)) {
-		addDelay = true
-		fmt.Println("		 -*- Delay - true ")
-	}
-
-	var timerReal TimerR
-	_ = timerReal.InitTimer()
-
-	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
-
-	//genSocket(ifi.Index, b)
-	//genSocket(ifi.Index, b, 1000)
-	//time.Sleep(time.Millisecond * 3000)
-
-	//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
-	//fmt.Println("		 -*- min period [mks] = ", min_per_rez)
-
-	g_start := time.Now()
-	fmt.Println(" == gStart ", g_start)
-	rez_time := make(chan int64)
-	test.numberCounter = 0
-
-	K := 1
-	quit := make(chan int, K+1)
-
-	counter := mutexCounter{}
-
-	if period_nano > min_period_ticket_nano {
-		counter.Set(cnt)
-		//for i := 0; i < 32; i++ {
-
-		var test_type uint16
-		test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
-
-		var netConfRecive *raw.Config = new(raw.Config)
-
-		(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
-			// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
-			bpf.LoadAbsolute{Off: 34, Size: 1},
-			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
-			// Проверка идентификатора теста
-			bpf.LoadAbsolute{Off: 64, Size: 2},
-			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
-			// Выбор одного из 1000
-			bpf.LoadExtension{Num: bpf.ExtRand},
-			//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
-			bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
-			// Verdict is "send up to 4k of the packet to userspace."
-			bpf.RetConstant{Val: 4096},
-			// Verdict is "ignore packet."
-			bpf.RetConstant{Val: 0},
-		})
-
-		conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
-
-		go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
-
+		ticker_test := time.NewTicker(10 * time.Nanosecond)
+		done_tiker_test := make(chan bool)
 		go func() {
-			ticker := time.NewTicker(time.Duration(period_nano))
-			//timer := time.NewTimer(time.Microsecond * 10)
-			//period := time.Duration(period_nano)
-			//fmt.Println("Start")
-			//for range ticker.C {
-		ExitLoop:
 			for {
 				select {
-				case <-quit:
-					break ExitLoop
-				case <-ticker.C:
-					//time.Sleep(period)
-					counter.Inc()
+				case <-done_tiker_test:
+					return
+				case <-ticker_test.C:
 					c.WriteTo(b, addr)
-					if counter.Value() <= 0 {
-						//	rez_time <- (int64)(time.Since(time.Time(g_start)))
-						break ExitLoop
-					}
-					if counter.Value()%100 == 0 {
-						if time.Since(g_start) >= time_gen {
-							//rez_time <- (int64)(time.Since(time.Time(g_start)))
-							break ExitLoop
-						}
-						//		}
-					}
+					counter_test_ticket++
 				}
 			}
-			rez_time <- (int64)(time.Since(time.Time(g_start)))
-			ticker.Stop()
-			//fmt.Println("		 -*- rez_time = ", rez_t)
 		}()
-		//}
-	} else {
 
-		blen := len(b)
+		time.Sleep(3000 * time.Millisecond)
+		ticker_test.Stop()
+		done_tiker_test <- true
+		fmt.Println("Ticker test [3s] : ", counter_test_ticket)
+		min_period_ticket_nano := int64(3500000000 / counter_test_ticket)
+		fmt.Println("Ticker min [ns] : ", min_period_ticket_nano)
 
-		var test_type uint16
-		test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
+		var addDelay bool
+		addDelay = false
 
-		var netConfRecive *raw.Config = new(raw.Config)
+		//if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
+		fmt.Println("   Max pps- ", int64(1000000000/period_nano))
+		fmt.Println("   Rez pps- ", int64(pps_rez))
+		if (int64(1000000000 / period_nano)) < (int64(pps_rez)) {
+			addDelay = true
+			fmt.Println("		 -*- Delay - true ")
+		}
 
-		(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
-			// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
-			bpf.LoadAbsolute{Off: 34, Size: 1},
-			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
-			// Проверка идентификатора теста
-			bpf.LoadAbsolute{Off: 64, Size: 2},
-			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
-			// Выбор одного из 1000
-			bpf.LoadExtension{Num: bpf.ExtRand},
-			//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
-			bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
-			// Verdict is "send up to 4k of the packet to userspace."
-			bpf.RetConstant{Val: 4096},
-			// Verdict is "ignore packet."
-			bpf.RetConstant{Val: 0},
-		})
+		var timerReal TimerR
+		_ = timerReal.InitTimer()
 
-		conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
+		findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
 
-		go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
+		//genSocket(ifi.Index, b)
+		//genSocket(ifi.Index, b, 1000)
+		//time.Sleep(time.Millisecond * 3000)
 
-		var netConf *raw.Config = new(raw.Config)
+		//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
+		//fmt.Println("		 -*- min period [mks] = ", min_per_rez)
 
-		(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-			// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
-			bpf.LoadAbsolute{Off: 34, Size: 1},
-			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
-			// Проверка идентификатора теста
-			bpf.LoadAbsolute{Off: 64, Size: 2},
-			bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
-			// Verdict is "send up to 4k of the packet to userspace."
-			bpf.RetConstant{Val: 4096},
-			// Verdict is "ignore packet."
-			bpf.RetConstant{Val: 0},
-		})
+		g_start := time.Now()
+		fmt.Println(" == gStart ", g_start)
+		rez_time := make(chan int64)
+		test.numberCounter = 0
 
-		counter.Set(cnt)
+		K := 1
+		quit := make(chan int, K+1)
 
-		for i := 0; i < K; i++ {
+		counter := mutexCounter{}
+
+		if period_nano > min_period_ticket_nano {
+			counter.Set(cnt)
+			//for i := 0; i < 32; i++ {
+
+			var test_type uint16
+			test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
+
+			var netConfRecive *raw.Config = new(raw.Config)
+
+			(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
+				// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+				bpf.LoadAbsolute{Off: 34, Size: 1},
+				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
+				// Проверка идентификатора теста
+				bpf.LoadAbsolute{Off: 64, Size: 2},
+				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
+				// Выбор одного из 1000
+				bpf.LoadExtension{Num: bpf.ExtRand},
+				//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
+				bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
+				// Verdict is "send up to 4k of the packet to userspace."
+				bpf.RetConstant{Val: 4096},
+				// Verdict is "ignore packet."
+				bpf.RetConstant{Val: 0},
+			})
+
+			conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
+
+			go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
+
 			go func() {
-
-				con, err := raw.ListenPacket(ifi, etherType, netConf)
-
-				defer con.Close()
-
-				if err != nil {
-
-					fmt.Println(" -!! Error !!-")
-					fmt.Println(err)
-					fmt.Println(" ----=====----")
-					return
-				}
-
+				ticker := time.NewTicker(time.Duration(period_nano))
+				//timer := time.NewTimer(time.Microsecond * 10)
+				//period := time.Duration(period_nano)
+				//fmt.Println("Start")
+				//for range ticker.C {
 			ExitLoop:
 				for {
 					select {
 					case <-quit:
-						fmt.Println(" == Quit ", (int64)(time.Since(g_start)))
-						rez_time <- (int64)(time.Since(g_start))
 						break ExitLoop
-					default:
-						n, err := con.WriteTo(b, addr)
-
-						if addDelay == true {
-							timerReal.timerDelayNano(period_nano - int64(time_to_write_pack_nano))
-						}
-						if err != nil {
-							fmt.Printf("%v", err)
-							continue
-						}
-						if n < blen {
-							fmt.Printf("Partial write: %d", n)
-							continue
-						}
-						counter.Inc()
+					case <-ticker.C:
+						//time.Sleep(period)
+						counter.Dec()
+						c.WriteTo(b, addr)
 						if counter.Value() <= 0 {
-							fmt.Println(" == cnt<0 ", (int64)(time.Since(g_start)))
-							rez_time <- (int64)(time.Since(time.Time(g_start)))
+							//	rez_time <- (int64)(time.Since(time.Time(g_start)))
 							break ExitLoop
 						}
-						if counter.Value()%1000 == 0 {
+						if counter.Value()%100 == 0 {
 							if time.Since(g_start) >= time_gen {
-								fmt.Println(" == time out ", (int64)(time.Since(g_start)))
-								rez_time <- (int64)(time.Since(time.Time(g_start)))
+								//rez_time <- (int64)(time.Since(time.Time(g_start)))
 								break ExitLoop
 							}
+							//		}
 						}
 					}
 				}
-
+				rez_time <- (int64)(time.Since(time.Time(g_start)))
+				ticker.Stop()
+				//fmt.Println("		 -*- rez_time = ", rez_t)
 			}()
+			//}
+		} else {
+
+			blen := len(b)
+
+			var test_type uint16
+			test_type = 0x2000 + (uint16((*test).testID) & 0x1FFF)
+
+			var netConfRecive *raw.Config = new(raw.Config)
+
+			(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
+				// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+				bpf.LoadAbsolute{Off: 34, Size: 1},
+				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
+				// Проверка идентификатора теста
+				bpf.LoadAbsolute{Off: 64, Size: 2},
+				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
+				// Выбор одного из 1000
+				bpf.LoadExtension{Num: bpf.ExtRand},
+				//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
+				bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
+				// Verdict is "send up to 4k of the packet to userspace."
+				bpf.RetConstant{Val: 4096},
+				// Verdict is "ignore packet."
+				bpf.RetConstant{Val: 0},
+			})
+
+			conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
+
+			go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
+
+			var netConf *raw.Config = new(raw.Config)
+
+			(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
+				// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+				bpf.LoadAbsolute{Off: 34, Size: 1},
+				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+				// Проверка идентификатора теста
+				bpf.LoadAbsolute{Off: 64, Size: 2},
+				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
+				// Verdict is "send up to 4k of the packet to userspace."
+				bpf.RetConstant{Val: 4096},
+				// Verdict is "ignore packet."
+				bpf.RetConstant{Val: 0},
+			})
+
+			counter.Set(cnt)
+
+			for i := 0; i < K; i++ {
+				go func() {
+
+					con, err := raw.ListenPacket(ifi, etherType, netConf)
+
+					defer con.Close()
+
+					if err != nil {
+
+						fmt.Println(" -!! Error !!-")
+						fmt.Println(err)
+						fmt.Println(" ----=====----")
+						return
+					}
+
+				ExitLoop:
+					for {
+						select {
+						case <-quit:
+							fmt.Println(" == Quit ", (int64)(time.Since(g_start)))
+							rez_time <- (int64)(time.Since(g_start))
+							break ExitLoop
+						default:
+							n, err := con.WriteTo(b, addr)
+
+							if addDelay == true {
+								timerReal.timerDelayNano(period_nano - int64(time_to_write_pack_nano))
+							}
+							if err != nil {
+								fmt.Printf("%v", err)
+								continue
+							}
+							if n < blen {
+								fmt.Printf("Partial write: %d", n)
+								continue
+							}
+							counter.Decc()
+							if counter.Value() <= 0 {
+								fmt.Println(" == cnt<0 ", (int64)(time.Since(g_start)))
+								rez_time <- (int64)(time.Since(time.Time(g_start)))
+								break ExitLoop
+							}
+							if counter.Value()%1000 == 0 {
+								if time.Since(g_start) >= time_gen {
+									fmt.Println(" == time out ", (int64)(time.Since(g_start)))
+									rez_time <- (int64)(time.Since(time.Time(g_start)))
+									break ExitLoop
+								}
+							}
+						}
+					}
+
+				}()
+			}
+
 		}
 
-	}
-
-	time.Sleep(time.Duration(time_to_gen))
-	rez_count := test.numberCounter
-	fmt.Println("		 --->> rez_count= ", rez_count*64)
-	for i := 0; i < K; i++ {
-		quit <- 1
-	}
-	time.Sleep(time.Millisecond * 10)
-	rez := <-rez_time
-	fmt.Println("		 --->> rez_counterRez= ", cnt-counter.Value())
-	return int(cnt - counter.Value()), rez
+		time.Sleep(time.Duration(time_to_gen))
+		rez_count := test.numberCounter
+		fmt.Println("		 --->> rez_count= ", rez_count*64)
+		for i := 0; i < K; i++ {
+			quit <- 1
+		}
+		time.Sleep(time.Millisecond * 10)
+		rez := <-rez_time
+		fmt.Println("		 --->> rez_counterRez= ", cnt-counter.Value())
+		return int(cnt - counter.Value()), rez
+	*/
 }
 
 func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit chan int, t_type uint16) { //, counter chan<- int) {
@@ -732,7 +775,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 	}
 }
 
-func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
+func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) int64 {
 
 	size_p := len(packet)
 	period_nano := int64(size_p * 8 * 1000 / thr)
@@ -759,7 +802,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 4096, Ring_col, nettypes.All)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return 0
 	}
 	zs.SetMAX()
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
@@ -807,8 +850,9 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) {
 	time.Sleep(time.Duration(period_sec) * time.Second)
 	ticker.Stop()
 	done <- true
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 	fmt.Println("Packed send - ", counter_rez)
+	return counter_rez
 
 }
 
