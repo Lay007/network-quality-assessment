@@ -469,14 +469,16 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
-	counter := make(chan int64,1)
+	counter := make(chan int64, 1)
 
 	genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
-
+	fmt.Println("+1")
 	quit <- 1
-
+	fmt.Println("+2")
 	time.Sleep(time.Second * 10)
+	fmt.Println("+3")
 	rez := <-counter
+	fmt.Println("+4")
 	fmt.Println("		 --->> rez_counterRez= ", rez)
 	return int(rez), cnt * period_nano
 
