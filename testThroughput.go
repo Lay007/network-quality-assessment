@@ -471,7 +471,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	counter := make(chan int64)
 
-	counter <- genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr)
+	genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
 
 	quit <- 1
 
@@ -775,7 +775,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 	}
 }
 
-func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) int64 {
+func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter chan int64) {
 
 	size_p := len(packet)
 	period_nano := int64(size_p * 8 * 1000 / thr)
@@ -802,7 +802,8 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) int64 {
 	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 4096, Ring_col, nettypes.All)
 	if err != nil {
 		fmt.Println(err)
-		return 0
+		counter <- 0
+		return
 	}
 	zs.SetMAX()
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
@@ -852,7 +853,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int) int64 {
 	done <- true
 	time.Sleep(1 * time.Second)
 	fmt.Println("Packed send - ", counter_rez)
-	return counter_rez
+	counter <- counter_rez
 
 }
 
