@@ -465,22 +465,18 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
 
-	quit := make(chan int,1)
+	quit := make(chan int, 1)
 
 	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
 	counter := make(chan int64, 1)
 
-	genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
-	fmt.Println("+1")
+	time_gen_nano := genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
 	quit <- 1
-	fmt.Println("+2")
 	time.Sleep(time.Second * 10)
-	fmt.Println("+3")
 	rez := <-counter
-	fmt.Println("+4")
 	fmt.Println("		 --->> rez_counterRez= ", rez)
-	return int(rez), cnt * period_nano
+	return int(rez), time_gen_nano
 
 	//ifi.Index
 
@@ -777,7 +773,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 	}
 }
 
-func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter chan int64) {
+func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter chan int64) int64 {
 
 	size_p := len(packet)
 	period_nano := int64(size_p * 8 * 1000 / thr)
@@ -825,25 +821,29 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 		})
 	*/
 	//*
-
+	star_gen := time.Now()
+	var rez_time int64
 	ticker := time.NewTicker(time.Duration(period_nano))
 	done := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-done:
+				rez_time = (int64)(time.Since(star_gen))
 				return
 			case <-ticker.C:
 				for ind := 0; ind < int(Ring_col); ind++ {
 					_, ee := zs.WriteToBuffer(packet, uint16(size_p))
 					if ee != nil {
 						fmt.Println("-Write buff error - ", ee)
+						rez_time = (int64)(time.Since(star_gen))
 						return
 					}
 				}
 				cc, err, e := zs.FlushFrames()
 				if err != nil {
 					fmt.Println("- Flush error - ", e)
+					rez_time = (int64)(time.Since(star_gen))
 					return
 				}
 				counter_rez = counter_rez + int64(cc)
@@ -856,7 +856,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	time.Sleep(1 * time.Second)
 	fmt.Println("Packed send - ", counter_rez)
 	counter <- counter_rez
-
+	return rez_time
 }
 
 //for count_cir := 0; count_cir < 10000; count_cir++ {
