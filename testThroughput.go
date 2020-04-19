@@ -465,7 +465,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
 
-	quit := make(chan int)
+	quit := make(chan int,1)
 
 	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
