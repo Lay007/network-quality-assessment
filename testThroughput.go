@@ -469,7 +469,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
-	counter := make(chan int64)
+	counter := make(chan int64,1)
 
 	genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
 
