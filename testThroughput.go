@@ -801,7 +801,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	if err != nil {
 		fmt.Println(err)
 		counter <- 0
-		return
+		return 0
 	}
 	zs.SetMAX()
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
