@@ -872,6 +872,9 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			cc++
 			if err != nil {
 				fmt.Printf("failed to receive message: %v", err)
+				if err.Error() == "resource temporarily unavailable" {
+					continue
+				}
 				//log.Fatalf("failed to receive message: %v", err)
 				c.SetReadDeadline(start.Add(time.Hour * 24))
 				quit <- 1

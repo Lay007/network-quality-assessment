@@ -38,16 +38,16 @@ type sfpsla struct {
 	test_type   uint16
 	//						     /- test type -\  /----           test ID          ----\
 	//                            15    14    13   12 11 10 09 08 07 06 05 04 03 02 01 00
-	//                test type:   0     0     0  - test Real SLA
+	//                   test type:   0     0     0  - test Real SLA
 
-	//                test type:   0     0     1  - test RFC 2544 - Пропускная способность (нагрузка)
-	//                test type:   0     1     0  - test RFC 2544 - Пропускная способность (мониторинг)
-	//                test type:   0     0     1  - test RFC 2544 - Задержка (нагрузка)
-	//                test type:   0     1     1  - test RFC 2544 - Задержка (мониторинг)
-	//                test type:   1     0     0  - test RFC 2544 - Потеря пакетов (нагрузка)
-	//                test type:   1     0     1  - test RFC 2544 - Потеря пакетов (мониторинг)
-	//                test type:   1     1     0  - test RFC 2544 - Берстность
-	//                test type:   1     1     1  - test Y.1544
+	//          2000     test type:   0     0     1  - test RFC 2544 - Пропускная способность (нагрузка)
+	//          4000     test type:   0     1     0  - test RFC 2544 - Пропускная способность (мониторинг)
+	//          2000     test type:   0     0     1  - test RFC 2544 - Задержка (нагрузка)
+	//          6000     test type:   0     1     1  - test RFC 2544 - Задержка (мониторинг)
+	//          8000     test type:   1     0     0  - test RFC 2544 - Потеря пакетов (нагрузка)
+	//          A000     test type:   1     0     1  - test RFC 2544 - Потеря пакетов (мониторинг)
+	//          C000     test type:   1     1     0  - test RFC 2544 - Берстность
+	//          F000     test type:   1     1     1  - test Y.1544
 }
 
 type global_config struct {
@@ -88,6 +88,39 @@ type testThroughput struct {
 	rez_4096      float32
 	rez_9000      float32
 	status        int
+}
+
+type testDelay struct {
+	id            int
+	test_type     int
+	module_first  int
+	module_second int
+	thr_begin     int
+	count_packs   int
+	count_tests   int
+
+	rez_64       float32
+	rez_64_max   float32
+	rez_64_min   float32
+	rez_128      float32
+	rez_128_max  float32
+	rez_128_min  float32
+	rez_256      float32
+	rez_256_max  float32
+	rez_256_min  float32
+	rez_512      float32
+	rez_512_max  float32
+	rez_512_min  float32
+	rez_1024     float32
+	rez_1024_max float32
+	rez_1024_min float32
+	rez_1280     float32
+	rez_1280_max float32
+	rez_1280_min float32
+	rez_1518     float32
+	rez_1518_max float32
+	rez_1518_min float32
+	status       int
 }
 
 type testReal struct {
