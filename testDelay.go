@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bytes"
+	//"bytes"
 	"database/sql"
 	"fmt"
 	"net"
-	"sync"
+	//"sync"
 	"time"
 
 	//set "syscall"
@@ -19,8 +19,8 @@ import (
 	//	"github.com/intel-go/nff-go/flow"
 	//	"github.com/intel-go/nff-go/packet"
 
-	. "./zsocket"
-	"github.com/newtools/zsocket/nettypes"
+	//. "./zsocket"
+	//"github.com/newtools/zsocket/nettypes"
 )
 
 func TestDelay(id int, net_interface_name string) { //Нагрузочное тестирование задержки
@@ -290,7 +290,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 
-	period_test := test.count // период теста - 10 секунд
+	period_test := test.count_packs // период теста - 10 секунд
 
 	size := 64
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
