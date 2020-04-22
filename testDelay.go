@@ -242,7 +242,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	var number uint32
 	
 	test.id_test_type = 0x2000 + (uint16(id) & 0x1FFF)
-
+/*
 	counter := make(chan int64, 1)
 	quit := make(chan int64, 1)
 	size_p := 64
@@ -259,7 +259,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 	}
 
-
+*/
 
 	var test_c testThr
 
@@ -273,13 +273,13 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
 		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
-		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test.id_test_type), SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
 		bpf.RetConstant{Val: 4096},
 		// Verdict is "ignore packet."
 		bpf.RetConstant{Val: 0},
 	})
-
+/*
 	c, err := raw.ListenPacket(ifi, etherType, netConf)
 
 	if err != nil {
@@ -291,7 +291,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		fmt.Println(" ----=====----")
 		return
 	}
-
+/*
 	period_test := test.count_packs // период теста - 10 секунд
 
 	size := 64
@@ -419,8 +419,8 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 	db.Close()
 }
-
-func getMonDelay(quit, id, ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size_p*i,id_test_type int, test.test_type) int64, int64, int64
+/*
+func getMonDelay(quit, id, ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size_p*i,id_test_type int, test.test_type) int64 int64 int64
 {
 	int64 delay, delay_max, delay_min
 
