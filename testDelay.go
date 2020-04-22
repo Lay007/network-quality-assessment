@@ -4,7 +4,7 @@ import (
 	//"bytes"
 	"database/sql"
 	"fmt"
-	"net"
+//	"net"
 	//"sync"
 	"time"
 
@@ -12,7 +12,7 @@ import (
 	//"os"
 	//"golang.org/x/sys/unix"
 
-	"github.com/mdlayher/ethernet"
+	//"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 
 	"golang.org/x/net/bpf"
