@@ -857,7 +857,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	start := time.Now()
 	quit := make(chan int, 10)
 	fmt.Println("-> Begin Catch - ", start)
-	c.SetReadDeadline(start.Add(time.Microsecond * 1000))
+	c.SetReadDeadline(start.Add(time.Microsecond * 10000))
 	//ExitLoop:
 	for {
 		select {
