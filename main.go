@@ -857,7 +857,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	start := time.Now()
 	quit := make(chan int, 10)
 	fmt.Println("-> Begin Catch - ", start)
-	c.SetReadDeadline(start.Add(time.Microsecond * 10000))
+	c.SetReadDeadline(start.Add(time.Microsecond * 3000))
 	//ExitLoop:
 	for {
 		select {
@@ -871,15 +871,17 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			n, _, err := c.ReadFrom(b)
 			cc++
 			if err != nil {
-				fmt.Printf("failed to receive message: %v", err)				
+				fmt.Printf("failed to receive message: %v", err)
+				if err.Error() == "resource temporarily unavailable" {
+					(*test).number++
+				}
 				//log.Fatalf("failed to receive message: %v", err)
 				c.SetReadDeadline(start.Add(time.Hour * 24))
-				(*test).number++;
 				quit <- 1
 				continue
 			}
 
-			if time.Since(start) > (time.Millisecond * 3000) {
+			if time.Since(start) > (time.Millisecond * 1000) {
 				quit <- 1
 				continue
 			}
