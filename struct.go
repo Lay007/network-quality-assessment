@@ -121,6 +121,8 @@ type testDelay struct {
 	rez_1518_max float32
 	rez_1518_min float32
 	status       int
+
+	id_test_type uint16
 }
 
 type testReal struct {

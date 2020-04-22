@@ -465,6 +465,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 
 	db.Close()
+
+	
 	var test_this testSLA
 
 	var test_type uint16

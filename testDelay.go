@@ -240,17 +240,17 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		HardwareAddr: ethernet.Broadcast,
 	}
 	var number uint32
-	var test_type uint16
-	test_type = 0x2000 + (uint16(id) & 0x1FFF)
-/*
+	
+	test.id_test_type = 0x2000 + (uint16(id) & 0x1FFF)
+
 	counter := make(chan int64, 1)
 	quit := make(chan int64, 1)
 	size_p := 64
 	
 	for i := 1; i <= 7; i++ {
-		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size_p*i, number, test_type, test.test_type)
+		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size_p*i, number, test.id_test_type, test.test_type)
 		go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-		delay, delay_max, delay_min := getMonDelay(quit, id, ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size_p*i, test_type, test.test_type)
+		delay, delay_max, delay_min := getMonDelay(quit, id, ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size_p*i, test.id_test_type, test.test_type)
 
 		time.Sleep(time.Second * time.Duration(test.count_packs))
 		quit <- 1
@@ -258,7 +258,9 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		rez := <-counter
 
 	}
-*/
+
+
+
 	var test_c testThr
 
 	test_c.testID = id
@@ -417,6 +419,14 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 	db.Close()
 }
+
+func getMonDelay(quit, id, ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size_p*i,id_test_type int, test.test_type) int64, int64, int64
+{
+	int64 delay, delay_max, delay_min
+
+	return delay, delay_max, delay_min
+}
+
 /*
 func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, thr int, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 150) / 100
