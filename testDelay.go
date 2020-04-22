@@ -34,7 +34,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", time.Now(), 2, id) // Тест выполняется
-	ifi, err := net.InterfaceByName(net_interface_name)
+//	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
@@ -210,11 +210,11 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	//counter := test.count
 	//var numberTX uint32
 	//	numberTX = 0
-
+/*
 	ipsrc := net.ParseIP(ipsrcstr)
 	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
-
+*/
 	//period_min := time.Duration(time.Duration(int(period_nano)) * time.Nanosecond)
 	//period_gen := time.Duration(10 * time.Second)
 
@@ -236,11 +236,12 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 	//fmt.Println("period_min= ", period_min)
 	//	numberTX++
+	/*
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
 	var number uint32
-	
+*/	
 	test.id_test_type = 0x2000 + (uint16(id) & 0x1FFF)
 /*
 	counter := make(chan int64, 1)
