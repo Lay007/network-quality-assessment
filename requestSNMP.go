@@ -40,6 +40,7 @@ func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string) bool {
 				val := g.ToBigInt(variable.Value)
 				//val.Int64()
 				fmt.Printf("number: %v   Mb/s\n", val.Int64()*8 )
+				fmt.Printf("NUMBER: %v   Mb/s\n",  g.ToBigInt(variable.Value))
 			}
 		}
 	}
