@@ -25,7 +25,6 @@ func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string) bool {
 		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
 		if err2 != nil {
 			fmt.Printf("Get() err: %v", err2)
-
 		}
 
 		for i, variable := range result.Variables {
@@ -34,13 +33,10 @@ func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string) bool {
 			case g.OctetString:
 				fmt.Printf("string: %s\n", string(variable.Value.([]byte)))
 			default:
-				// ... or often you're just interested in numeric values.
-				// ToBigInt() will return the Value as a BigInt, for plugging
-				// into your calculations.
 				val := g.ToBigInt(variable.Value)
 				//val.Int64()
-				fmt.Printf("number: %v   Mb/s\n", float32(val.Int64()*8) / 1000.0)
-				fmt.Printf("NUMBER: %v   Mb/s\n",  g.ToBigInt(variable.Value))
+				fmt.Printf("number: %v   Mb/s\n", float32(val.Int64()*8) / 1000000.0)
+				fmt.Printf("  --  NUMBER: %v   Byte/s\n",  g.ToBigInt(variable.Value))
 			}
 		}
 	}
