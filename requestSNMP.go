@@ -20,7 +20,7 @@ func findSFP(ip_1sfpsla_str string, ip_2sfpsla_str string) bool {
 
 	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
 
-	timer_SNMP := time.NewTicker(100 * time.Millisecond)
+	timer_SNMP := time.NewTicker(1000 * time.Millisecond)
 	for range timer_SNMP.C {
 		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
 		if err2 != nil {
