@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+//	"log"
 	"time"
 
 	g "github.com/soniah/gosnmp"
