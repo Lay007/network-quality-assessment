@@ -284,6 +284,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println("->> period_nano  = ", period_nano)
 	fmt.Println("->> packet_count = ", packet_count)
 
+	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
+
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
 
 	//genSocket(ifi.Index, b, period_test, test.thr_begin)
@@ -532,7 +534,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 		var timerReal TimerR
 		_ = timerReal.InitTimer()
 
-		findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
+
 
 		//genSocket(ifi.Index, b)
 		//genSocket(ifi.Index, b, 1000)
