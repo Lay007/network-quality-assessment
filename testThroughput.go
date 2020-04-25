@@ -285,7 +285,56 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println("->> packet_count = ", packet_count)
 
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
-	findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, test_type, test.test_type)
+
+	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, test_type, test.test_type)
+	if rez == 0 {
+		fmt.Println("Error test SFP connect")
+		return
+	}
+	if rez == 2 {
+
+		tmp := ipdst_1sfpsla_str
+		ipdst_1sfpsla_str = ipdst_2sfpsla_str
+		ipdst_2sfpsla_str = tmp
+
+		ipsrc = net.ParseIP(ipsrcstr)
+		ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
+		ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
+
+		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
+		if err != nil {
+			db.Close()
+			row_mac.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+		defer row_mac.Close()
+		var test_mac int64
+		for row_mac.Next() {
+			err = row_mac.Scan(&test_mac)
+			if err != nil {
+				db.Close()
+				row_mac.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
+			}
+		}
+		mac_dst[5] = byte(test_mac & 0xFF)
+		mac_dst[4] = byte((test_mac >> 8) & 0xFF)
+		mac_dst[3] = byte((test_mac >> 16) & 0xFF)
+		mac_dst[2] = byte((test_mac >> 24) & 0xFF)
+		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
+		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
+
+		db.Close()
+
+	}
+	fmt.Println(" Rez find : ", rez)
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
 
