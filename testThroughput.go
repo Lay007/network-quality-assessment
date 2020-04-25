@@ -284,7 +284,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println("->> period_nano  = ", period_nano)
 	fmt.Println("->> packet_count = ", packet_count)
 
-	findSFP(ipdst_1sfpsla_str, ipdst_1sfpsla_str)
+	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
+	findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, test_type, test.test_type)
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
 
