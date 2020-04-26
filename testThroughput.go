@@ -143,7 +143,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			row_mac.Close()
@@ -160,7 +160,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 				db.Close()
 				row.Close()
 				fmt.Println(" -!! Error !!-")
@@ -525,7 +525,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	time_gen_nano := genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
 	quit <- 1
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 5)
 	rez := <-counter
 	fmt.Println("		 --->> rez_counterRez= ", rez)
 	return int(rez), time_gen_nano

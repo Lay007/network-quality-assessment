@@ -228,6 +228,18 @@ func main() {
 			continue
 		}
 
+		// проверка тестов максмальной пропускной способности
+		row_test_berst, err := db.Query("SELECT id FROM test_bert WHERE status=1")
+		defer row_test_berst.Close()
+		if err != nil {
+			db.Close()
+			row_test_berst.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
+		}
+
 		db.Close()
 
 		for row_test_real.Next() {
@@ -258,6 +270,21 @@ func main() {
 				continue
 			}
 			TestThroughput(id, conf.net_interface_name)
+		}
+		row_test_thr.Close()
+
+		for row_test_berst.Next() {
+			var id int
+			err = row_test_berst.Scan(&id)
+			if err != nil {
+				db.Close()
+				row_test_berst.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				continue
+			}
+			TestBerst(id, conf.net_interface_name)
 		}
 		row_test_thr.Close()
 		//	row_test_real, err := db.Query("select * from global_config where status=1")

@@ -152,3 +152,23 @@ type testRealMax struct {
 	jitterOneMax float32
 	lossMax      float32
 }
+
+type testBert struct {
+	id               int
+	test_type        int
+	module_first     int
+	module_second    int
+	thr_begin        int
+	count_prob_packs int
+	count_probs      int
+	rez_64           float32
+	rez_128          float32
+	rez_256          float32
+	rez_512          float32
+	rez_1024         float32
+	rez_1280         float32
+	rez_1518         float32
+	rez_4096         float32
+	rez_9000         float32
+	status           int
+}
