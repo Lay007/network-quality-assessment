@@ -1,6 +1,6 @@
 package main
 
-//import "time"
+import "net"
 
 type testSLA struct {
 	delay_solve    []int64
@@ -98,6 +98,15 @@ type testDelay struct {
 	thr_begin     int
 	count_packs   int
 	count_tests   int
+
+	net_interface_name string
+
+	ipsrc  net.IP
+	ipdst1 net.IP
+	ipdst2 net.IP
+
+	mac_src []byte
+	mac_dst []byte
 
 	rez_64       float32
 	rez_64_max   float32

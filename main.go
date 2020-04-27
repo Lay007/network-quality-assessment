@@ -240,6 +240,17 @@ func main() {
 			continue
 		}
 
+		row_test_latency, err := db.Query("SELECT id FROM test_latency WHERE status=1")
+		defer row_test_latency.Close()
+		if err != nil {
+			db.Close()
+			row_test_latency.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
+		}
+
 		db.Close()
 
 		for row_test_real.Next() {
@@ -287,6 +298,22 @@ func main() {
 			TestBerst(id, conf.net_interface_name)
 		}
 		row_test_thr.Close()
+
+		for row_test_latency.Next() {
+			var id int
+			err = row_test_latency.Scan(&id)
+			if err != nil {
+				db.Close()
+				row_test_latency.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				continue
+			}
+			TestDelay(id, conf.net_interface_name)
+		}
+		row_test_latency.Close()
+
 		//	row_test_real, err := db.Query("select * from global_config where status=1")
 
 		//go Test_SLA_real_go()
@@ -670,15 +697,15 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 
 	b, err := f.MarshalBinary()
 	if err != nil {
-		log.Fatalf("failed to marshal ethernet frame: %v", err)
+		//log.Fatalf("failed to marshal ethernet frame: %v", err)
 
 		fmt.Println(" -!! Error !!-")
 		fmt.Println(err)
 		fmt.Println(" ----=====----")
 		return []byte{}
 	}
-	fmt.Print(" ==> Packet Form - ")
-	fmt.Println(time.Now())
+	//	fmt.Print(" ==> Packet Form - ")
+	//	fmt.Println(time.Now())
 	return b
 }
 
