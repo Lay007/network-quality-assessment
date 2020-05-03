@@ -397,7 +397,8 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 		// Выбор одного из 1000
 		bpf.LoadExtension{Num: bpf.ExtRand},
 		//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
-		bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
+		//bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x0FFFFFFF, SkipTrue: 1},
+		bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0xFFFFFFFF, SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
 		bpf.RetConstant{Val: 4096},
 		// Verdict is "ignore packet."
@@ -406,7 +407,7 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 
 	c, err := raw.ListenPacket(ifi, etherType, netConf)
 
-	SolveDelayTicker := time.NewTicker(1 * time.Millisecond)
+	SolveDelayTicker := time.NewTicker(5 * time.Millisecond)
 	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size, 1, test.id_test_type, test.test_type)
 
 	for range SolveDelayTicker.C {
@@ -516,13 +517,13 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 			n, _, err := c.ReadFrom(b)
 			cc++
 			if err != nil {
-				fmt.Printf("failed to receive message: %v", err)
+				//fmt.Printf("failed to receive message: %v", err)
 				if err.Error() == "resource temporarily unavailable" {
 
 				}
 				//log.Fatalf("failed to receive message: %v", err)
 				c.SetReadDeadline(start.Add(time.Hour * 24))
-				quit <- 0
+				//quit <- 0
 				continue
 			}
 

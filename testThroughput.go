@@ -848,7 +848,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 
 	var counter_rez int64
 	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
-
+	fmt.Printf("\n   period_nano = %d \n", period_nano)
 	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 4096, Ring_col, nettypes.All)
 	if err != nil {
 		fmt.Println(err)
