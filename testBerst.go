@@ -188,7 +188,8 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			}
 		}
 	}
-
+	
+	db.Exec("UPDATE test_bert SET status=?, datetime_start=? WHERE id=?", 2,time.Now(), id) // Тест выполняется
 	db.Close()
 
 	fmt.Println(ipsrcstr)
@@ -473,7 +474,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now(), test.status, id)
+	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now(), test.status, id)
 
 	db.Close()
 }

@@ -11,6 +11,7 @@ import (
 	//set "syscall"
 	//"os"
 	//"golang.org/x/sys/unix"
+	//"golang.org/x/net/ipv4"
 
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
@@ -200,7 +201,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 		}
 	}
-
+	
+	db.Exec("UPDATE test_throughput SET status=?, datetime_start=? WHERE id=?", 2,time.Now(), id) // Тест выполняется
+	
 	db.Close()
 
 	fmt.Println(ipsrcstr)
@@ -449,7 +452,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now(), test.status, id)
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now(), test.status, id)
 
 	db.Close()
 }
@@ -786,6 +789,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit chan int, t_type uint16) { //, counter chan<- int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
+//	oob :=make([]byte, mtu)
 	//var count int
 	// Keep receiving messages forever.
 	for {
@@ -794,13 +798,26 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 			return
 		default:
 		}
+/*
+		n, oobn, flags ,_, err :=c.ReadMsgIP(b,oob)
+		if err != nil {
+			fmt.Println(" -****- ")
+			fmt.Println(" n= ",n)
+			fmt.Println(" oobn= ",oobn)
+			fmt.Println(" oob= ",oob)
+			fmt.Println(" flags= ",flags)
+			fmt.Println(" -****- ")
+			continue
+		}
+		*/
+//*
 		n, _, err := c.ReadFrom(b)
 		if err != nil {
 			//log.Fatalf("failed to receive message: %v", err)
 			fmt.Println(" -****- ")
 			continue
 		}
-
+//*/
 		// Unpack Ethernet II frame into Go representation.
 		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 			//log.Fatalf("failed to unmarshal ethernet frame: %v", err)
@@ -837,7 +854,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	Ring_col = 16
 
 	for i := 1; i <= 8; i++ {
-		if (period_nano * int64(Ring_col)) > (1000000) {
+		if (period_nano * int64(Ring_col)) > (5000000) {
 			break
 		} else {
 			Ring_col = Ring_col * 2
@@ -856,6 +873,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 		return 0
 	}
 	zs.SetMAX()
+	
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
 

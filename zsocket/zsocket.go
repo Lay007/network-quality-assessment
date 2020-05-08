@@ -287,6 +287,13 @@ func (zs *ZSocket) SetMAX()  {
 
 }
 
+func (zs *ZSocket) AddTimeStamping()  {	
+	if errReusePort := syscall.SetsockoptInt(zs.socket, unix.SOL_SOCKET, unix.SO_REUSEPORT, 1); errReusePort != nil {
+		fmt.Printf("reuse port error: %v\n", errReusePort)
+		return
+	}	
+}
+
 // Returns the frame size in bytes
 func (zs *ZSocket) MaxPacketSize() uint16 {
 	return zs.txFrameSize
