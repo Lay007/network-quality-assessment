@@ -188,8 +188,8 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			}
 		}
 	}
-	
-	db.Exec("UPDATE test_bert SET status=?, datetime_start=? WHERE id=?", 2,time.Now(), id) // Тест выполняется
+
+	db.Exec("UPDATE test_bert SET status=?, datetime_start=? WHERE id=?", 2, time.Now(), id) // Тест выполняется
 	db.Close()
 
 	fmt.Println(ipsrcstr)

@@ -251,6 +251,28 @@ func main() {
 			continue
 		}
 
+		row_test_loss, err := db.Query("SELECT id FROM test_frame_loss WHERE status=1")
+		defer row_test_loss.Close()
+		if err != nil {
+			db.Close()
+			row_test_loss.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
+		}
+
+		row_test_y1564, err := db.Query("SELECT id FROM test_y1564 WHERE status=1")
+		defer row_test_y1564.Close()
+		if err != nil {
+			db.Close()
+			row_test_y1564.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			continue
+		}
+
 		db.Close()
 
 		for row_test_real.Next() {
@@ -313,6 +335,36 @@ func main() {
 			TestDelay(id, conf.net_interface_name)
 		}
 		row_test_latency.Close()
+
+		for row_test_loss.Next() {
+			var id int
+			err = row_test_loss.Scan(&id)
+			if err != nil {
+				db.Close()
+				row_test_loss.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				continue
+			}
+			TestLoss(id, conf.net_interface_name)
+		}
+		row_test_loss.Close()
+
+		for row_test_y1564.Next() {
+			var id int
+			err = row_test_y1564.Scan(&id)
+			if err != nil {
+				db.Close()
+				row_test_y1564.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				continue
+			}
+			TestY1564(id, conf.net_interface_name)
+		}
+		row_test_y1564.Close()
 
 		//	row_test_real, err := db.Query("select * from global_config where status=1")
 
@@ -1089,29 +1141,28 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				}
 				if (tMax.delayMax != 0) && (tMax.delayMax < delay) {
 					msg := fmt.Sprintf("!! Превышение порогового значения времени двусторонней задержки на %.4f мкс", delay-tMax.delayMax)
-					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 1, delay, dt, msg)
 				}
 				if (tMax.jitterMax != 0) && (tMax.jitterMax < float32(math.Abs(float64(jitter)))) {
 					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени двусторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter)))-tMax.jitterMax)
-					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 2, float32(math.Abs(float64(jitter))), dt, msg)
 				}
 				if (tMax.lossMax != 0) && (tMax.lossMax < loss) {
-					msg := fmt.Sprintf("!! Превышение порогового значения вероятности ошибки на %.6f", loss-tMax.lossMax)
-					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
-
+					msg := fmt.Sprintf("!! Превышение порогового значения коэффициента потери пакетов на %.6f", loss-tMax.lossMax)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 3, loss, dt, msg)
 				}
 
 				if (tMax.delayOneMax != 0) && ((tMax.delayOneMax < delay1) || (tMax.delayOneMax < delay2)) {
 					msg := fmt.Sprintf("!! Превышение порогового значения времени односторонней задержки на %.4f мкс", float32(math.Max(float64(delay1), float64(delay2)))-tMax.delayOneMax)
-					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 4, float32(math.Max(float64(delay1), float64(delay2))), dt, msg)
 				}
 				if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter1)))) {
 					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter1)))-tMax.jitterOneMax)
-					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 5, float32(math.Abs(float64(jitter1))), dt, msg)
 				}
 				if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter2)))) {
 					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter2)))-tMax.jitterOneMax)
-					db.Exec("INSERT INTO test_sla_real_alarm (id_test, datatime, message) VALUES(?, ?, ?)", id, dt, msg)
+					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 5, float32(math.Abs(float64(jitter2))), dt, msg)
 				}
 
 				db.Close()

@@ -47,7 +47,7 @@ type sfpsla struct {
 	//          8000     test type:   1     0     0  - test RFC 2544 - Потеря пакетов (нагрузка)
 	//          A000     test type:   1     0     1  - test RFC 2544 - Потеря пакетов (мониторинг)
 	//          C000     test type:   1     1     0  - test RFC 2544 - Берстность
-	//          F000     test type:   1     1     1  - test Y.1544
+	//          E000     test type:   1     1     1  - test Y.1544
 }
 
 type global_config struct {
@@ -180,4 +180,71 @@ type testBert struct {
 	rez_4096         float32
 	rez_9000         float32
 	status           int
+}
+
+type testY1564 struct {
+	id            int
+	test_type     int
+	module_first  int
+	module_second int
+	block_size    int
+	ToS			  int
+	VLAN_priority int
+
+	CIR			int
+	EIR			int
+	TP			int
+
+	period		int
+	step_count	int
+
+	max_FTD		float32
+	max_FVD		float32
+	max_FLR		float32
+
+	net_interface_name string
+
+	ipsrc  net.IP
+	ipdst1 net.IP
+	ipdst2 net.IP
+
+	mac_src []byte
+	mac_dst []byte
+
+	numberTx    uint32
+	numberRx    uint32
+
+	rez_IR_s1	float32
+	rez_FTD_s1	float32
+	rez_FVD_s1	float32
+	rez_FLR_s1	float32
+
+	rez_IR_s2	float32
+	rez_FTD_s2	float32
+	rez_FVD_s2	float32
+	rez_FLR_s2	float32
+
+	rez_IR_s3	float32
+	rez_FTD_s3	float32
+	rez_FVD_s3	float32
+	rez_FLR_s3	float32
+
+	rez_IR_s4	float32
+	rez_FTD_s4	float32
+	rez_FVD_s4	float32
+	rez_FLR_s4	float32
+
+	rez_IR_eir	float32
+	rez_FTD_eir	float32
+	rez_FVD_eir	float32
+	rez_FLR_eir	float32
+
+	rez_IR_tp	float32
+	rez_FTD_tp	float32
+	rez_FVD_tp	float32
+	rez_FLR_tp	float32
+
+	status       int
+
+	id_test_type uint16
 }
