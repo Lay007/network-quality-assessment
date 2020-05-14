@@ -188,19 +188,19 @@ type testY1564 struct {
 	module_first  int
 	module_second int
 	block_size    int
-	ToS			  int
+	ToS           uint8
 	VLAN_priority int
 
-	CIR			int
-	EIR			int
-	TP			int
+	CIR int
+	EIR int
+	TP  int
 
-	period		int
-	step_count	int
+	period     int
+	step_count int
 
-	max_FTD		float32
-	max_FVD		float32
-	max_FLR		float32
+	max_FTD float32
+	max_FVD float32
+	max_FLR float32
 
 	net_interface_name string
 
@@ -211,40 +211,40 @@ type testY1564 struct {
 	mac_src []byte
 	mac_dst []byte
 
-	numberTx    uint32
-	numberRx    uint32
+	numberTx uint32
+	numberRx uint32
 
-	rez_IR_s1	float32
-	rez_FTD_s1	float32
-	rez_FVD_s1	float32
-	rez_FLR_s1	float32
+	rez_IR_s1  float32
+	rez_FTD_s1 float32
+	rez_FVD_s1 float32
+	rez_FLR_s1 float32
 
-	rez_IR_s2	float32
-	rez_FTD_s2	float32
-	rez_FVD_s2	float32
-	rez_FLR_s2	float32
+	rez_IR_s2  float32
+	rez_FTD_s2 float32
+	rez_FVD_s2 float32
+	rez_FLR_s2 float32
 
-	rez_IR_s3	float32
-	rez_FTD_s3	float32
-	rez_FVD_s3	float32
-	rez_FLR_s3	float32
+	rez_IR_s3  float32
+	rez_FTD_s3 float32
+	rez_FVD_s3 float32
+	rez_FLR_s3 float32
 
-	rez_IR_s4	float32
-	rez_FTD_s4	float32
-	rez_FVD_s4	float32
-	rez_FLR_s4	float32
+	rez_IR_s4  float32
+	rez_FTD_s4 float32
+	rez_FVD_s4 float32
+	rez_FLR_s4 float32
 
-	rez_IR_eir	float32
-	rez_FTD_eir	float32
-	rez_FVD_eir	float32
-	rez_FLR_eir	float32
+	rez_IR_eir  float32
+	rez_FTD_eir float32
+	rez_FVD_eir float32
+	rez_FLR_eir float32
 
-	rez_IR_tp	float32
-	rez_FTD_tp	float32
-	rez_FVD_tp	float32
-	rez_FLR_tp	float32
+	rez_IR_tp  float32
+	rez_FTD_tp float32
+	rez_FVD_tp float32
+	rez_FLR_tp float32
 
-	status       int
+	status int
 
 	id_test_type uint16
 }

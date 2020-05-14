@@ -851,10 +851,10 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
-	Ring_col = 16
+	Ring_col = 4
 
 	for i := 1; i <= 8; i++ {
-		if (period_nano * int64(Ring_col)) > (5000000) {
+		if (period_nano * int64(Ring_col)) > (2000000) {
 			break
 		} else {
 			Ring_col = Ring_col * 2
@@ -895,10 +895,12 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	var rez_time int64
 	ticker := time.NewTicker(time.Duration(period_nano))
 	done := make(chan bool)
+	fmt.Println("Start generate: ", time.Now())
 	go func() {
 		for {
 			select {
 			case <-done:
+				fmt.Println("End generate: ", time.Now())
 				rez_time = (int64)(time.Since(star_gen))
 				return
 			case <-ticker.C:

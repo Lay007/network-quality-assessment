@@ -1,15 +1,18 @@
 package main
 
 import (
-	"math"
 	"bytes"
-	"encoding/binary"
 	"database/sql"
+	"encoding/binary"
 	"fmt"
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
+	"golang.org/x/net/bpf"
+	"math"
 	"net"
 	"time"
+	"runtime"
+	"runtime/debug"
 )
 
 func TestY1564(id int, net_interface_name string) { //Нагрузочное тестирование задержки
@@ -44,7 +47,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	defer row.Close()
 	row.Next()
 	test := new(testY1564)
-	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.ToS, &test.VLAN_priority,&test.CIR,&test.EIR, &test.TP, &test.period, &test.step_count, &test.max_FTD, &test.max_FVD, &test.max_FLR, &test.status)
+	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.ToS, &test.VLAN_priority, &test.CIR, &test.EIR, &test.TP, &test.period, &test.step_count, &test.max_FTD, &test.max_FVD, &test.max_FLR, &test.status)
 	if err != nil {
 		db.Close()
 		fmt.Println(" -!! Error !!-")
@@ -291,23 +294,127 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
 
-	//counter := make(chan int64, 7)
-	//quit := make(chan int64, 7)
+	counter := make(chan int64, 1)
+	quit := make(chan int64, 2)
 
 	//size_p := 64
 
 	var ToS_tag uint8
-	ToS_tag=((uint8(0x7&test.VLAN_priority))<<5)+uint8(test.ToS << 1)
+	ToS_tag = ((uint8(0x7 & test.VLAN_priority)) << 5) + uint8(test.ToS<<1)
+	test.ToS = ToS_tag
+	thr_s := make([]int, test.step_count)
 
-	b := packetFormY1546(ToS_tag,test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, test.block_size, 0, test.id_test_type, test.test_type)
-	//go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-	//test.getMonDelay(quit, size_p)
-	//time.Sleep(time.Second * 2)
-	//<-quit
+	switch test.step_count {
+	case 1:
+		thr_s[0] = test.CIR
+		break
+	case 2:
+		thr_s[0] = test.CIR / 2
+		thr_s[1] = test.CIR
+		break
+	case 3:
+		thr_s[0] = test.CIR / 2
+		thr_s[1] = int(float32(test.CIR) * 0.75)
+		thr_s[2] = test.CIR
+		break
+	case 4:
+		thr_s[0] = test.CIR / 2
+		thr_s[1] = int(float32(test.CIR) * 0.75)
+		thr_s[2] = int(float32(test.CIR) * 0.9)
+		thr_s[3] = test.CIR
+		break
+	}
+	//	b := packetFormY1546(ToS_tag, test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, test.block_size, 0, test.id_test_type, test.test_type)
 
-	test.rez_FLR_s2=0.02
+	go test.genFramesY1564(thr_s[0], counter)
+	delay, jitter := test.getMetricsY1564(quit)
+	time.Sleep(time.Second * 2)
+	<-quit
+	PacketsRx := <-counter
+	test.rez_IR_s1 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+	test.rez_FTD_s1 = delay
+	test.rez_FVD_s1 = jitter
+	test.rez_FLR_s1 = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
 
+	PacketsRx = 0
+	test.numberRx = 0
 
+	if test.step_count > 1 {
+
+		go test.genFramesY1564(thr_s[1], counter)
+		delay, jitter := test.getMetricsY1564(quit)
+		time.Sleep(time.Second * 2)
+		<-quit
+		PacketsRx := <-counter
+		test.rez_IR_s2 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+		test.rez_FTD_s2 = delay
+		test.rez_FVD_s2 = jitter
+		test.rez_FLR_s2 = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+
+		PacketsRx = 0
+		test.numberRx = 0
+
+	}
+
+	if test.step_count > 2 {
+
+		go test.genFramesY1564(thr_s[2], counter)
+		delay, jitter := test.getMetricsY1564(quit)
+		time.Sleep(time.Second * 2)
+		<-quit
+		PacketsRx := <-counter
+		test.rez_IR_s3 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+		test.rez_FTD_s3 = delay
+		test.rez_FVD_s3 = jitter
+		test.rez_FLR_s3 = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+
+		PacketsRx = 0
+		test.numberRx = 0
+
+	}
+
+	if test.step_count > 3 {
+
+		go test.genFramesY1564(thr_s[3], counter)
+		delay, jitter := test.getMetricsY1564(quit)
+		time.Sleep(time.Second * 2)
+		<-quit
+		PacketsRx := <-counter
+		test.rez_IR_s4 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+		test.rez_FTD_s4 = delay
+		test.rez_FVD_s4 = jitter
+		test.rez_FLR_s4 = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+
+		PacketsRx = 0
+		test.numberRx = 0
+
+	}
+
+	go test.genFramesY1564(test.CIR+test.EIR, counter)
+	delay, jitter = test.getMetricsY1564(quit)
+	time.Sleep(time.Second * 2)
+	<-quit
+	PacketsRx = <-counter
+	test.rez_IR_eir = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+	test.rez_FTD_eir = delay
+	test.rez_FVD_eir = jitter
+	test.rez_FLR_eir = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+
+	PacketsRx = 0
+	test.numberRx = 0
+
+	go test.genFramesY1564(test.CIR+test.TP, counter)
+	delay, jitter = test.getMetricsY1564(quit)
+	time.Sleep(time.Second * 2)
+	<-quit
+	PacketsRx = <-counter
+	test.rez_IR_tp = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+	test.rez_FTD_tp = delay
+	test.rez_FVD_tp = jitter
+	test.rez_FLR_tp = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+
+	PacketsRx = 0
+	test.numberRx = 0
 
 	test.status = 3
 
@@ -321,12 +428,12 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1,test.rez_FVD_s1,test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2,test.rez_FVD_s2,test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3,test.rez_FVD_s3,test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4,test.rez_FVD_s4,test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir,test.rez_FVD_eir,test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp,test.rez_FVD_tp,test.rez_FLR_tp, time.Now(), test.status, id)								   
+	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now(), test.status, id)
 
 	db.Close()
 }
 
-func packetFormY1546(ToS uint8,ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_dst []byte, size int, number uint32, test_type uint16, testWay int) []byte {
+func packetFormY1546(ToS uint8, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_dst []byte, size int, number uint32, test_type uint16, testWay int) []byte {
 	ip := iphdr{
 		vhl:   0x45,
 		tos:   ToS,
@@ -404,4 +511,358 @@ func packetFormY1546(ToS uint8,ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_s
 	//	fmt.Print(" ==> Packet Form - ")
 	//	fmt.Println(time.Now())
 	return b
+}
+
+/*
+func (test *testY1564) genFramesY1564(thr int, counter chan int64) int64 {
+	time.Sleep(1*time.Millisecond)
+	number := uint32(0)
+	period_nano := int64(test.block_size * 8 * 1000 / thr)
+
+	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
+
+	var counter_rez int64
+	ifi, err := net.InterfaceByName(test.net_interface_name)
+	c, err := raw.ListenPacket(ifi, etherType, nil)
+	if err != nil {
+		fmt.Println("failed to listen: %v", err)
+		fmt.Println(" -!! Error !!-")
+		fmt.Println(err)
+		fmt.Println(" ----=====----")
+		return 0
+	}
+	//c.SetReadDeadline(time.Now().Add(time.Millisecond * 3000))
+	addr := &raw.Addr{
+		HardwareAddr: ethernet.Broadcast,
+	}
+
+	star_gen := time.Now()
+	var rez_time int64
+	ticker := time.NewTicker(time.Duration(period_nano))
+	done := make(chan bool)
+	b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, number, test.id_test_type, test.test_type)
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				rez_time = (int64)(time.Since(star_gen))
+				return
+			case <-ticker.C:
+				number++
+			//	b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, number, test.id_test_type, test.test_type)
+
+			//	for { //	time.Sleep(time.Millisecond * 1)
+				//	n, err := c.WriteTo(b, addr)
+					c.WriteTo(b, addr)
+			//		if n == len(b) && err == nil {
+			//			break
+			//		}
+			//		fmt.Println("failed to listen: %v", err)
+			//		time.Sleep(time.Millisecond * 1)
+			//	}
+				counter_rez = counter_rez + 1
+			}
+		}
+	}()
+	time.Sleep(time.Duration(test.period) * time.Second)
+	ticker.Stop()
+	done <- true
+	time.Sleep(1 * time.Second)
+	fmt.Println("Packed send - ", counter_rez)
+	counter <- counter_rez
+	return rez_time
+}
+*/
+func (test *testY1564) genFramesY1564(thr int, counter chan int64) int64 {
+	time.Sleep(time.Millisecond * 10)
+	ifi, _ := net.InterfaceByName(test.net_interface_name)
+	b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, 1, test.id_test_type, test.test_type)
+	//counter := make(chan int64, 1)
+	rez_time := genSocket(ifi.Index, b, test.period, thr, counter)
+
+	return rez_time
+}
+func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
+
+	var delay, delayMax, delayMin int64
+	var floatDelay, floatDelayMax, floatDelayMin float32
+
+	detectPackDelay := make(chan int64, 10)
+	number := 0
+
+	timeStart := time.Now()
+
+	ifi, err := net.InterfaceByName(test.net_interface_name)
+	if err != nil {
+		fmt.Println("failed to find interface %q: %v", test.net_interface_name, err)
+		quit <- 1
+		return 0, 0
+	}
+
+	var netConf *raw.Config = new(raw.Config)
+
+	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
+		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+		bpf.LoadAbsolute{Off: 34, Size: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+		// Проверка идентификатора теста
+		bpf.LoadAbsolute{Off: 64, Size: 2},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test.id_test_type), SkipTrue: 1},
+		// Verdict is "send up to 4k of the packet to userspace."
+		bpf.RetConstant{Val: 4096},
+		// Verdict is "ignore packet."
+		bpf.RetConstant{Val: 0},
+	})
+
+	c, err := raw.ListenPacket(ifi, etherType, netConf)
+	quit_receive := make(chan int64, 2)
+	go (*test).receivePacketsY(ifi.MTU, quit_receive, test.id_test_type)
+
+	SolveDelayTicker := time.NewTicker(1 * time.Millisecond)
+	//	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, test.block_size, 1, test.id_test_type, test.test_type)
+
+	for range SolveDelayTicker.C {
+		//	for	 {
+		go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, test.block_size)
+
+		select {
+		//fmt.Println("Wait")
+		case detect := <-detectPackDelay:
+
+			if detect > 0 {
+				number++
+				delay = delay + detect
+				if number == 1 {
+					delayMax = detect
+					delayMin = detect
+				} else {
+					if delayMax < detect {
+						delayMax = detect
+					}
+					if delayMin > detect {
+						delayMin = detect
+					}
+				}
+
+			}
+		default:
+			if time.Since(timeStart) > time.Duration(time.Duration(test.period)*time.Second) {
+				fmt.Println(" --> Number = ", number)
+				fmt.Println(" --> Size = ", test.block_size)
+
+				floatDelay = (float32(delay) / float32(number)) * 1000000.0 / float32(math.Pow(2, 32))
+				floatDelayMax = float32(delayMax) * 1000000.0 / float32(math.Pow(2, 32))
+				floatDelayMin = float32(delayMin) * 1000000.0 / float32(math.Pow(2, 32))
+				/*
+					fmt.Println(" --> Delay = ", floatDelay)
+					fmt.Println(" --> DelayMax = ", floatDelayMax)
+					fmt.Println(" --> DelayMin = ", floatDelayMin)
+
+					floatDelay = (float32(delay) / float32(number))
+					floatDelayMax = float32(delayMax)
+					floatDelayMin = float32(delayMin)
+				*/
+				fmt.Println(" --> Delay = ", floatDelay)
+				fmt.Println(" --> DelayMax = ", floatDelayMax)
+				fmt.Println(" --> DelayMin = ", floatDelayMin)
+
+				/*
+					switch test.block_size {
+					case 64:
+						test.rez_64 = floatDelay
+						test.rez_64_max = floatDelayMax
+						test.rez_64_min = floatDelayMin
+					case 128:
+						test.rez_128 = floatDelay
+						test.rez_128_max = floatDelayMax
+						test.rez_128_min = floatDelayMin
+					case 256:
+						test.rez_256 = floatDelay
+						test.rez_256_max = floatDelayMax
+						test.rez_256_min = floatDelayMin
+					case 512:
+						test.rez_512 = floatDelay
+						test.rez_512_max = floatDelayMax
+						test.rez_512_min = floatDelayMin
+					case 1024:
+						test.rez_1024 = floatDelay
+						test.rez_1024_max = floatDelayMax
+						test.rez_1024_min = floatDelayMin
+					case 1280:
+						test.rez_1280 = floatDelay
+						test.rez_1280_max = floatDelayMax
+						test.rez_1280_min = floatDelayMin
+					case 1500:
+						test.rez_1518 = floatDelay
+						test.rez_1518_max = floatDelayMax
+						test.rez_1518_min = floatDelayMin
+					}
+				*/
+				time.Sleep(1000 * time.Millisecond)
+				quit_receive <- 1
+				//time.Sleep(100 * time.Millisecond)
+				quit <- 1
+				return floatDelay, float32(math.Max(float64(floatDelayMax-floatDelay), float64(floatDelay-floatDelayMin)))
+			}
+		}
+	}
+	return 0, 0
+
+}
+
+func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.PacketConn, mtu int, test_type uint16, packetSize int) {
+	var f ethernet.Frame
+	b := make([]byte, mtu)
+	cc := 0
+	var t_ips [2]byte
+	t_ips[1] = byte(test_type & 0xFF)
+	t_ips[0] = byte((test_type >> 8) & 0xFF)
+	start := time.Now()
+	quit := make(chan int64, 10)
+	//fmt.Println("-> Begin Catch - ", start)
+	c.SetReadDeadline(start.Add(time.Microsecond * 3000))
+	//ExitLoop:
+	for {
+		select {
+		case key := <-quit:
+			catchDetect <- key
+			//	fmt.Println("Chanel go")
+			return
+			//break ExitLoop
+		default:
+
+			n, _, err := c.ReadFrom(b)
+			cc++
+			if err != nil {
+				//fmt.Printf("failed to receive message: %v", err)
+				if err.Error() == "resource temporarily unavailable" {
+
+				}
+				//log.Fatalf("failed to receive message: %v", err)
+				c.SetReadDeadline(start.Add(time.Hour * 24))
+				//quit <- 0
+				continue
+			}
+
+			if time.Since(start) > (time.Millisecond * 20000) {
+				quit <- 0
+				continue
+			}
+
+			if (n) != packetSize {
+				continue
+			}
+
+			//t_time := int64(float64(time.Now().UnixNano() - delta_nano )*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
+			delta_nano := int64((2208988800) * 1000000000)
+			t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
+			t_time = t_time & int64(0xFFFFFFFFFFFFFF)
+
+			//n, addr, err := c.ReadFrom(b)
+			// Unpack Ethernet II frame into Go representation.
+			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
+				fmt.Printf("failed to unmarshal ethernet frame: %v", err)
+				continue
+			}
+
+			var ips [4]byte
+			copy(ips[:], (test.ipdst1).To4())
+
+			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+				//	(*test).numberRx++
+				if ((*test).numberRx % 100) != 0 {
+					return
+				}
+				var markerSFP11, markerSFP12, markerSFP2 int64
+				var ind uint
+
+				for ind = 0; ind < 7; ind++ {
+					markerSFP11 = markerSFP11 + int64(f.Payload[31-ind])<<(8*ind)
+					markerSFP2 = markerSFP2 + int64(f.Payload[38-ind])<<(8*ind)
+					markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
+				}
+
+				if test.test_type == 1 {
+					quit <- (markerSFP12 - markerSFP11)
+				} else {
+					quit <- (t_time - markerSFP2)
+				}
+
+			}
+		}
+
+	}
+}
+func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) { //, counter chan<- int) {
+
+	ifi, err := net.InterfaceByName(test.net_interface_name)
+	if err != nil {
+		fmt.Println("failed to find interface %q: %v", test.net_interface_name, err)
+		return
+	}
+
+	var netConf *raw.Config = new(raw.Config)
+
+	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
+		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+		bpf.LoadAbsolute{Off: 34, Size: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+		// Проверка идентификатора теста
+		bpf.LoadAbsolute{Off: 64, Size: 2},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test.id_test_type), SkipTrue: 1},
+		// Verdict is "send up to 4k of the packet to userspace."
+		bpf.RetConstant{Val: 4096},
+		// Verdict is "ignore packet."
+		bpf.RetConstant{Val: 0},
+	})
+
+	c, err := raw.ListenPacket(ifi, etherType, netConf)
+
+	//	var f ethernet.Frame
+	b := make([]byte, mtu)
+	var ips [4]byte
+	copy(ips[:], (test.ipdst1).To4())
+
+	var t_ips [2]byte
+	t_ips[1] = byte(test.id_test_type & 0xFF)
+	t_ips[0] = byte((test.id_test_type >> 8) & 0xFF)
+	start := time.Now()
+	c.SetReadDeadline(start.Add(time.Second * time.Duration(1+test.period)))
+	debug.SetGCPercent(-1)
+	fmt.Println("Start receive: ", time.Now())
+	for {
+		select {
+		case <-quit:
+			//quit <- k
+			runtime.GC()
+			fmt.Println("End receive: ", time.Now())
+			fmt.Println("Packets receive = ", test.numberRx)
+			return
+		default:
+		}
+		_, _, err := c.ReadFrom(b)
+		if err != nil {
+			fmt.Println("failed to receive message: %v", err)
+			c.SetReadDeadline(start.Add(time.Hour * 24))
+			continue
+		}
+		//*/
+		// Unpack Ethernet II frame into Go representation.
+		//	if err := (&f).UnmarshalBinary(b[:n]); err != nil {
+		//		fmt.Println("failed to unmarshal ethernet frame: %v", err)
+		//	}
+		//fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
+
+		//fmt.Printf("\n\n--=T_so %x - \n", ips)
+
+		// Display source of message and message itself.
+		//	if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+		//count++
+		//	fmt.Printf("-->>Detect")
+		//	counter <-count
+		//(*test).numberCounter = uint32(count)
+		(*test).numberRx++
+		//	}
+	}
 }

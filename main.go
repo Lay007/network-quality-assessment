@@ -594,7 +594,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 	c, err := raw.ListenPacket(ifi, etherType, netConf)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		fmt.Println("failed to listen: %v", err)
 		db.Close()
 
 		fmt.Println(" -!! Error !!-")
@@ -1214,36 +1214,58 @@ func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, int64) {
 
-	if len((*test).delay_solve_to) < 2 {
+	size_s := 1000
+	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
+	if len((*test).delay_solve_to) > size_s {
+		test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
+	}
+	mean_to := float32((*test).delay_solve_to[0]) / float32(len((*test).delay_solve_un))
 
-		(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
-		(*test).delay_solve_to = append((*test).delay_solve_to, 1)
+	for ind := 1; ind < len((*test).delay_solve_to); ind++ {
 
-		(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
-		(*test).delay_solve_un = append((*test).delay_solve_un, 1)
-
-		return in_delay_to, in_delay_un
-
+		mean_to = mean_to + (float32((*test).delay_solve_to[ind]) / float32(len((*test).delay_solve_to)))
 	}
 
-	mean_to := float32((*test).delay_solve_to[0]) * float32((*test).delay_solve_to[1])
-	(*test).delay_solve_to[1] = (*test).delay_solve_to[1] + 1
-	mean_to = (mean_to + float32(in_delay_to)) / float32((*test).delay_solve_to[1])
-	(*test).delay_solve_to[0] = int64(mean_to)
+	(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
+	if len((*test).delay_solve_un) > size_s {
+		test.delay_solve_un = (*test).delay_solve_un[1:(size_s + 1)]
+	}
+	mean_un := float32((*test).delay_solve_un[0]) / float32(len((*test).delay_solve_un))
 
-	mean_un := float32((*test).delay_solve_un[0]) * float32((*test).delay_solve_un[1])
-	(*test).delay_solve_un[1] = (*test).delay_solve_un[1] + 1
-	mean_un = (mean_un + float32(in_delay_un)) / float32((*test).delay_solve_un[1])
-	(*test).delay_solve_un[0] = int64(mean_un)
+	for ind := 1; ind < len((*test).delay_solve_un); ind++ {
 
+		mean_un = mean_un + (float32((*test).delay_solve_un[ind]) / float32(len((*test).delay_solve_un)))
+	}
 	/*
-		fmt.Printf(" --== Jitter debug ==-- \n")
-		fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
-		fmt.Printf(" --== Max = %x \n", max)
-		fmt.Printf(" --== Min = %x \n", min)
-		fmt.Printf(" --== Mean = %f \n", mean)
-		fmt.Printf(" --== Jitter = %f \n", jitter)
-		fmt.Printf(" --== End Jitter debug ==-- \n")
+		if len((*test).delay_solve_to) < 2 {
+
+			(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
+			(*test).delay_solve_to = append((*test).delay_solve_to, 1)
+
+			(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
+			(*test).delay_solve_un = append((*test).delay_solve_un, 1)
+
+			return in_delay_to, in_delay_un
+
+		}
+		mean_to := float32((*test).delay_solve_to[0]) * float32((*test).delay_solve_to[1])
+		(*test).delay_solve_to[1] = (*test).delay_solve_to[1] + 1
+		mean_to = (mean_to + float32(in_delay_to)) / float32((*test).delay_solve_to[1])
+		(*test).delay_solve_to[0] = int64(mean_to)
+
+		mean_un := float32((*test).delay_solve_un[0]) * float32((*test).delay_solve_un[1])
+		(*test).delay_solve_un[1] = (*test).delay_solve_un[1] + 1
+		mean_un = (mean_un + float32(in_delay_un)) / float32((*test).delay_solve_un[1])
+		(*test).delay_solve_un[0] = int64(mean_un)
+
+		/*
+			fmt.Printf(" --== Jitter debug ==-- \n")
+			fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
+			fmt.Printf(" --== Max = %x \n", max)
+			fmt.Printf(" --== Min = %x \n", min)
+			fmt.Printf(" --== Mean = %f \n", mean)
+			fmt.Printf(" --== Jitter = %f \n", jitter)
+			fmt.Printf(" --== End Jitter debug ==-- \n")
 	*/
 	return int64(mean_to), int64(mean_un)
 }
@@ -1303,11 +1325,12 @@ func (test *testSLA) getJitter() float32 {
 
 func (test *testSLA) getJitterto(in_solve int64) float32 {
 	var jitter float32
-	if len((*test).delay_solve_to) < 3 {
-		(*test).delay_solve_to = append((*test).delay_solve_to, in_solve)
+	l:=len((*test).delay_solve_to)
+	if l < 2 {
+		return jitter
 	}
-	jitter = float32((*test).delay_solve_to[2] - in_solve)
-	(*test).delay_solve_to[2] = in_solve
+	jitter = float32((*test).delay_solve_to[l-1] - (*test).delay_solve_to[l-2])
+	
 	/*
 		var jitter, mean float32
 		var size_s int
@@ -1343,6 +1366,13 @@ func (test *testSLA) getJitterto(in_solve int64) float32 {
 
 func (test *testSLA) getJitterun(in_solve int64) float32 {
 	var jitter float32
+
+	l:=len((*test).delay_solve_un)
+	if l < 2 {
+		return jitter
+	}
+	jitter = float32((*test).delay_solve_un[l-1] - (*test).delay_solve_un[l-2])
+	/*
 	if len((*test).delay_solve_un) < 3 {
 		(*test).delay_solve_un = append((*test).delay_solve_un, in_solve)
 	}
