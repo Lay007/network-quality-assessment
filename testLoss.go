@@ -6,8 +6,8 @@ import (
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 	"net"
-	"runtime"
-	"runtime/debug"
+	//"runtime"
+	//"runtime/debug"
 	"time"
 
 	"golang.org/x/net/bpf"
@@ -307,10 +307,10 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
 		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 1)
 		PacketsTx := <-counter
 		quit <- 1
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * 2)
 		testRez.rez_64 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
@@ -461,13 +461,13 @@ func (test *testLoss) receivePacketsLoss(mtu int, quit chan int64) { //, counter
 	t_ips[0] = byte((test.id_test_type >> 8) & 0xFF)
 	start := time.Now()
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(1+test.count_frames)))
-	debug.SetGCPercent(-1)
+	//debug.SetGCPercent(-1)
 	fmt.Println("Start receive: ", time.Now())
 	for {
 		select {
 		case <-quit:
 			//quit <- k
-			runtime.GC()
+			//runtime.GC()
 			fmt.Println("End receive: ", time.Now())
 			fmt.Println("Packets receive = ", test.numberRx)
 			return
@@ -476,8 +476,11 @@ func (test *testLoss) receivePacketsLoss(mtu int, quit chan int64) { //, counter
 		_, _, err := c.ReadFrom(b)
 		if err != nil {
 			fmt.Println("failed to receive message: %v", err)
-			if err.Error() != "resource temporarily unavailable"{
-			c.SetReadDeadline(start.Add(time.Hour * 24))
+			if err.Error() != "resource temporarily unavailable" {
+				c.SetReadDeadline(start.Add(time.Hour * 24))
+				//runtime.GC()
+				<-quit
+				return
 			}
 			continue
 		}

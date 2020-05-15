@@ -10,8 +10,8 @@ import (
 	"golang.org/x/net/bpf"
 	"math"
 	"net"
-	"runtime"
-	"runtime/debug"
+	//	"runtime"
+	//"runtime/debug"
 	"time"
 )
 
@@ -829,13 +829,13 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 	t_ips[0] = byte((test.id_test_type >> 8) & 0xFF)
 	start := time.Now()
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(1+test.period)))
-	debug.SetGCPercent(-1)
+	//debug.SetGCPercent(-1)
 	fmt.Println("Start receive: ", time.Now())
 	for {
 		select {
 		case <-quit:
 			//quit <- k
-			runtime.GC()
+			//	runtime.GC()
 			fmt.Println("End receive: ", time.Now())
 			fmt.Println("Packets receive = ", test.numberRx)
 			return
@@ -844,7 +844,12 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 		_, _, err := c.ReadFrom(b)
 		if err != nil {
 			fmt.Println("failed to receive message: %v", err)
-			c.SetReadDeadline(start.Add(time.Hour * 24))
+			if err.Error() != "resource temporarily unavailable" {
+				c.SetReadDeadline(start.Add(time.Hour * 24))
+				//	runtime.GC()
+				<-quit
+				return
+			}
 			continue
 		}
 		//*/
