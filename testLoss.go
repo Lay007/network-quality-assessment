@@ -3,15 +3,18 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"net"
-	"time"
-
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
+	"net"
+	"runtime"
+	"runtime/debug"
+	"time"
+
+	"golang.org/x/net/bpf"
 )
 
 func TestLoss(id int, net_interface_name string) { //Нагрузочное тестирование задержки
-	fmt.Println("Тест задержки начался")
+	fmt.Println("Тест потери пакетов начался")
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
 		db.Close()
@@ -20,16 +23,16 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" ----=====----")
 		return
 	}
-	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", time.Now(), 2, id) // Тест выполняется
+	db.Exec("UPDATE test_frame_loss SET status=?, datatime=? WHERE id=?", time.Now(), 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
-		db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		return
 	}
 
-	row, err := db.Query("select id, test_type, module_first, module_second, thr_begin, count_packs, count_tests, status from test_latency where id=?", id)
+	row, err := db.Query("select id, test_type, module_first, module_second, thr_begin, step, count_frames, count_steps, status from test_frame_loss where id=?", id)
 	if err != nil {
 		db.Close()
 		row.Close()
@@ -41,8 +44,8 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 	fmt.Println(row)
 	defer row.Close()
 	row.Next()
-	test := new(testDelay)
-	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count_packs, &test.count_tests, &test.status)
+	test := new(testLoss)
+	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.step, &test.count_frames, &test.count_steps, &test.status)
 	if err != nil {
 		db.Close()
 		fmt.Println(" -!! Error !!-")
@@ -58,7 +61,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
-		db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
 		row.Close()
 		fmt.Println(" -!! Error !!-")
@@ -70,7 +73,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		err = row.Scan(&ipsrcstr)
 		if err != nil {
 
-			db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			fmt.Println(" -!! Error !!-")
@@ -80,9 +83,9 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		}
 	}
 	var id_sfp1, id_sfp2 int
-	row, err = db.Query("SELECT module_first, module_second FROM test_latency WHERE id=?", id)
+	row, err = db.Query("SELECT module_first, module_second FROM test_frame_loss WHERE id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
 		row.Close()
 		fmt.Println(" -!! Error !!-")
@@ -94,7 +97,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		err = row.Scan(&id_sfp1, &id_sfp2)
 		if err != nil {
 
-			db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			fmt.Println(" -!! Error !!-")
@@ -104,7 +107,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		}
 		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			row_ip.Close()
@@ -118,7 +121,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 				db.Close()
 				row.Close()
 				fmt.Println(" -!! Error !!-")
@@ -130,7 +133,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			row_mac.Close()
@@ -147,7 +150,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 				db.Close()
 				row.Close()
 				fmt.Println(" -!! Error !!-")
@@ -165,7 +168,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			fmt.Println(" -!! Error !!-")
@@ -177,7 +180,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 			err = row_ip.Scan(&ipdst_2sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_frame_loss SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 				db.Close()
 				row.Close()
 				fmt.Println(" -!! Error !!-")
@@ -187,7 +190,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 			}
 		}
 	}
-	db.Exec("UPDATE test_latency SET status=?, datetime_start=? WHERE id=?", 2, time.Now(), id) // Тест выполняется
+	db.Exec("UPDATE test_frame_loss SET status=?, datetime_start=? WHERE id=?", 2, time.Now(), id) // Тест выполняется
 	db.Close()
 
 	fmt.Println(ipsrcstr)
@@ -285,82 +288,201 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 	}
 	fmt.Println(" Rez find : ", rez)
 
-	test.id_test_type = 0x2000 + (uint16(id) & 0x1FFF)
+	test.id_test_type = 0x8000 + (uint16(id) & 0x1FFF)
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
+	for step := 0; step < test.count_steps; step++ {
 
-	counter := make(chan int64, 7)
-	quit := make(chan int64, 7)
+		testRez := new(testLossRez)
+		testRez.id_test = id
+		testRez.step_number = step
 
-	size_p := 64
+		thr_step := test.thr_begin - step*(int(float32(test.thr_begin)*float32(test.step)/100.0))
 
-	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-	test.getMonDelay(quit, size_p)
-	time.Sleep(time.Second * 2)
-	<-quit
+		counter := make(chan int64, 7)
+		quit := make(chan int64, 7)
 
-	size_p = 128
+		size_p := 64
+		test.numberRx = 0
+		b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		go test.receivePacketsLoss(ifi.MTU, quit)
+		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		time.Sleep(time.Second * 2)
+		PacketsTx := <-counter
+		quit <- 1
+		time.Sleep(time.Second * 1)
+		testRez.rez_64 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
 
-	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-	test.getMonDelay(quit, size_p)
-	time.Sleep(time.Second * 2)
-	<-quit
+		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Receive Packets - ", test.numberRx)
 
-	size_p = 256
+		size_p = 128
+		test.numberRx = 0
+		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		go test.receivePacketsLoss(ifi.MTU, quit)
+		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		time.Sleep(time.Second * 2)
+		PacketsTx = <-counter
+		quit <- 1
+		time.Sleep(time.Second * 1)
+		testRez.rez_128 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
 
-	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-	test.getMonDelay(quit, size_p)
-	time.Sleep(time.Second * 2)
-	<-quit
+		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Receive Packets - ", test.numberRx)
 
-	size_p = 512
+		size_p = 256
+		test.numberRx = 0
+		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		go test.receivePacketsLoss(ifi.MTU, quit)
+		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		time.Sleep(time.Second * 2)
+		PacketsTx = <-counter
+		quit <- 1
+		time.Sleep(time.Second * 1)
+		testRez.rez_256 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
 
-	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-	test.getMonDelay(quit, size_p)
-	time.Sleep(time.Second * 2)
-	<-quit
+		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Receive Packets - ", test.numberRx)
 
-	size_p = 1024
+		size_p = 512
+		test.numberRx = 0
+		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		go test.receivePacketsLoss(ifi.MTU, quit)
+		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		time.Sleep(time.Second * 2)
+		PacketsTx = <-counter
+		quit <- 1
+		time.Sleep(time.Second * 1)
+		testRez.rez_512 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
 
-	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-	test.getMonDelay(quit, size_p)
-	time.Sleep(time.Second * 2)
-	<-quit
+		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Receive Packets - ", test.numberRx)
 
-	size_p = 1280
+		size_p = 1024
+		test.numberRx = 0
+		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		go test.receivePacketsLoss(ifi.MTU, quit)
+		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		time.Sleep(time.Second * 2)
+		PacketsTx = <-counter
+		quit <- 1
+		time.Sleep(time.Second * 1)
+		testRez.rez_1024 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
 
-	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-	test.getMonDelay(quit, size_p)
-	time.Sleep(time.Second * 2)
-	<-quit
+		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Receive Packets - ", test.numberRx)
 
-	size_p = 1518
+		size_p = 1280
+		test.numberRx = 0
+		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		go test.receivePacketsLoss(ifi.MTU, quit)
+		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		time.Sleep(time.Second * 2)
+		PacketsTx = <-counter
+		quit <- 1
+		time.Sleep(time.Second * 1)
+		testRez.rez_1280 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
 
-	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, 1500, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
-	test.getMonDelay(quit, 1500)
-	time.Sleep(time.Second * 2)
-	<-quit
+		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Receive Packets - ", test.numberRx)
 
+		size_p = 1518
+		test.numberRx = 0
+		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, 1500, 0, test.id_test_type, test.test_type)
+		go test.receivePacketsLoss(ifi.MTU, quit)
+		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		time.Sleep(time.Second * 2)
+		PacketsTx = <-counter
+		quit <- 1
+		time.Sleep(time.Second * 1)
+		testRez.rez_1518 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
+
+		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Receive Packets - ", test.numberRx)
+
+		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		if err != nil {
+			db.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+		db.Exec("INSERT INTO test_frame_loss_rez (id_test, step_number, rez_64, rez_128, rez_256, rez_512, rez_1024, rez_1280, rez_1518, rez_4096, rez_9000) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", testRez.id_test, testRez.step_number, testRez.rez_64, testRez.rez_128, testRez.rez_256, testRez.rez_512, testRez.rez_1024, testRez.rez_1280, testRez.rez_1518, testRez.rez_4096, testRez.rez_9000)
+		db.Close()
+	}
 	test.status = 3
 
 	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
 		db.Close()
-
 		fmt.Println(" -!! Error !!-")
 		fmt.Println(err)
 		fmt.Println(" ----=====----")
 		return
 	}
-	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, time.Now(), test.status, id)
-
+	db.Exec("UPDATE test_frame_loss SET datetime_end=?, status=? WHERE id=?", time.Now(), test.status, id)
 	db.Close()
+
+}
+
+func (test *testLoss) receivePacketsLoss(mtu int, quit chan int64) { //, counter chan<- int) {
+
+	ifi, err := net.InterfaceByName(test.net_interface_name)
+	if err != nil {
+		fmt.Println("failed to find interface %q: %v", test.net_interface_name, err)
+		return
+	}
+
+	var netConf *raw.Config = new(raw.Config)
+
+	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
+		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
+		bpf.LoadAbsolute{Off: 34, Size: 1},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
+		// Проверка идентификатора теста
+		bpf.LoadAbsolute{Off: 64, Size: 2},
+		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test.id_test_type), SkipTrue: 1},
+		// Verdict is "send up to 4k of the packet to userspace."
+		bpf.RetConstant{Val: 4096},
+		// Verdict is "ignore packet."
+		bpf.RetConstant{Val: 0},
+	})
+
+	c, err := raw.ListenPacket(ifi, etherType, netConf)
+
+	//	var f ethernet.Frame
+	b := make([]byte, mtu)
+	var ips [4]byte
+	copy(ips[:], (test.ipdst1).To4())
+
+	var t_ips [2]byte
+	t_ips[1] = byte(test.id_test_type & 0xFF)
+	t_ips[0] = byte((test.id_test_type >> 8) & 0xFF)
+	start := time.Now()
+	c.SetReadDeadline(start.Add(time.Second * time.Duration(1+test.count_frames)))
+	debug.SetGCPercent(-1)
+	fmt.Println("Start receive: ", time.Now())
+	for {
+		select {
+		case <-quit:
+			//quit <- k
+			runtime.GC()
+			fmt.Println("End receive: ", time.Now())
+			fmt.Println("Packets receive = ", test.numberRx)
+			return
+		default:
+		}
+		_, _, err := c.ReadFrom(b)
+		if err != nil {
+			fmt.Println("failed to receive message: %v", err)
+			if err.Error() != "resource temporarily unavailable"{
+			c.SetReadDeadline(start.Add(time.Hour * 24))
+			}
+			continue
+		}
+
+		(*test).numberRx++
+
+	}
 }

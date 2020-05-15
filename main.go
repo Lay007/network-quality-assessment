@@ -1214,7 +1214,7 @@ func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, int64) {
 
-	size_s := 1000
+	size_s := 10000
 	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
 	if len((*test).delay_solve_to) > size_s {
 		test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
@@ -1325,12 +1325,12 @@ func (test *testSLA) getJitter() float32 {
 
 func (test *testSLA) getJitterto(in_solve int64) float32 {
 	var jitter float32
-	l:=len((*test).delay_solve_to)
+	l := len((*test).delay_solve_to)
 	if l < 2 {
 		return jitter
 	}
 	jitter = float32((*test).delay_solve_to[l-1] - (*test).delay_solve_to[l-2])
-	
+
 	/*
 		var jitter, mean float32
 		var size_s int
@@ -1367,47 +1367,47 @@ func (test *testSLA) getJitterto(in_solve int64) float32 {
 func (test *testSLA) getJitterun(in_solve int64) float32 {
 	var jitter float32
 
-	l:=len((*test).delay_solve_un)
+	l := len((*test).delay_solve_un)
 	if l < 2 {
 		return jitter
 	}
 	jitter = float32((*test).delay_solve_un[l-1] - (*test).delay_solve_un[l-2])
 	/*
-	if len((*test).delay_solve_un) < 3 {
-		(*test).delay_solve_un = append((*test).delay_solve_un, in_solve)
-	}
-	jitter = float32((*test).delay_solve_un[2] - in_solve)
-	(*test).delay_solve_un[2] = in_solve
-	/*
-		var jitter, mean float32
-		var size_s int
-		var max, min int64
-
-		size_s = 100
-		(*test).delay_solve_un = append((*test).delay_solve_un, in_solve)
-		if len((*test).delay_solve_un) < (size_s + 1) {
-			return 0
+		if len((*test).delay_solve_un) < 3 {
+			(*test).delay_solve_un = append((*test).delay_solve_un, in_solve)
 		}
-		test.delay_solve_un = (*test).delay_solve_un[1:(size_s + 1)]
+		jitter = float32((*test).delay_solve_un[2] - in_solve)
+		(*test).delay_solve_un[2] = in_solve
+		/*
+			var jitter, mean float32
+			var size_s int
+			var max, min int64
 
-		max = (*test).delay_solve_un[0]
-		min = max
-		mean = float32((*test).delay_solve_un[0]) / float32(size_s)
+			size_s = 100
+			(*test).delay_solve_un = append((*test).delay_solve_un, in_solve)
+			if len((*test).delay_solve_un) < (size_s + 1) {
+				return 0
+			}
+			test.delay_solve_un = (*test).delay_solve_un[1:(size_s + 1)]
 
-		for ind := 1; ind < size_s; ind++ {
-			if max < (*test).delay_solve_un[ind] {
-				max = (*test).delay_solve_un[ind]
+			max = (*test).delay_solve_un[0]
+			min = max
+			mean = float32((*test).delay_solve_un[0]) / float32(size_s)
+
+			for ind := 1; ind < size_s; ind++ {
+				if max < (*test).delay_solve_un[ind] {
+					max = (*test).delay_solve_un[ind]
+				}
+				if min > (*test).delay_solve_un[ind] {
+					min = (*test).delay_solve_un[ind]
+				}
+				mean = mean + (float32((*test).delay_solve_un[ind]) / float32(size_s))
 			}
-			if min > (*test).delay_solve_un[ind] {
-				min = (*test).delay_solve_un[ind]
-			}
-			mean = mean + (float32((*test).delay_solve_un[ind]) / float32(size_s))
-		}
-		if (float32(max) - mean) > (mean - float32(min)) {
-			jitter = float32(max) - mean
-		} else {
-			jitter = mean - float32(min)
-		}*/
+			if (float32(max) - mean) > (mean - float32(min)) {
+				jitter = float32(max) - mean
+			} else {
+				jitter = mean - float32(min)
+			}*/
 	return jitter
 }
 

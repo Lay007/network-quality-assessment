@@ -248,3 +248,47 @@ type testY1564 struct {
 
 	id_test_type uint16
 }
+
+type testLoss struct {
+	id            int
+	test_type     int
+	module_first  int
+	module_second int
+	thr_begin     int
+	step          int
+
+	count_frames int
+	count_steps  int
+
+	net_interface_name string
+
+	ipsrc  net.IP
+	ipdst1 net.IP
+	ipdst2 net.IP
+
+	mac_src []byte
+	mac_dst []byte
+
+	numberTx uint32
+	numberRx uint32
+
+	status int
+
+	id_test_type uint16
+}
+
+type testLossRez struct {
+	id          int
+	id_test     int
+	step_number int
+
+	rez_64   float32
+	rez_128  float32
+	rez_256  float32
+	rez_512  float32
+	rez_1024 float32
+	rez_1280 float32
+	rez_1518 float32
+	rez_4096 float32
+	rez_9000 float32
+}

@@ -10,9 +10,9 @@ import (
 	"golang.org/x/net/bpf"
 	"math"
 	"net"
-	"time"
 	"runtime"
 	"runtime/debug"
+	"time"
 )
 
 func TestY1564(id int, net_interface_name string) { //Нагрузочное тестирование задержки
