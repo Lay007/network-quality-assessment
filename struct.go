@@ -6,7 +6,11 @@ type testSLA struct {
 	delay_solve    []int64
 	delay_solve_to []int64
 	delay_solve_un []int64
-	number         uint32
+
+	delay_to_sum int64
+	delay_un_sum int64
+
+	number uint32
 }
 
 type testThr struct {

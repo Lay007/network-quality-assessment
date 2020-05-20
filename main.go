@@ -9,7 +9,7 @@ import (
 	"math"
 	"math/rand"
 	"net"
-	//"runtime"
+	"runtime"
 	"time"
 	//"unsafe"
 	"golang.org/x/net/bpf"
@@ -76,7 +76,7 @@ func (h *iphdr) checksum() {
 
 func main() {
 
-	//runtime.GOMAXPROCS(1024)
+	runtime.GOMAXPROCS(1024)
 
 	//time.Sleep(100 * time.Second)
 
@@ -595,7 +595,6 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	c, err := raw.ListenPacket(ifi, etherType, netConf)
 	if err != nil {
 		fmt.Println("failed to listen: %v", err)
-		db.Close()
 
 		fmt.Println(" -!! Error !!-")
 		fmt.Println(err)
@@ -631,6 +630,9 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		if !circ {
 			counter--
 			if counter <= 0 {
+				db, _ = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 3, id)
+				db.Close()
 				break
 			}
 		}
@@ -1215,27 +1217,23 @@ func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 func (test *testSLA) getOneDelay(in_delay_to int64, in_delay_un int64) (int64, int64) {
 
 	size_s := 10000
+
 	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
+	(*test).delay_to_sum += in_delay_to
 	if len((*test).delay_solve_to) > size_s {
+		(*test).delay_to_sum -= (*test).delay_solve_to[0]
 		test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
 	}
-	mean_to := float32((*test).delay_solve_to[0]) / float32(len((*test).delay_solve_un))
-
-	for ind := 1; ind < len((*test).delay_solve_to); ind++ {
-
-		mean_to = mean_to + (float32((*test).delay_solve_to[ind]) / float32(len((*test).delay_solve_to)))
-	}
+	mean_to := (float32((*test).delay_to_sum) / float32(len((*test).delay_solve_to)))
 
 	(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
+	(*test).delay_un_sum += in_delay_un
 	if len((*test).delay_solve_un) > size_s {
+		(*test).delay_un_sum -= (*test).delay_solve_un[0]
 		test.delay_solve_un = (*test).delay_solve_un[1:(size_s + 1)]
 	}
-	mean_un := float32((*test).delay_solve_un[0]) / float32(len((*test).delay_solve_un))
+	mean_un := float32((*test).delay_un_sum) / float32(len((*test).delay_solve_un))
 
-	for ind := 1; ind < len((*test).delay_solve_un); ind++ {
-
-		mean_un = mean_un + (float32((*test).delay_solve_un[ind]) / float32(len((*test).delay_solve_un)))
-	}
 	/*
 		if len((*test).delay_solve_to) < 2 {
 

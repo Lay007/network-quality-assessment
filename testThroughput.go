@@ -7,6 +7,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	"runtime"
 
 	//set "syscall"
 	//"os"
@@ -894,7 +895,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	star_gen := time.Now()
 	var rez_time int64
 	ticker := time.NewTicker(time.Duration(period_nano))
-	done := make(chan bool)
+	done := make(chan int, 1)
 	fmt.Println("Start generate: ", time.Now())
 	go func() {
 		for {
@@ -922,12 +923,17 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 			}
 		}
 	}()
+	fmt.Println("G")
 	time.Sleep(time.Duration(period_sec) * time.Second)
 	ticker.Stop()
-	done <- true
+	fmt.Println("GG")
+	done <- 1
+	runtime.Gosched()
+	fmt.Println("GGG")
 	time.Sleep(1 * time.Second)
 	fmt.Println("Packed send - ", counter_rez)
 	counter <- counter_rez
+	fmt.Println("GGGG")
 	return rez_time
 }
 

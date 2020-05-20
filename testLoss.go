@@ -306,11 +306,15 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		test.numberRx = 0
 		b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
+		fmt.Println("*")
 		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
-		time.Sleep(time.Second * 1)
-		PacketsTx := <-counter
-		quit <- 1
+		fmt.Println("**")
 		time.Sleep(time.Second * 2)
+		fmt.Println("***")
+		PacketsTx := <-counter
+
+		quit <- 1
+		time.Sleep(time.Second * 1)
 		testRez.rez_64 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
@@ -460,7 +464,7 @@ func (test *testLoss) receivePacketsLoss(mtu int, quit chan int64) { //, counter
 	t_ips[1] = byte(test.id_test_type & 0xFF)
 	t_ips[0] = byte((test.id_test_type >> 8) & 0xFF)
 	start := time.Now()
-	c.SetReadDeadline(start.Add(time.Second * time.Duration(1+test.count_frames)))
+	c.SetReadDeadline(start.Add(time.Second * time.Duration(2+test.count_frames)))
 	//debug.SetGCPercent(-1)
 	fmt.Println("Start receive: ", time.Now())
 	for {
@@ -475,7 +479,8 @@ func (test *testLoss) receivePacketsLoss(mtu int, quit chan int64) { //, counter
 		}
 		_, _, err := c.ReadFrom(b)
 		if err != nil {
-			fmt.Println("failed to receive message: %v", err)
+			fmt.Println("receivePacketsLoss: failed to receive message: ", err)
+			fmt.Println("receivePacketsLoss: ", time.Now())
 			if err.Error() != "resource temporarily unavailable" {
 				c.SetReadDeadline(start.Add(time.Hour * 24))
 				//runtime.GC()
