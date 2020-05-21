@@ -27,6 +27,9 @@ import (
 
 func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
 	fmt.Println("Тест пропускной способности начался")
+	defer func() {
+		fmt.Println("Тест пропускной способности завершился")
+	}()
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
 		db.Close()
@@ -266,7 +269,6 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		bpf.RetConstant{Val: 0},
 	})
 
-	
 	period_test := test.count // период теста - 10 секунд
 
 	size := 64
@@ -329,6 +331,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	}
 	fmt.Println(" Rez find : ", rez)
+	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
 
@@ -338,6 +341,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	count_rez, per := test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+
+	fmt.Printf("End 64 goroutine num: %d\n", runtime.NumGoroutine())
 
 	size = 128
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
@@ -352,6 +357,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
 
+	fmt.Printf("End 128 goroutine num: %d\n", runtime.NumGoroutine())
+
+	//*
 	size = 256
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count = (int64(period_test * 1000000000)) / period_nano
@@ -410,6 +418,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	count_rez, per = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1518)
+
+	//*/
 	/*
 		b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type)
 		count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
@@ -473,6 +483,11 @@ func (c *mutexCounter) Set(val int64) {
 }
 
 func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, thr int, t_type uint16) (int, int64) {
+	fmt.Println("Start testThrGen")
+	defer func() {
+		fmt.Println("End testThrGen")
+	}()
+
 	time_to_gen := ((cnt * period_nano) * 150) / 100
 	time_gen := time.Duration(cnt * period_nano)
 	fmt.Println("		-- time_to_generate [ms] = ", (cnt*period_nano)/1000000)
@@ -481,6 +496,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.A
 	fmt.Println("		-- time gen ", time_gen)
 	fmt.Println("		-- cnt start= ", cnt)
 	fmt.Println("		-- pps = ", 1000000000/period_nano)
+	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
@@ -522,8 +538,9 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.A
 	time_gen_nano := genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
 	quit <- 1
 	runtime.Gosched()
-	conRcv.Close()
+
 	time.Sleep(time.Second * 5)
+	conRcv.Close()
 	rez := <-counter
 	fmt.Println("		 --->> rez_counterRez= ", rez)
 	fmt.Println("		 --->> time_gen_nano= ", time_gen_nano)
@@ -788,6 +805,9 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 
 	start := time.Now()
 	fmt.Println("Begin receive")
+	defer func() {
+		fmt.Println("Exit receive")
+	}()
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(test.period+1)))
 	//	oob :=make([]byte, mtu)
 	//var count int
@@ -795,55 +815,56 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 	for {
 		select {
 		case <-quit:
-			fmt.Println("End receive - counter = ",(*test).numberCounter)		
+			fmt.Println("End receive - counter = ", (*test).numberCounter)
 			return
 		default:
-		}
-		/*
-			n, oobn, flags ,_, err :=c.ReadMsgIP(b,oob)
+
+			/*
+				n, oobn, flags ,_, err :=c.ReadMsgIP(b,oob)
+				if err != nil {
+					fmt.Println(" -****- ")
+					fmt.Println(" n= ",n)
+					fmt.Println(" oobn= ",oobn)
+					fmt.Println(" oob= ",oob)
+					fmt.Println(" flags= ",flags)
+					fmt.Println(" -****- ")
+					continue
+				}
+			*/
+			//*
+			n, _, err := c.ReadFrom(b)
 			if err != nil {
-				fmt.Println(" -****- ")
-				fmt.Println(" n= ",n)
-				fmt.Println(" oobn= ",oobn)
-				fmt.Println(" oob= ",oob)
-				fmt.Println(" flags= ",flags)
-				fmt.Println(" -****- ")
+				fmt.Println("failed to receive message: ", err)
+				if err.Error() == "resource temporarily unavailable" {
+					//	(*test).number++
+				}
+				c.SetReadDeadline(start.Add(time.Hour * 24))
+				quit <- 1
+				runtime.Gosched()
 				continue
 			}
-		*/
-		//*
-		n, _, err := c.ReadFrom(b)
-		if err != nil {
-			fmt.Println("failed to receive message: ", err)
-			if err.Error() == "resource temporarily unavailable" {
-				//	(*test).number++
+			//*/
+			// Unpack Ethernet II frame into Go representation.
+			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
+				//log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 			}
-			c.SetReadDeadline(start.Add(time.Hour * 24))
-			quit <- 1
-			runtime.Gosched()
-			continue
-		}
-		//*/
-		// Unpack Ethernet II frame into Go representation.
-		if err := (&f).UnmarshalBinary(b[:n]); err != nil {
-			//log.Fatalf("failed to unmarshal ethernet frame: %v", err)
-		}
-		//fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
-		var ips [4]byte
-		copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
+			//fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
+			var ips [4]byte
+			copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
 
-		var t_ips [2]byte
-		t_ips[1] = byte(t_type & 0xFF)
-		t_ips[0] = byte((t_type >> 8) & 0xFF)
-		//fmt.Printf("\n\n--=T_so %x - \n", ips)
+			var t_ips [2]byte
+			t_ips[1] = byte(t_type & 0xFF)
+			t_ips[0] = byte((t_type >> 8) & 0xFF)
+			//fmt.Printf("\n\n--=T_so %x - \n", ips)
 
-		// Display source of message and message itself.
-		if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
-			//count++
-			//	fmt.Printf("-->>Detect")
-			//	counter <-count
-			//(*test).numberCounter = uint32(count)
-			(*test).numberCounter++
+			// Display source of message and message itself.
+			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+				//count++
+				//	fmt.Printf("-->>Detect")
+				//	counter <-count
+				//(*test).numberCounter = uint32(count)
+				(*test).numberCounter++
+			}
 		}
 	}
 }
@@ -852,7 +873,9 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 
 	size_p := len(packet)
 	period_nano := int64(size_p * 8 * 1000 / thr)
-
+	defer func() {
+		fmt.Println("Exit genSocket")
+	}()
 	fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
 	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
@@ -907,7 +930,8 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 			select {
 			case <-done:
 				fmt.Println("End generate: ", time.Now())
-				rez_time = (int64)(time.Since(star_gen))				
+				rez_time = (int64)(time.Since(star_gen))
+				runtime.Gosched()
 				return
 			case <-ticker.C:
 				for ind := 0; ind < int(Ring_col); ind++ {
@@ -915,6 +939,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 					if ee != nil {
 						fmt.Println("-Write buff error - ", ee)
 						rez_time = (int64)(time.Since(star_gen))
+						runtime.Gosched()
 						return
 					}
 				}
@@ -922,9 +947,11 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 				if err != nil {
 					fmt.Println("- Flush error - ", e)
 					rez_time = (int64)(time.Since(star_gen))
+					runtime.Gosched()
 					return
 				}
 				counter_rez = counter_rez + int64(cc)
+				runtime.Gosched()
 			}
 		}
 	}()

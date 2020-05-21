@@ -11,6 +11,7 @@ import (
 	"net"
 	"runtime"
 	"time"
+
 	//"unsafe"
 	"golang.org/x/net/bpf"
 
@@ -76,7 +77,7 @@ func (h *iphdr) checksum() {
 
 func main() {
 
-	runtime.GOMAXPROCS(1024)
+	//	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	//time.Sleep(100 * time.Second)
 
@@ -203,6 +204,7 @@ func main() {
 		fmt.Println("Net_NAME: ", conf.net_interface_name)
 		fmt.Println("interface: ", ifi.Name)
 		fmt.Println("Time now: ", time.Now())
+		fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
 		// проверка тестов пропускной способности
 		row_test_thr, err := db.Query("SELECT id FROM test_throughput WHERE status=1")
