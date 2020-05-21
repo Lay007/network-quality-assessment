@@ -251,18 +251,6 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		bpf.RetConstant{Val: 0},
 	})
 
-	c, err := raw.ListenPacket(ifi, etherType, netConf)
-
-	if err != nil {
-		//	log.Fatalf("failed to listen: %v", err)
-		db.Close()
-
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
-		return
-	}
-
 	period_test := test.count_prob_packs // период теста - 10 секунд
 
 	size := 64
@@ -334,7 +322,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	per = 0
 	for k := 0; k < test.count_probs; k++ {
 		test_c.numberCounter = 0
-		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 		count_rez = count_rez + count_rez_uni
 		per = per + per_uni
 	}
@@ -354,7 +342,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 	for k := 0; k < test.count_probs; k++ {
 		test_c.numberCounter = 0
-		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 		count_rez = count_rez + count_rez_uni
 		per = per + per_uni
 	}
@@ -370,7 +358,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 256, number, test_type, test.test_type)
 	for k := 0; k < test.count_probs; k++ {
 		test_c.numberCounter = 0
-		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 		count_rez = count_rez + count_rez_uni
 		per = per + per_uni
 	}
@@ -386,7 +374,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 512, number, test_type, test.test_type)
 	for k := 0; k < test.count_probs; k++ {
 		test_c.numberCounter = 0
-		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 		count_rez = count_rez + count_rez_uni
 		per = per + per_uni
 	}
@@ -402,7 +390,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	for k := 0; k < test.count_probs; k++ {
 		test_c.numberCounter = 0
-		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 		count_rez = count_rez + count_rez_uni
 		per = per + per_uni
 	}
@@ -418,7 +406,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	for k := 0; k < test.count_probs; k++ {
 		test_c.numberCounter = 0
-		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 		count_rez = count_rez + count_rez_uni
 		per = per + per_uni
 	}
@@ -434,7 +422,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	for k := 0; k < test.count_probs; k++ {
 		test_c.numberCounter = 0
-		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+		count_rez_uni, per_uni = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 		count_rez = count_rez + count_rez_uni
 		per = per + per_uni
 	}

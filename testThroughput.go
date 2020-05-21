@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
+	"runtime"
 	"sync"
 	"time"
-	"runtime"
 
 	//set "syscall"
 	//"os"
@@ -266,18 +266,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		bpf.RetConstant{Val: 0},
 	})
 
-	c, err := raw.ListenPacket(ifi, etherType, netConf)
-
-	if err != nil {
-		//	log.Fatalf("failed to listen: %v", err)
-		db.Close()
-
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
-		return
-	}
-
+	
 	period_test := test.count // период теста - 10 секунд
 
 	size := 64
@@ -291,6 +280,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 
 	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, test_type, test.test_type)
+	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
 		return
@@ -345,7 +335,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per := test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+	count_rez, per := test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
 
@@ -358,7 +348,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_128 = (float32)(128.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_128)
 
@@ -371,7 +361,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_256 = (float32)(256.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_256)
 
@@ -384,7 +374,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	//genSocket(ifi.Index, b, period_test, test.thr_begin)
 
 	//count_rez, per = test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_512 = (float32)(512.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_512)
 
@@ -396,7 +386,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	//genSocket(ifi.Index, b, period_test, test.thr_begin)
 
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1024)
 
@@ -407,7 +397,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	//genSocket(ifi.Index, b, period_test, test.thr_begin)
 
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1280)
 
@@ -417,7 +407,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	test_c.numberCounter = 0
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	//genSocket(ifi.Index, b, period_test, test.thr_begin)
-	count_rez, per = test_c.testThrGen(net_interface_name, b, c, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+	count_rez, per = test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_1518)
 	/*
@@ -482,7 +472,7 @@ func (c *mutexCounter) Set(val int64) {
 	c.mu.Unlock()
 }
 
-func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, thr int, t_type uint16) (int, int64) {
+func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, thr int, t_type uint16) (int, int64) {
 	time_to_gen := ((cnt * period_nano) * 150) / 100
 	time_gen := time.Duration(cnt * period_nano)
 	fmt.Println("		-- time_to_generate [ms] = ", (cnt*period_nano)/1000000)
@@ -512,7 +502,8 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 		// Выбор одного из 1000
 		bpf.LoadExtension{Num: bpf.ExtRand},
 		//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
-		bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
+		//bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
+		bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0xFFFFFFFF, SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
 		bpf.RetConstant{Val: 4096},
 		// Verdict is "ignore packet."
@@ -522,6 +513,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 	conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
 
 	quit := make(chan int, 1)
+	(*test).period = int16((cnt * period_nano) / 1000000000)
 
 	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
@@ -529,9 +521,12 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 
 	time_gen_nano := genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
 	quit <- 1
+	runtime.Gosched()
+	conRcv.Close()
 	time.Sleep(time.Second * 5)
 	rez := <-counter
 	fmt.Println("		 --->> rez_counterRez= ", rez)
+	fmt.Println("		 --->> time_gen_nano= ", time_gen_nano)
 	return int(rez), time_gen_nano
 
 	//ifi.Index
@@ -790,12 +785,17 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, c *raw.Conn
 func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit chan int, t_type uint16) { //, counter chan<- int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
+
+	start := time.Now()
+	fmt.Println("Begin receive")
+	c.SetReadDeadline(start.Add(time.Second * time.Duration(test.period+1)))
 	//	oob :=make([]byte, mtu)
 	//var count int
 	// Keep receiving messages forever.
 	for {
 		select {
 		case <-quit:
+			fmt.Println("End receive - counter = ",(*test).numberCounter)		
 			return
 		default:
 		}
@@ -814,8 +814,13 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 		//*
 		n, _, err := c.ReadFrom(b)
 		if err != nil {
-			//log.Fatalf("failed to receive message: %v", err)
-			fmt.Println(" -****- ")
+			fmt.Println("failed to receive message: ", err)
+			if err.Error() == "resource temporarily unavailable" {
+				//	(*test).number++
+			}
+			c.SetReadDeadline(start.Add(time.Hour * 24))
+			quit <- 1
+			runtime.Gosched()
 			continue
 		}
 		//*/
@@ -902,7 +907,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 			select {
 			case <-done:
 				fmt.Println("End generate: ", time.Now())
-				rez_time = (int64)(time.Since(star_gen))
+				rez_time = (int64)(time.Since(star_gen))				
 				return
 			case <-ticker.C:
 				for ind := 0; ind < int(Ring_col); ind++ {
@@ -929,6 +934,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	fmt.Println("GG")
 	done <- 1
 	runtime.Gosched()
+	zs.Close()
 	fmt.Println("GGG")
 	time.Sleep(1 * time.Second)
 	fmt.Println("Packed send - ", counter_rez)

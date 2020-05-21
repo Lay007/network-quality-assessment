@@ -17,6 +17,8 @@ type testThr struct {
 	testID        int
 	numberTx      uint32
 	numberCounter uint32
+
+	period int16
 }
 
 type iphdr struct {
