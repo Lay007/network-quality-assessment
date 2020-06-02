@@ -292,7 +292,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
 
-	counter := make(chan int64, 7)
+	counter := make(chan uint64, 7)
 	quit := make(chan int64, 7)
 
 	size_p := 64

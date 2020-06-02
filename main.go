@@ -825,7 +825,7 @@ func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, dist
 	}
 	copy(sfpdat.dst[:], ipdst2.To4())
 	(*test).numberTx++
-	sfpdat.number = test.numberTx
+	sfpdat.number = uint32(test.numberTx)
 	//ip.iplen = uint16(20 + 26 + 4)
 	ip.iplen = uint16(size)
 	ip.checksum()

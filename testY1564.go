@@ -294,7 +294,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
 
-	counter := make(chan int64, 1)
+	counter := make(chan uint64, 1)
 	quit := make(chan int64, 2)
 
 	//size_p := 64
@@ -334,7 +334,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_IR_s1 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_s1 = delay
 	test.rez_FVD_s1 = jitter
-	test.rez_FLR_s1 = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+	test.rez_FLR_s1 = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
 
 	PacketsRx = 0
 	test.numberRx = 0
@@ -349,7 +349,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.rez_IR_s2 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s2 = delay
 		test.rez_FVD_s2 = jitter
-		test.rez_FLR_s2 = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+		test.rez_FLR_s2 = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
 
 		PacketsRx = 0
 		test.numberRx = 0
@@ -366,7 +366,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.rez_IR_s3 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s3 = delay
 		test.rez_FVD_s3 = jitter
-		test.rez_FLR_s3 = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+		test.rez_FLR_s3 = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
 
 		PacketsRx = 0
 		test.numberRx = 0
@@ -383,7 +383,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.rez_IR_s4 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s4 = delay
 		test.rez_FVD_s4 = jitter
-		test.rez_FLR_s4 = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+		test.rez_FLR_s4 = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
 
 		PacketsRx = 0
 		test.numberRx = 0
@@ -398,7 +398,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_IR_eir = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_eir = delay
 	test.rez_FVD_eir = jitter
-	test.rez_FLR_eir = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+	test.rez_FLR_eir = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
 
 	PacketsRx = 0
 	test.numberRx = 0
@@ -411,7 +411,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_IR_tp = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_tp = delay
 	test.rez_FVD_tp = jitter
-	test.rez_FLR_tp = float32(PacketsRx-int64(test.numberRx)) / float32(PacketsRx)
+	test.rez_FLR_tp = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
 
 	PacketsRx = 0
 	test.numberRx = 0
@@ -574,7 +574,7 @@ func (test *testY1564) genFramesY1564(thr int, counter chan int64) int64 {
 	return rez_time
 }
 */
-func (test *testY1564) genFramesY1564(thr int, counter chan int64) int64 {
+func (test *testY1564) genFramesY1564(thr int, counter chan uint64) int64 {
 	time.Sleep(time.Millisecond * 10)
 	ifi, _ := net.InterfaceByName(test.net_interface_name)
 	b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, 1, test.id_test_type, test.test_type)

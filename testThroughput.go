@@ -7,8 +7,8 @@ import (
 	"net"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
-
 	//set "syscall"
 	//"os"
 	//"golang.org/x/sys/unix"
@@ -251,7 +251,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	test_type = 0x2000 + (uint16(id) & 0x1FFF)
 
 	var test_c testThr
-	test_c.numberCounter = uint32(test.count)
+	test_c.numberCounter = uint64(test.count)
 	test_c.testID = id
 
 	var netConf *raw.Config = new(raw.Config)
@@ -533,7 +533,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.A
 
 	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
-	counter := make(chan int64, 1)
+	counter := make(chan uint64, 1)
 
 	time_gen_nano := genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
 	quit <- 1
@@ -863,13 +863,14 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 				//	fmt.Printf("-->>Detect")
 				//	counter <-count
 				//(*test).numberCounter = uint32(count)
-				(*test).numberCounter++
+				atomic.AddUint64(&test.numberCounter, uint64(1))
+				//	(*test).numberCounter++
 			}
 		}
 	}
 }
 
-func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter chan int64) int64 {
+func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter chan uint64) int64 {
 
 	size_p := len(packet)
 	period_nano := int64(size_p * 8 * 1000 / thr)
@@ -892,7 +893,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 
 	period_nano = period_nano * int64(Ring_col)
 
-	var counter_rez int64
+	var counter_rez uint64
 	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
 	fmt.Printf("\n   period_nano = %d \n", period_nano)
 	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 4096, Ring_col, nettypes.All)
@@ -901,7 +902,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 		counter <- 0
 		return 0
 	}
-	zs.SetMAX()
+	//zs.SetMAX()
 
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
 	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
@@ -926,6 +927,9 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	done := make(chan int, 1)
 	fmt.Println("Start generate: ", time.Now())
 	go func() {
+		defer func() {
+			fmt.Println("Exit funcgenSocket")
+		}()
 		for {
 			select {
 			case <-done:
@@ -950,7 +954,8 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 					runtime.Gosched()
 					return
 				}
-				counter_rez = counter_rez + int64(cc)
+				//counter_rez = counter_rez + int64(cc)
+				atomic.AddUint64(&counter_rez, uint64(cc))
 				runtime.Gosched()
 			}
 		}

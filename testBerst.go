@@ -233,7 +233,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	test_type = 0x2000 + (uint16(id) & 0x1FFF)
 
 	var test_c testThr
-	test_c.numberCounter = uint32(test.count_prob_packs)
+	test_c.numberCounter = uint64(test.count_prob_packs)
 	test_c.testID = id
 
 	var netConf *raw.Config = new(raw.Config)

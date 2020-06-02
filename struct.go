@@ -15,8 +15,8 @@ type testSLA struct {
 
 type testThr struct {
 	testID        int
-	numberTx      uint32
-	numberCounter uint32
+	numberTx      uint64
+	numberCounter uint64
 
 	period int16
 }
@@ -275,8 +275,8 @@ type testLoss struct {
 	mac_src []byte
 	mac_dst []byte
 
-	numberTx uint32
-	numberRx uint32
+	numberTx int64
+	numberRx int64
 
 	status int
 

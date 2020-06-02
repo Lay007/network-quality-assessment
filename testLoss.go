@@ -299,7 +299,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 
 		thr_step := test.thr_begin - step*(int(float32(test.thr_begin)*float32(test.step)/100.0))
 
-		counter := make(chan int64, 7)
+		counter := make(chan uint64, 7)
 		quit := make(chan int64, 7)
 
 		size_p := 64
@@ -315,7 +315,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_64 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_64 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
@@ -329,7 +329,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		PacketsTx = <-counter
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_128 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_128 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
@@ -343,7 +343,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		PacketsTx = <-counter
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_256 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_256 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
@@ -357,7 +357,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		PacketsTx = <-counter
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_512 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_512 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
@@ -371,7 +371,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		PacketsTx = <-counter
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_1024 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_1024 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
@@ -385,7 +385,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		PacketsTx = <-counter
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_1280 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_1280 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
@@ -399,7 +399,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		PacketsTx = <-counter
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_1518 = float32(PacketsTx-int64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_1518 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
