@@ -67,12 +67,15 @@ type global_config struct {
 	QinQ_number        int
 }
 type module_sfp struct {
-	id         int
-	addres_mac int64
-	name       string
-	address_ip string
-	version    string
-	location   string
+	id          int
+	addres_mac  int64
+	name        string
+	address_ip  string
+	version     string
+	location    string
+	zabbix_node string
+
+	chan_stop chan int
 }
 
 type testThroughput struct {

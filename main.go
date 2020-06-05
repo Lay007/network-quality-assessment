@@ -81,6 +81,8 @@ func main() {
 
 	//time.Sleep(100 * time.Second)
 
+	modules := []module_sfp{}
+
 	// подключение к БД и обновление списка сетевых интерфейсов
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 	if err != nil {
@@ -110,12 +112,17 @@ func main() {
 	}
 
 	// Оценка выполнения тестов
-	db.Exec("UPDATE test_throughput SET status=4 WHERE status=2")
 	db.Exec("UPDATE test_sla_real SET status=1 WHERE status=2")
+
+	db.Exec("UPDATE test_throughput SET status=4 WHERE status=2")
+	db.Exec("UPDATE test_bert SET status=4 WHERE status=2")
+	db.Exec("UPDATE test_latency SET status=4 WHERE status=2")
+	db.Exec("UPDATE test_frame_loss SET status=4 WHERE status=2")
+	db.Exec("UPDATE test_y1564 SET status=4 WHERE status=2")
 
 	db.Close()
 
-	t := time.NewTicker(10 * time.Second) //проверка один раз в 10 секунд
+	t := time.NewTicker(15 * time.Second) //проверка один раз в 15 секунд
 	for range t.C {
 
 		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
@@ -157,6 +164,12 @@ func main() {
 
 		fmt.Println(conf.server_ip)
 
+		// Stop check SNMP
+		for _, v := range modules {
+			v.chan_stop <- 1
+		}
+		runtime.Gosched()
+
 		row_modules, err := db.Query("select * from modules_sfp_sla")
 		defer row_modules.Close()
 		if err != nil {
@@ -167,19 +180,24 @@ func main() {
 			fmt.Println(" ----=====----")
 			continue
 		}
-
-		modules := []module_sfp{}
+		modules_up := []module_sfp{}
+		
+		for _, v := range modules {
+			go v.startSNMP(*conf)
+		}
 
 		for row_modules.Next() {
 			m := module_sfp{}
-			err = row_modules.Scan(&m.id, &m.addres_mac, &m.name, &m.address_ip, &m.version, &m.location)
+			err = row_modules.Scan(&m.id, &m.addres_mac, &m.name, &m.address_ip, &m.version, &m.zabbix_node, &m.location)
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
+			m.chan_stop = make(chan int,1)
 			fmt.Println(m.address_ip)
-			modules = append(modules, m)
+			modules_up = append(modules, m)
 		}
+		modules = modules_up
 		row_modules.Close()
 		//defer db.Close()
 
