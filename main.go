@@ -1,7 +1,6 @@
 package main //serverSLA
 
 import (
-	. "./go-zabbix"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -11,6 +10,8 @@ import (
 	"net"
 	"runtime"
 	"time"
+
+	. "./go-zabbix"
 
 	//"unsafe"
 	"golang.org/x/net/bpf"
@@ -166,6 +167,7 @@ func main() {
 
 		// Stop check SNMP
 		for _, v := range modules {
+			fmt.Println("Chan stop ", v.address_ip)
 			v.chan_stop <- 1
 		}
 		runtime.Gosched()
@@ -181,10 +183,7 @@ func main() {
 			continue
 		}
 		modules_up := []module_sfp{}
-		
-		for _, v := range modules {
-			go v.startSNMP(*conf)
-		}
+		fmt.Println("Modules update")
 
 		for row_modules.Next() {
 			m := module_sfp{}
@@ -193,14 +192,16 @@ func main() {
 				fmt.Println(err)
 				continue
 			}
-			m.chan_stop = make(chan int,1)
+			m.chan_stop = make(chan int, 1)
 			fmt.Println(m.address_ip)
 			modules_up = append(modules, m)
 		}
 		modules = modules_up
 		row_modules.Close()
 		//defer db.Close()
-
+		for _, v := range modules {
+			go v.startSNMP(*conf)
+		}
 		//go zabbixHello("SFP-SLA_4401")
 
 		if conf.net_interface_name == "0" {
