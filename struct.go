@@ -279,7 +279,7 @@ type testLoss struct {
 	mac_dst []byte
 
 	numberTx int64
-	numberRx int64
+	numberRx uint64
 
 	status int
 

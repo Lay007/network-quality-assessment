@@ -3,16 +3,18 @@ package main
 import (
 	"fmt"
 	//	"log"
-	"net"
-	"time"
-
 	. "./go-zabbix"
 	g "github.com/soniah/gosnmp"
+	"net"
+	"sync"
+	"time"
 
 	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 )
+
+var mux_SNMP sync.Mutex
 
 func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, test_type uint16, testWay int) int {
 
@@ -31,16 +33,19 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 			timer_SNMP.Stop()
 			break
 		}
+		mux_SNMP.Lock()
 		g.Default.Target = ip_1sfpsla_str
 		err := g.Default.Connect()
 		if err != nil {
 			fmt.Printf("Connect to SFP1 error: %v", err)
+			mux_SNMP.Unlock()
 			return 0
 		}
 
 		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
 		if err2 != nil {
 			fmt.Printf("Get() err: %v", err2)
+			mux_SNMP.Unlock()
 		}
 		for _, variable := range result.Variables {
 			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
@@ -59,14 +64,17 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 		err = g.Default.Connect()
 		if err != nil {
 			fmt.Printf("Connect to SFP2 error: %v", err)
+			mux_SNMP.Unlock()
 			return 0
 		}
 
 		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
 		if err2 != nil {
 			fmt.Printf("Get() err: %v", err2)
+			mux_SNMP.Unlock()
 		}
 		g.Default.Conn.Close()
+		mux_SNMP.Unlock()
 		for _, variable := range result.Variables {
 			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
 			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
@@ -79,7 +87,6 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 			}
 		}
 
-		g.Default.Conn.Close()
 	}
 
 	fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", float32(SFP1_com_init*8)/10000000.0, float32(SFP1_laz_init*8)/10000000.0)
@@ -117,18 +124,22 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 			timer_SNMP.Stop()
 			break
 		}
+		mux_SNMP.Lock()
 		g.Default.Target = ip_1sfpsla_str
 		err := g.Default.Connect()
 		if err != nil {
 			fmt.Printf("Connect to SFP1 error: %v", err)
+			mux_SNMP.Unlock()
 			return 0
 		}
 
 		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
 		if err2 != nil {
 			fmt.Printf("Get() err: %v", err2)
+			mux_SNMP.Unlock()
 		}
 		g.Default.Conn.Close()
+		mux_SNMP.Unlock()
 		for _, variable := range result.Variables {
 			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
 			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
@@ -141,18 +152,22 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 			}
 		}
 
+		mux_SNMP.Lock()
 		g.Default.Target = ip_2sfpsla_str
 		err = g.Default.Connect()
 		if err != nil {
 			fmt.Printf("Connect to SFP2 error: %v", err)
+			mux_SNMP.Unlock()
 			return 0
 		}
 
 		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
 		if err2 != nil {
 			fmt.Printf("Get() err: %v", err2)
+			mux_SNMP.Unlock()
 		}
 		g.Default.Conn.Close()
+		mux_SNMP.Unlock()
 		for _, variable := range result.Variables {
 			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
 			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
@@ -164,7 +179,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 				SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
 			}
 		}
-		g.Default.Conn.Close()
+
 	}
 
 	SFP1_com_load = SFP1_com_load - SFP1_com_init
@@ -192,7 +207,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 
 func (module *module_sfp) startSNMP(conf global_config) {
 
-	fmt.Println("Star SNMP_check - ", module.address_ip)
+	fmt.Println("Start SNMP_check - ", (*module).address_ip)
 	if conf.net_interface_name == "" {
 		fmt.Println("null net_interface_name")
 		return
@@ -202,33 +217,39 @@ func (module *module_sfp) startSNMP(conf global_config) {
 	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
 
 	timer_SNMP := time.NewTicker(1000 * time.Millisecond)
+//	timer_SNMP.C <- time.Now()
+
 	for range timer_SNMP.C {
 		select {
-		case <-module.chan_stop:
-			fmt.Println("End SNMP_check - ", module.address_ip)
+		case <-(*module).chan_stop:
+			fmt.Println("End SNMP_check - ", (*module).address_ip)
 			timer_SNMP.Stop()
 			return
 		default:
 			{
-				g.Default.Target = module.address_ip
+				mux_SNMP.Lock()
+				g.Default.Target = (*module).address_ip
 				err := g.Default.Connect()
 				if err != nil {
 					fmt.Printf("Connect to SFP error: %v", err)
+					mux_SNMP.Unlock()
 					continue
 				}
 
 				result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
 				if err2 != nil {
 					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
 				}
+				var metrics []*Metric
 				for _, variable := range result.Variables {
 					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-					var metrics []*Metric
+
 					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
 
 						SFP_com = g.ToBigInt(variable.Value).Int64() * 8
 
-						metrics = append(metrics, NewMetric(module.zabbix_node, "band_to_comm", fmt.Sprint(SFP_com), time.Now().Unix()))
+						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_comm", fmt.Sprint(SFP_com), time.Now().Unix()))
 
 						// Create instance of Packet class
 
@@ -238,29 +259,33 @@ func (module *module_sfp) startSNMP(conf global_config) {
 
 						SFP_laz = g.ToBigInt(variable.Value).Int64() * 8
 
-						metrics = append(metrics, NewMetric(module.zabbix_node, "band_to_lazer", fmt.Sprint(SFP_laz), time.Now().Unix()))
+						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_lazer", fmt.Sprint(SFP_laz), time.Now().Unix()))
 
 					}
-
-					packet := NewPacket(metrics)
-					// Send packet to zabbix
-					z := NewSender(conf.zabbix_server_name, conf.zabbix_server_port)
-					z.Send(packet)
-
-					db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-					if err != nil {
-						db.Close()
-
-						fmt.Println(" -!! Error !!-")
-						fmt.Println(err)
-						fmt.Println(" ----=====----")
-						return
-					}
-					db.Exec("INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) VALUES(?, ?, ?, ?)", module.id, time.Now(), SFP_laz, SFP_com)
-					db.Close()
-
 				}
+				packet := NewPacket(metrics)
+				// Send packet to zabbix
+				z := NewSender(conf.zabbix_server_name, conf.zabbix_server_port)
+				z.Send(packet)
+
+				db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+				if err != nil {
+					db.Close()
+					mux_SNMP.Unlock()
+					fmt.Println(" -!! Error !!-")
+					fmt.Println(err)
+					fmt.Println(" ----=====----")
+					return
+				}
+				//rez,er:=
+				db.Exec("INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) VALUES(?, NOW(), ?, ?)", (*module).id, SFP_laz, SFP_com)
+				//fmt.Println("Rez add module metric: ",rez)
+				//fmt.Println("Error add module metric: ",er)
+			//	fmt.Println(" add metric - ", time.Now())
+				db.Close()
+
 				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
 			}
 		}
 	}

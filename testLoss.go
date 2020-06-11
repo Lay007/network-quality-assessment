@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"sync/atomic"
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 	"net"
@@ -490,7 +491,7 @@ func (test *testLoss) receivePacketsLoss(mtu int, quit chan int64) { //, counter
 			continue
 		}
 
-		(*test).numberRx++
-
+		//(*test).numberRx++
+		atomic.AddUint64(&test.numberRx, uint64(1))
 	}
 }

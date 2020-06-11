@@ -38,7 +38,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		fmt.Println(" ----=====----")
 		return
 	}
-	db.Exec("UPDATE test_throughput SET status=?, datatime=? WHERE id=?", time.Now(), 2, id) // Тест выполняется
+	db.Exec("UPDATE test_throughput SET status=?, datatime=NOW() WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()

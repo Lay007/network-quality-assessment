@@ -166,11 +166,12 @@ func main() {
 		fmt.Println(conf.server_ip)
 
 		// Stop check SNMP
-		for _, v := range modules {
-			fmt.Println("Chan stop ", v.address_ip)
-			v.chan_stop <- 1
+		for i_m, _ := range modules {
+			fmt.Println("Chan stop ", modules[i_m].address_ip)
+			(&modules[i_m]).chan_stop <- 1
 		}
 		runtime.Gosched()
+		//time.Sleep(time.Second)
 
 		row_modules, err := db.Query("select * from modules_sfp_sla")
 		defer row_modules.Close()
@@ -194,13 +195,13 @@ func main() {
 			}
 			m.chan_stop = make(chan int, 1)
 			fmt.Println(m.address_ip)
-			modules_up = append(modules, m)
+			modules_up = append(modules_up, m)
 		}
 		modules = modules_up
 		row_modules.Close()
 		//defer db.Close()
-		for _, v := range modules {
-			go v.startSNMP(*conf)
+		for _i_m, _ := range modules {
+			go (&modules[_i_m]).startSNMP(*conf)
 		}
 		//go zabbixHello("SFP-SLA_4401")
 
