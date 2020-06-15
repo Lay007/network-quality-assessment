@@ -291,10 +291,12 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	fmt.Println(" Rez find : ", rez)
 
 	test.id_test_type = 0xE000 + (uint16(id) & 0x1FFF)
+	test.id_test_type_temp = 0x2000 + (uint16(id) & 0x1FFF)
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
 
 	counter := make(chan uint64, 1)
+	counterRes := make(chan uint64, 1)
 	quit := make(chan int64, 2)
 
 	//size_p := 64
@@ -326,30 +328,32 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	}
 	//	b := packetFormY1546(ToS_tag, test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, test.block_size, 0, test.id_test_type, test.test_type)
 
-	go test.genFramesY1564(thr_s[0], counter)
+	go test.genFramesY1564(thr_s[0], counter, counterRes)
 	delay, jitter := test.getMetricsY1564(quit)
 	time.Sleep(time.Second * 2)
 	<-quit
 	PacketsRx := <-counter
+	PacketsRxRes := <-counterRes
 	test.rez_IR_s1 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_s1 = delay
 	test.rez_FVD_s1 = jitter
-	test.rez_FLR_s1 = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
+	test.rez_FLR_s1 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
 	PacketsRx = 0
 	test.numberRx = 0
 
 	if test.step_count > 1 {
 
-		go test.genFramesY1564(thr_s[1], counter)
+		go test.genFramesY1564(thr_s[1], counter, counterRes)
 		delay, jitter := test.getMetricsY1564(quit)
 		time.Sleep(time.Second * 2)
 		<-quit
 		PacketsRx := <-counter
+		PacketsRxRes := <-counterRes
 		test.rez_IR_s2 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s2 = delay
 		test.rez_FVD_s2 = jitter
-		test.rez_FLR_s2 = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
+		test.rez_FLR_s2 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
 		PacketsRx = 0
 		test.numberRx = 0
@@ -358,15 +362,16 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	if test.step_count > 2 {
 
-		go test.genFramesY1564(thr_s[2], counter)
+		go test.genFramesY1564(thr_s[2], counter,counterRes)
 		delay, jitter := test.getMetricsY1564(quit)
 		time.Sleep(time.Second * 2)
 		<-quit
 		PacketsRx := <-counter
+		PacketsRxRes := <-counterRes
 		test.rez_IR_s3 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s3 = delay
 		test.rez_FVD_s3 = jitter
-		test.rez_FLR_s3 = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
+		test.rez_FLR_s3 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
 		PacketsRx = 0
 		test.numberRx = 0
@@ -375,43 +380,46 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	if test.step_count > 3 {
 
-		go test.genFramesY1564(thr_s[3], counter)
+		go test.genFramesY1564(thr_s[3], counter, counterRes)
 		delay, jitter := test.getMetricsY1564(quit)
 		time.Sleep(time.Second * 2)
 		<-quit
 		PacketsRx := <-counter
+		PacketsRxRes := <-counterRes
 		test.rez_IR_s4 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s4 = delay
 		test.rez_FVD_s4 = jitter
-		test.rez_FLR_s4 = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
+		test.rez_FLR_s4 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
 		PacketsRx = 0
 		test.numberRx = 0
 
 	}
 
-	go test.genFramesY1564(test.CIR+test.EIR, counter)
+	go test.genFramesY1564(test.CIR+test.EIR, counter, counterRes)
 	delay, jitter = test.getMetricsY1564(quit)
 	time.Sleep(time.Second * 2)
 	<-quit
 	PacketsRx = <-counter
+	PacketsRxRes = <-counterRes
 	test.rez_IR_eir = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_eir = delay
 	test.rez_FVD_eir = jitter
-	test.rez_FLR_eir = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
+	test.rez_FLR_eir = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
 	PacketsRx = 0
 	test.numberRx = 0
 
-	go test.genFramesY1564(test.CIR+test.TP, counter)
+	go test.genFramesY1564(test.CIR+test.TP, counter, counterRes)
 	delay, jitter = test.getMetricsY1564(quit)
 	time.Sleep(time.Second * 2)
 	<-quit
 	PacketsRx = <-counter
+	PacketsRxRes = <-counterRes
 	test.rez_IR_tp = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_tp = delay
 	test.rez_FVD_tp = jitter
-	test.rez_FLR_tp = float32(PacketsRx-uint64(test.numberRx)) / float32(PacketsRx)
+	test.rez_FLR_tp = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
 	PacketsRx = 0
 	test.numberRx = 0
@@ -574,12 +582,13 @@ func (test *testY1564) genFramesY1564(thr int, counter chan int64) int64 {
 	return rez_time
 }
 */
-func (test *testY1564) genFramesY1564(thr int, counter chan uint64) int64 {
+func (test *testY1564) genFramesY1564(thr int, counter chan uint64, counterRes chan uint64) int64 {
 	time.Sleep(time.Millisecond * 10)
 	ifi, _ := net.InterfaceByName(test.net_interface_name)
 	b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, 1, test.id_test_type, test.test_type)
+	bTemp := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, 1, test.id_test_type_temp, test.test_type)
 	//counter := make(chan int64, 1)
-	rez_time := genSocket(ifi.Index, b, test.period, thr, counter)
+	rez_time := genSocket(ifi.Index, b, bTemp, test.period, thr, counter, counterRes)
 
 	return rez_time
 }

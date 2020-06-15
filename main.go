@@ -431,7 +431,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 
 	db.Exec("UPDATE test_sla_real SET data_start=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), id) // Добавление времени начала
-	fmt.Println("Test time - ",time.Now())
+	fmt.Println("Test time - ", time.Now())
 	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()

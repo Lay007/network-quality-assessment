@@ -535,8 +535,9 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.A
 	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
 
 	counter := make(chan uint64, 1)
+	counterRes := make(chan uint64, 1)
 
-	time_gen_nano := genSocket(ifi.Index, b, int((cnt*period_nano)/1000000000), thr, counter)
+	time_gen_nano := genSocket(ifi.Index, b,b, int((cnt*period_nano)/1000000000), thr, counter, counterRes)
 	quit <- 1
 	runtime.Gosched()
 
@@ -950,6 +951,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 							runtime.Gosched()
 							return
 						}
+						atomic.AddUint64(&counter_rez_r, uint64(1))
 					} else {
 						_, ee := zs.WriteToBuffer(packetTemp, uint16(size_p))
 						if ee != nil {
@@ -958,7 +960,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 							runtime.Gosched()
 							return
 						}
-						atomic.AddUint64(&counter_rez_r, uint64(1))
+						
 					}
 				}
 				cc, err, e := zs.FlushFrames()

@@ -290,7 +290,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 	fmt.Println(" Rez find : ", rez)
 
 	test.id_test_type = 0x8000 + (uint16(id) & 0x1FFF)
-	testTypeTemp:=0x2000 + (uint16(id) & 0x1FFF)
+	testTypeTemp := 0x2000 + (uint16(id) & 0x1FFF)
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
 	for step := 0; step < test.count_steps; step++ {
@@ -302,6 +302,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		thr_step := test.thr_begin - step*(int(float32(test.thr_begin)*float32(test.step)/100.0))
 
 		counter := make(chan uint64, 7)
+		counterRes := make(chan uint64, 7)
 		quit := make(chan int64, 7)
 
 		size_p := 64
@@ -310,99 +311,118 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		bTemp := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
 		fmt.Println("*")
-		go genSocket(ifi.Index, b,bTemp, test.count_frames, thr_step, counter)
+		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
 		fmt.Println("**")
 		time.Sleep(time.Second * 2)
 		fmt.Println("***")
 		PacketsTx := <-counter
-
+		PacketsTxRes := <-counterRes
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_64 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_64 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 128
 		test.numberRx = 0
+		test.numberRxRes = 0
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
-		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
 		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
+		PacketsTxRes = <-counterRes
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_128 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_128 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 256
 		test.numberRx = 0
+		test.numberRxRes = 0
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
-		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
 		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
+		PacketsTxRes = <-counterRes
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_256 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_256 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 512
 		test.numberRx = 0
+		test.numberRxRes = 0
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
-		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
 		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
+		PacketsTxRes = <-counterRes
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_512 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_512 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 1024
 		test.numberRx = 0
+		test.numberRxRes = 0
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
-		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
 		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
+		PacketsTxRes = <-counterRes
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_1024 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_1024 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 1280
 		test.numberRx = 0
+		test.numberRxRes = 0
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
-		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
 		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
+		PacketsTxRes = <-counterRes
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_1280 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_1280 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 1518
 		test.numberRx = 0
+		test.numberRxRes = 0
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, 1500, 0, test.id_test_type, test.test_type)
+		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, 1500, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
-		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
 		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
+		PacketsTxRes = <-counterRes
 		quit <- 1
 		time.Sleep(time.Second * 1)
-		testRez.rez_1518 = float32(PacketsTx-uint64(test.numberRx)) / float32(PacketsTx)
+		testRez.rez_1518 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Receive Packets - ", test.numberRx)

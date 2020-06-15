@@ -46,10 +46,10 @@ type sfpsla struct {
 	//                            15    14    13   12 11 10 09 08 07 06 05 04 03 02 01 00
 	//                   test type:   0     0     0  - test Real SLA
 
-	//          4000     test type:   0     1     0  - test RFC 2544 - Пропускная способность 
-	//          6000     test type:   0     1     1  - test RFC 2544 - Задержка 
-	//          8000     test type:   1     0     0  - test RFC 2544 - Потеря пакетов 
-	//          C000     test type:   1     1     0  - test RFC 2544 - Берстность	
+	//          4000     test type:   0     1     0  - test RFC 2544 - Пропускная способность
+	//          6000     test type:   0     1     1  - test RFC 2544 - Задержка
+	//          8000     test type:   1     0     0  - test RFC 2544 - Потеря пакетов
+	//          C000     test type:   1     1     0  - test RFC 2544 - Берстность
 	//          E000     test type:   1     1     1  - test Y.1544
 	//          2000     test type:   0     0     1  - test RFC 2544 - Пакеты нагрузки
 }
@@ -218,8 +218,9 @@ type testY1564 struct {
 	mac_src []byte
 	mac_dst []byte
 
-	numberTx uint32
-	numberRx uint32
+	numberTx    uint32
+	numberRx    uint32
+	numberRxRes uint32
 
 	rez_IR_s1  float32
 	rez_FTD_s1 float32
@@ -254,6 +255,7 @@ type testY1564 struct {
 	status int
 
 	id_test_type uint16
+	id_test_type_temp uint16
 }
 
 type testLoss struct {
@@ -276,8 +278,9 @@ type testLoss struct {
 	mac_src []byte
 	mac_dst []byte
 
-	numberTx int64
-	numberRx uint64
+	numberTx    int64
+	numberRx    uint64
+	numberRxRes uint64
 
 	status int
 

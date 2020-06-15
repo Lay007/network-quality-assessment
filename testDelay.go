@@ -288,17 +288,21 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	}
 	fmt.Println(" Rez find : ", rez)
 
-	test.id_test_type = 0x2000 + (uint16(id) & 0x1FFF)
+	test.id_test_type = 0x6000 + (uint16(id) & 0x1FFF)
+	testTypeTemp := 0x2000 + (uint16(id) & 0x1FFF)
+
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
 
 	counter := make(chan uint64, 7)
+	counterRes := make(chan uint64, 7)
 	quit := make(chan int64, 7)
 
 	size_p := 64
 
-	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
+	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)	
+	bTemp := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
+	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
@@ -306,7 +310,8 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	size_p = 128
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
+	bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
+	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
@@ -314,7 +319,8 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	size_p = 256
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
+	bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
+	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
@@ -322,7 +328,8 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	size_p = 512
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
+	bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
+	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
@@ -330,7 +337,8 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	size_p = 1024
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
+	bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)	
+	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
@@ -338,7 +346,8 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	size_p = 1280
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
+	bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
+	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
@@ -346,7 +355,8 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	size_p = 1518
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, 1500, 0, test.id_test_type, test.test_type)
-	go genSocket(ifi.Index, b, test.count_packs, test.thr_begin, counter)
+	bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, 1500, 0, testTypeTemp, test.test_type)
+	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, 1500)
 	time.Sleep(time.Second * 2)
 	<-quit
