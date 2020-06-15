@@ -9,6 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
 	//set "syscall"
 	//"os"
 	//"golang.org/x/sys/unix"
@@ -870,9 +871,10 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 	}
 }
 
-func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter chan uint64) int64 {
+func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, thr int, counter chan uint64, counterRes chan uint64) int64 {
 
 	size_p := len(packet)
+
 	period_nano := int64(size_p * 8 * 1000 / thr)
 	defer func() {
 		fmt.Println("Exit genSocket")
@@ -894,6 +896,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	period_nano = period_nano * int64(Ring_col)
 
 	var counter_rez uint64
+	var counter_rez_r uint64
 	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
 	fmt.Printf("\n   period_nano = %d \n", period_nano)
 	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 4096, Ring_col, nettypes.All)
@@ -939,12 +942,23 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 				return
 			case <-ticker.C:
 				for ind := 0; ind < int(Ring_col); ind++ {
-					_, ee := zs.WriteToBuffer(packet, uint16(size_p))
-					if ee != nil {
-						fmt.Println("-Write buff error - ", ee)
-						rez_time = (int64)(time.Since(star_gen))
-						runtime.Gosched()
-						return
+					if ind == 0 {
+						_, ee := zs.WriteToBuffer(packet, uint16(size_p))
+						if ee != nil {
+							fmt.Println("-Write buff error - ", ee)
+							rez_time = (int64)(time.Since(star_gen))
+							runtime.Gosched()
+							return
+						}
+					} else {
+						_, ee := zs.WriteToBuffer(packetTemp, uint16(size_p))
+						if ee != nil {
+							fmt.Println("-Write buff error - ", ee)
+							rez_time = (int64)(time.Since(star_gen))
+							runtime.Gosched()
+							return
+						}
+						atomic.AddUint64(&counter_rez_r, uint64(1))
 					}
 				}
 				cc, err, e := zs.FlushFrames()
@@ -971,6 +985,7 @@ func genSocket(ifiIndex int, packet []byte, period_sec int, thr int, counter cha
 	time.Sleep(1 * time.Second)
 	fmt.Println("Packed send - ", counter_rez)
 	counter <- counter_rez
+	counterRes <- counter_rez_r
 	fmt.Println("GGGG")
 	return rez_time
 }

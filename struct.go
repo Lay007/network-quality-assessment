@@ -46,14 +46,12 @@ type sfpsla struct {
 	//                            15    14    13   12 11 10 09 08 07 06 05 04 03 02 01 00
 	//                   test type:   0     0     0  - test Real SLA
 
-	//          2000     test type:   0     0     1  - test RFC 2544 - Пропускная способность (нагрузка)
-	//          4000     test type:   0     1     0  - test RFC 2544 - Пропускная способность (мониторинг)
-	//          2000     test type:   0     0     1  - test RFC 2544 - Задержка (нагрузка)
-	//          6000     test type:   0     1     1  - test RFC 2544 - Задержка (мониторинг)
-	//          8000     test type:   1     0     0  - test RFC 2544 - Потеря пакетов (нагрузка)
-	//          A000     test type:   1     0     1  - test RFC 2544 - Потеря пакетов (мониторинг)
-	//          C000     test type:   1     1     0  - test RFC 2544 - Берстность
+	//          4000     test type:   0     1     0  - test RFC 2544 - Пропускная способность 
+	//          6000     test type:   0     1     1  - test RFC 2544 - Задержка 
+	//          8000     test type:   1     0     0  - test RFC 2544 - Потеря пакетов 
+	//          C000     test type:   1     1     0  - test RFC 2544 - Берстность	
 	//          E000     test type:   1     1     1  - test Y.1544
+	//          2000     test type:   0     0     1  - test RFC 2544 - Пакеты нагрузки
 }
 
 type global_config struct {

@@ -290,6 +290,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 	fmt.Println(" Rez find : ", rez)
 
 	test.id_test_type = 0x8000 + (uint16(id) & 0x1FFF)
+	testTypeTemp:=0x2000 + (uint16(id) & 0x1FFF)
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
 	for step := 0; step < test.count_steps; step++ {
@@ -306,9 +307,10 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		size_p := 64
 		test.numberRx = 0
 		b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
+		bTemp := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
 		fmt.Println("*")
-		go genSocket(ifi.Index, b, test.count_frames, thr_step, counter)
+		go genSocket(ifi.Index, b,bTemp, test.count_frames, thr_step, counter)
 		fmt.Println("**")
 		time.Sleep(time.Second * 2)
 		fmt.Println("***")
