@@ -3,10 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"sync/atomic"
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 	"net"
+	"sync/atomic"
 	//"runtime"
 	//"runtime/debug"
 	"time"
@@ -24,7 +24,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" ----=====----")
 		return
 	}
-	db.Exec("UPDATE test_frame_loss SET status=?, datatime=? WHERE id=?", time.Now(), 2, id) // Тест выполняется
+	db.Exec("UPDATE test_frame_loss SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
@@ -191,7 +191,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 			}
 		}
 	}
-	db.Exec("UPDATE test_frame_loss SET status=?, datetime_start=? WHERE id=?", 2, time.Now(), id) // Тест выполняется
+	db.Exec("UPDATE test_frame_loss SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
 	db.Close()
 
 	fmt.Println(ipsrcstr)
@@ -426,7 +426,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" ----=====----")
 		return
 	}
-	db.Exec("UPDATE test_frame_loss SET datetime_end=?, status=? WHERE id=?", time.Now(), test.status, id)
+	db.Exec("UPDATE test_frame_loss SET datetime_end=?, status=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 	db.Close()
 
 }

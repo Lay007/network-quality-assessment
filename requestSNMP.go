@@ -217,7 +217,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
 
 	timer_SNMP := time.NewTicker(1000 * time.Millisecond)
-//	timer_SNMP.C <- time.Now()
+	//	timer_SNMP.C <- time.Now()
 
 	for range timer_SNMP.C {
 		select {
@@ -281,7 +281,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 				db.Exec("INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) VALUES(?, NOW(), ?, ?)", (*module).id, SFP_laz, SFP_com)
 				//fmt.Println("Rez add module metric: ",rez)
 				//fmt.Println("Error add module metric: ",er)
-			//	fmt.Println(" add metric - ", time.Now())
+				//	fmt.Println(" add metric - ", time.Now())
 				db.Close()
 
 				g.Default.Conn.Close()

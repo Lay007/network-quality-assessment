@@ -23,7 +23,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		fmt.Println(" ----=====----")
 		return
 	}
-	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", time.Now(), 2, id) // Тест выполняется
+	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
@@ -190,7 +190,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 			}
 		}
 	}
-	db.Exec("UPDATE test_latency SET status=?, datetime_start=? WHERE id=?", 2, time.Now(), id) // Тест выполняется
+	db.Exec("UPDATE test_latency SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
 	db.Close()
 
 	fmt.Println(ipsrcstr)
@@ -363,7 +363,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, time.Now(), test.status, id)
+	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 
 	db.Close()
 }
