@@ -10,6 +10,9 @@ import (
 	"golang.org/x/net/bpf"
 	"math"
 	"net"
+	"runtime"
+
+	"sync/atomic"
 	//	"runtime"
 	//"runtime/debug"
 	"time"
@@ -362,7 +365,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	if test.step_count > 2 {
 
-		go test.genFramesY1564(thr_s[2], counter,counterRes)
+		go test.genFramesY1564(thr_s[2], counter, counterRes)
 		delay, jitter := test.getMetricsY1564(quit)
 		time.Sleep(time.Second * 2)
 		<-quit
@@ -750,8 +753,11 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 				}
 				//log.Fatalf("failed to receive message: %v", err)
 				c.SetReadDeadline(start.Add(time.Hour * 24))
-				//quit <- 0
+				//quit <- 1
+				//runtime.Gosched()
 				continue
+				//quit <- 0
+
 			}
 
 			if time.Since(start) > (time.Millisecond * 20000) {
@@ -791,7 +797,9 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 					markerSFP2 = markerSFP2 + int64(f.Payload[38-ind])<<(8*ind)
 					markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
 				}
-
+				if markerSFP2 == 0 {
+					continue
+				}
 				if test.test_type == 1 {
 					quit <- (markerSFP12 - markerSFP11)
 				} else {
@@ -852,13 +860,13 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 		}
 		_, _, err := c.ReadFrom(b)
 		if err != nil {
-			fmt.Println("failed to receive message: %v", err)
-			if err.Error() != "resource temporarily unavailable" {
-				c.SetReadDeadline(start.Add(time.Hour * 24))
-				//	runtime.GC()
-				<-quit
-				return
+			fmt.Println("failed to receive message: ", err)
+			if err.Error() == "resource temporarily unavailable" {
+				//	(*test).number++
 			}
+			c.SetReadDeadline(start.Add(time.Hour * 24))
+			quit <- 1
+			runtime.Gosched()
 			continue
 		}
 		//*/
@@ -876,7 +884,8 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 		//	fmt.Printf("-->>Detect")
 		//	counter <-count
 		//(*test).numberCounter = uint32(count)
-		(*test).numberRx++
+		atomic.AddUint64(&test.numberRx, uint64(1))
+		//(*test).numberRx++
 		//	}
 	}
 }

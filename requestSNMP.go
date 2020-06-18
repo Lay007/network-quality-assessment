@@ -249,7 +249,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 
 						SFP_com = g.ToBigInt(variable.Value).Int64() * 8
 
-						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_comm", fmt.Sprint(SFP_com), time.Now().Unix()))
+						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_lazer", fmt.Sprint(SFP_com), time.Now().Unix()))
 
 						// Create instance of Packet class
 
@@ -259,7 +259,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 
 						SFP_laz = g.ToBigInt(variable.Value).Int64() * 8
 
-						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_lazer", fmt.Sprint(SFP_laz), time.Now().Unix()))
+						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_comm", fmt.Sprint(SFP_laz), time.Now().Unix()))
 
 					}
 				}

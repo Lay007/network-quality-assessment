@@ -357,6 +357,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		testRez.rez_256 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 512
@@ -374,6 +375,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		testRez.rez_512 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 1024
@@ -391,6 +393,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		testRez.rez_1024 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 1280
@@ -408,6 +411,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		testRez.rez_1280 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		size_p = 1518
@@ -425,6 +429,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		testRez.rez_1518 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Send Packets - ", PacketsTx)
+		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
 		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)

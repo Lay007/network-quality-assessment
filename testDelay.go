@@ -300,7 +300,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 	size_p := 64
 
-	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)	
+	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
 	bTemp := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, size_p)
@@ -337,7 +337,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	size_p = 1024
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
-	bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)	
+	bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 	go genSocket(ifi.Index, b, bTemp, test.count_packs, test.thr_begin, counter, counterRes)
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
@@ -563,25 +563,25 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 
 			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 
-				//fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
-				//fmt.Println(time.Now())
-				//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
-				//fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-				//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+				/*	fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+					//	fmt.Println(time.Now())
+						//fmt.Printf("\n\n--=Test %x - \n -== %x\n", f.Payload[12:15], net.ParseIP(ipdst_1sfpsla_str))
+						//fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
+						//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 
-				//fmt.Printf("size     %x \n", b[2:4])
+						fmt.Printf("size     %x \n", b[2:4])
 
-				//fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-				//fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+						fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+						fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 
-				//fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+						fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-				//fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-				//fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-				//fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-				//fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-				//fmt.Println(" --== End Packet ==--")
-				//*/
+						fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+						fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+						fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+					//fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+						fmt.Println(" --== End Packet ==--")
+						//*/
 				var markerSFP11, markerSFP12, markerSFP2 int64
 				var ind uint
 
@@ -589,6 +589,28 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 					markerSFP11 = markerSFP11 + int64(f.Payload[31-ind])<<(8*ind)
 					markerSFP2 = markerSFP2 + int64(f.Payload[38-ind])<<(8*ind)
 					markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
+				}
+
+				floatDelay := (float32(markerSFP12 - markerSFP11)) * 1000000.0 / float32(math.Pow(2, 32))
+
+				if floatDelay < 25 {
+
+					fmt.Printf("size     %x \n", b[2:4])
+					fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+					fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+
+					fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+
+					fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+					fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+					fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+					fmt.Println(" delay = ", floatDelay)
+					//fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+					fmt.Println(" --== End Packet ==--")
+				}
+
+				if markerSFP2 == 0 {
+					continue
 				}
 
 				if test.test_type == 1 {

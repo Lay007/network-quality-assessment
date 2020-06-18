@@ -454,8 +454,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
-
+	res, err := db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
+	fmt.Println("Result test = ", res)
+	fmt.Println("Error SQL result test = ", err)
 	db.Close()
 }
 
@@ -537,7 +538,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.A
 	counter := make(chan uint64, 1)
 	counterRes := make(chan uint64, 1)
 
-	time_gen_nano := genSocket(ifi.Index, b,b, int((cnt*period_nano)/1000000000), thr, counter, counterRes)
+	time_gen_nano := genSocket(ifi.Index, b, b, int((cnt*period_nano)/1000000000), thr, counter, counterRes)
 	quit <- 1
 	runtime.Gosched()
 
@@ -960,15 +961,16 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 							runtime.Gosched()
 							return
 						}
-						
+
 					}
 				}
 				cc, err, e := zs.FlushFrames()
 				if err != nil {
-					fmt.Println("- Flush error - ", e)
-					rez_time = (int64)(time.Since(star_gen))
-					runtime.Gosched()
-					return
+					fmt.Println("- Flush error - ", err)
+					fmt.Println("- Errors - ", e)
+					//	rez_time = (int64)(time.Since(star_gen))
+					//	runtime.Gosched()
+					//	continue
 				}
 				//counter_rez = counter_rez + int64(cc)
 				atomic.AddUint64(&counter_rez, uint64(cc))
