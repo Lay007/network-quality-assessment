@@ -15,6 +15,7 @@ import (
 )
 
 var mux_SNMP sync.Mutex
+var db_SNMP *sql.DB
 
 func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, test_type uint16, testWay int) int {
 
@@ -240,6 +241,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 				if err2 != nil {
 					fmt.Printf("Get() err: %v", err2)
 					mux_SNMP.Unlock()
+					continue
 				}
 				var metrics []*Metric
 				for _, variable := range result.Variables {
@@ -267,22 +269,22 @@ func (module *module_sfp) startSNMP(conf global_config) {
 				// Send packet to zabbix
 				z := NewSender(conf.zabbix_server_name, conf.zabbix_server_port)
 				z.Send(packet)
-
-				db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-				if err != nil {
-					db.Close()
-					mux_SNMP.Unlock()
-					fmt.Println(" -!! Error !!-")
-					fmt.Println(err)
-					fmt.Println(" ----=====----")
-					return
-				}
+				/*
+					db_SNMP, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+					if err != nil {
+						db_SNMP.Close()
+						mux_SNMP.Unlock()
+						fmt.Println(" -!! Error !!-")
+						fmt.Println(err)
+						fmt.Println(" ----=====----")
+						return
+					}*/
 				//rez,er:=
-				db.Exec("INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) VALUES(?, NOW(), ?, ?)", (*module).id, SFP_laz, SFP_com)
+				db_SNMP.Exec("INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) VALUES(?, NOW(), ?, ?)", (*module).id, SFP_laz, SFP_com)
 				//fmt.Println("Rez add module metric: ",rez)
 				//fmt.Println("Error add module metric: ",er)
 				//	fmt.Println(" add metric - ", time.Now())
-				db.Close()
+				//db_SNMP.Close()
 
 				g.Default.Conn.Close()
 				mux_SNMP.Unlock()

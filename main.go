@@ -120,9 +120,10 @@ func main() {
 	db.Exec("UPDATE test_latency SET status=4 WHERE status=2")
 	db.Exec("UPDATE test_frame_loss SET status=4 WHERE status=2")
 	db.Exec("UPDATE test_y1564 SET status=4 WHERE status=2")
-
 	db.Close()
 
+	db_SNMP, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	defer db_SNMP.Close()
 	t := time.NewTicker(15 * time.Second) //проверка один раз в 15 секунд
 	for range t.C {
 

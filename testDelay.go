@@ -7,7 +7,7 @@ import (
 	"math"
 	"net"
 	"time"
-
+	"runtime"
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 	"golang.org/x/net/bpf"
@@ -383,7 +383,7 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 	var delay, delayMax, delayMin int64
 	var floatDelay, floatDelayMax, floatDelayMin float32
 
-	detectPackDelay := make(chan int64, 10)
+	detectPackDelay := make(chan int64, 1000)
 	number := 0
 
 	timeStart := time.Now()
@@ -533,7 +533,8 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 				}
 				//log.Fatalf("failed to receive message: %v", err)
 				c.SetReadDeadline(start.Add(time.Hour * 24))
-				//quit <- 0
+				quit <- 0
+				runtime.Gosched()
 				continue
 			}
 
@@ -596,6 +597,7 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 				if floatDelay < 25 {
 
 					fmt.Printf("size     %x \n", b[2:4])
+					fmt.Println("Packet: ",f.Payload)
 					fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
 					fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 
