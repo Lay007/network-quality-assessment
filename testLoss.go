@@ -6,6 +6,7 @@ import (
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 	"net"
+	"runtime"
 	"sync/atomic"
 	//"runtime"
 	//"runtime/debug"
@@ -504,21 +505,23 @@ func (test *testLoss) receivePacketsLoss(mtu int, quit chan int64) { //, counter
 			fmt.Println("Packets receive = ", test.numberRx)
 			return
 		default:
-		}
-		_, _, err := c.ReadFrom(b)
-		if err != nil {
-			fmt.Println("receivePacketsLoss: failed to receive message: ", err)
-			fmt.Println("receivePacketsLoss: ", time.Now())
-			if err.Error() != "resource temporarily unavailable" {
-				c.SetReadDeadline(start.Add(time.Hour * 24))
-				//runtime.GC()
-				<-quit
-				return
-			}
-			continue
-		}
 
-		//(*test).numberRx++
-		atomic.AddUint64(&test.numberRx, uint64(1))
+			_, _, err := c.ReadFrom(b)
+			if err != nil {
+				fmt.Println("receivePacketsLoss: failed to receive message: ", err)
+				fmt.Println("receivePacketsLoss: ", time.Now())
+				if err.Error() != "resource temporarily unavailable" {
+					c.SetReadDeadline(start.Add(time.Hour * 24))
+					//runtime.GC()
+					quit <- 1
+					runtime.Gosched()
+					continue
+				}
+				continue
+			}
+
+			//(*test).numberRx++
+			atomic.AddUint64(&test.numberRx, uint64(1))
+		}
 	}
 }
