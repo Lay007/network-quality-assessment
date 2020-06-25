@@ -948,6 +948,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 						_, ee := zs.WriteToBuffer(packet, uint16(size_p))
 						if ee != nil {
 							fmt.Println("-Write buff error - ", ee)
+							zs.
 							rez_time = (int64)(time.Since(star_gen))
 							runtime.Gosched()
 							return
