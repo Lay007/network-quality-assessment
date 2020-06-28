@@ -887,7 +887,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 	var Ring_col uint //128
 	Ring_col = 4
 
-	for i := 1; i <= 8; i++ {
+	for i := 1; i <= 6; i++ {
 		if (period_nano * int64(Ring_col)) > (2000000) {
 			break
 		} else {
@@ -930,6 +930,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 	var rez_time int64
 	ticker := time.NewTicker(time.Duration(period_nano))
 	done := make(chan int, 1)
+	gen_end := make(chan int, 1)
 	fmt.Println("Start generate: ", time.Now())
 	go func() {
 		defer func() {
@@ -941,56 +942,76 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 				fmt.Println("End generate: ", time.Now())
 				rez_time = (int64)(time.Since(star_gen))
 				runtime.Gosched()
+				gen_end <- 1
 				return
+			//default:
 			case <-ticker.C:
+
 				for ind := 0; ind < int(Ring_col); ind++ {
 					if ind == 0 {
-						_, ee := zs.WriteToBuffer(packet, uint16(size_p))
-						if ee != nil {
+						cc, ee := zs.WriteToBuffer(packet, uint16(size_p))
+						if (ee != nil) || (cc < 0){
 							fmt.Println("-Write buff error - ", ee)
-							zs.
-							rez_time = (int64)(time.Since(star_gen))
-							runtime.Gosched()
-							return
+
+							//	rez_time = (int64)(time.Since(star_gen))
+							//	runtime.Gosched()
+							//	return
+							break
 						}
-						atomic.AddUint64(&counter_rez_r, uint64(1))
+
 					} else {
-						_, ee := zs.WriteToBuffer(packetTemp, uint16(size_p))
-						if ee != nil {
+						cc, ee := zs.WriteToBuffer(packetTemp, uint16(size_p))
+						if (ee != nil) || (cc < 0) {
 							fmt.Println("-Write buff error - ", ee)
-							rez_time = (int64)(time.Since(star_gen))
-							runtime.Gosched()
-							return
+							//fmt.Println(" count - ", cc)
+							//	rez_time = (int64)(time.Since(star_gen))
+							//	runtime.Gosched()
+							//	return
+							break
 						}
 
 					}
 				}
+				//fmt.Print(",")
 				cc, err, e := zs.FlushFrames()
-				if err != nil {
+				//fmt.Print(".")
+				if (err != nil) || (cc < 1) {
 					fmt.Println("- Flush error - ", err)
 					fmt.Println("- Errors - ", e)
 					//	rez_time = (int64)(time.Since(star_gen))
 					//	runtime.Gosched()
-					//	continue
+					fmt.Println("End generate: ", time.Now())
+					rez_time = (int64)(time.Since(star_gen))
+					runtime.Gosched()
+					gen_end <- 1
+					return
+					//continue
 				}
 				//counter_rez = counter_rez + int64(cc)
+				atomic.AddUint64(&counter_rez_r, uint64(1))
 				atomic.AddUint64(&counter_rez, uint64(cc))
 				runtime.Gosched()
+
 			}
 		}
 	}()
 	fmt.Println("G")
 	time.Sleep(time.Duration(period_sec) * time.Second)
-	ticker.Stop()
+
 	fmt.Println("GG")
 	done <- 1
-	runtime.Gosched()
 	zs.Close()
+	runtime.Gosched()
+
 	fmt.Println("GGG")
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 	fmt.Println("Packed send - ", counter_rez)
 	counter <- counter_rez
 	counterRes <- counter_rez_r
+	runtime.Gosched()
+	time.Sleep(500 * time.Millisecond)
+	<-gen_end
+	ticker.Stop()
 	fmt.Println("GGGG")
 	return rez_time
 }
