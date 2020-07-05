@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
+	"os"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
-
 	//set "syscall"
 	//"os"
 	//"golang.org/x/sys/unix"
@@ -25,6 +25,8 @@ import (
 	. "./zsocket"
 	"github.com/newtools/zsocket/nettypes"
 )
+
+var muxConn sync.Mutex
 
 func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
 	fmt.Println("Тест пропускной способности начался")
@@ -530,21 +532,25 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.A
 
 	conRcv, _ := raw.ListenPacket(ifi, etherType, netConfRecive)
 
-	quit := make(chan int, 1)
+	quitRcv := make(chan int, 1)
 	(*test).period = int16((cnt * period_nano) / 1000000000)
 
-	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quit, t_type)
+	go (*test).receivePackets(conRcv, mtu, ipdst_1sfpsla_str, quitRcv, t_type)
+	time.Sleep(time.Second * 1)
 
 	counter := make(chan uint64, 1)
 	counterRes := make(chan uint64, 1)
 
 	time_gen_nano := genSocket(ifi.Index, b, b, int((cnt*period_nano)/1000000000), thr, counter, counterRes)
-	quit <- 1
+	fmt.Println("End gen thr")
+	quitRcv <- 1
 	runtime.Gosched()
 
 	time.Sleep(time.Second * 5)
 	conRcv.Close()
 	rez := <-counter
+	rezR := <-counterRes
+	rez = rez+rezR
 	fmt.Println("		 --->> rez_counterRez= ", rez)
 	fmt.Println("		 --->> time_gen_nano= ", time_gen_nano)
 	return int(rez), time_gen_nano
@@ -802,23 +808,24 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.A
 	*/
 }
 
-func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quit chan int, t_type uint16) { //, counter chan<- int) {
+func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str string, quitRcv chan int, t_type uint16) { //, counter chan<- int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 
 	start := time.Now()
-	fmt.Println("Begin receive")
+	fmt.Println("Begin receive - ", time.Now())
 	defer func() {
-		fmt.Println("Exit receive")
+		fmt.Println("Exit receive - ", time.Now())
 	}()
-	c.SetReadDeadline(start.Add(time.Second * time.Duration(test.period+1)))
+	c.SetReadDeadline(start.Add(time.Second * time.Duration(test.period+5)))
 	//	oob :=make([]byte, mtu)
 	//var count int
 	// Keep receiving messages forever.
 	for {
 		select {
-		case <-quit:
+		case <-quitRcv:
 			fmt.Println("End receive - counter = ", (*test).numberCounter)
+			c.SetReadDeadline(start.Add(time.Hour * 24))
 			return
 		default:
 
@@ -838,12 +845,14 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 			n, _, err := c.ReadFrom(b)
 			if err != nil {
 				fmt.Println("failed to receive message: ", err)
-				if err.Error() == "resource temporarily unavailable" {
+				fmt.Println("Error time - ", time.Now())
+				if err.Error() == "i/o timeout" {
 					//	(*test).number++
+
+					c.SetReadDeadline(start.Add(time.Hour * 24))
+					quitRcv <- 1
+					runtime.Gosched()
 				}
-				c.SetReadDeadline(start.Add(time.Hour * 24))
-				quit <- 1
-				runtime.Gosched()
 				continue
 			}
 			//*/
@@ -876,7 +885,7 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, thr int, counter chan uint64, counterRes chan uint64) int64 {
 
 	size_p := len(packet)
-
+	//os.page
 	period_nano := int64(size_p * 8 * 1000 / thr)
 	defer func() {
 		fmt.Println("Exit genSocket")
@@ -885,13 +894,13 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
 	//packet_count := (int64(period_nano * 1000000000)) / period_nano
 	var Ring_col uint //128
-	Ring_col = 4
+	Ring_col = 16
 
-	for i := 1; i <= 6; i++ {
+	for i := 1; i <= 10; i++ {
 		if (period_nano * int64(Ring_col)) > (2000000) {
 			break
 		} else {
-			Ring_col = Ring_col * 2
+			Ring_col = Ring_col + 8
 		}
 	}
 
@@ -901,16 +910,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 	var counter_rez_r uint64
 	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
 	fmt.Printf("\n   period_nano = %d \n", period_nano)
-	zs, err := NewZSocket(ifiIndex, ENABLE_TX, 4096, Ring_col, nettypes.All)
-	if err != nil {
-		fmt.Println(err)
-		counter <- 0
-		return 0
-	}
-	//zs.SetMAX()
-
-	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
-	//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
+	fmt.Printf("\n   pagesize = %d \n", os.Getpagesize())
 
 	// the above will result in a ring buffer of 64 frames at
 	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each (2048 - min)
@@ -928,29 +928,48 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 	//*
 	star_gen := time.Now()
 	var rez_time int64
-	ticker := time.NewTicker(time.Duration(period_nano))
+
 	done := make(chan int, 1)
 	gen_end := make(chan int, 1)
 	fmt.Println("Start generate: ", time.Now())
-	go func() {
+	go func(done <-chan int, gen_end chan<- int) {
 		defer func() {
 			fmt.Println("Exit funcgenSocket")
 		}()
+		//zs, err := NewZSocket(22, ENABLE_RX|ENABLE_TX, 256, MAX_ORDER, 4, nettypes.All)
+		zs, err := NewZSocket(ifiIndex, ENABLE_TX, 32768, Ring_col, nettypes.All)
+
+		//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
+		//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
+		if err != nil {
+			fmt.Println(" Error zsocket", err)
+			counter <- 0
+			gen_end <- 1
+			return
+		}
+		zs.SetMAX()
+		ticker := time.NewTicker(time.Duration(period_nano))
+		zs.FlushFrames()
+	ExitLoop:
 		for {
 			select {
 			case <-done:
 				fmt.Println("End generate: ", time.Now())
 				rez_time = (int64)(time.Since(star_gen))
 				runtime.Gosched()
+				zs.Close()
 				gen_end <- 1
-				return
+				break ExitLoop
 			//default:
 			case <-ticker.C:
-
+				//<-ticker.C
+				//fmt.Print(".")
 				for ind := 0; ind < int(Ring_col); ind++ {
 					if ind == 0 {
+						//	fmt.Print("w1")
 						cc, ee := zs.WriteToBuffer(packet, uint16(size_p))
-						if (ee != nil) || (cc < 0){
+						//	fmt.Print("e1")
+						if (ee != nil) || (cc != int32(ind)) {
 							fmt.Println("-Write buff error - ", ee)
 
 							//	rez_time = (int64)(time.Since(star_gen))
@@ -960,8 +979,10 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 						}
 
 					} else {
+						//	fmt.Print("w")
 						cc, ee := zs.WriteToBuffer(packetTemp, uint16(size_p))
-						if (ee != nil) || (cc < 0) {
+						//	fmt.Print("e")
+						if (ee != nil) || (cc != int32(ind)) {
 							fmt.Println("-Write buff error - ", ee)
 							//fmt.Println(" count - ", cc)
 							//	rez_time = (int64)(time.Since(star_gen))
@@ -980,38 +1001,39 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 					fmt.Println("- Errors - ", e)
 					//	rez_time = (int64)(time.Since(star_gen))
 					//	runtime.Gosched()
-					fmt.Println("End generate: ", time.Now())
-					rez_time = (int64)(time.Since(star_gen))
-					runtime.Gosched()
-					gen_end <- 1
-					return
-					//continue
+					//fmt.Println("End generate: ", time.Now())
+					//rez_time = (int64)(time.Since(star_gen))
+					//runtime.Gosched()
+					//gen_end <- 1
+					//return
+					continue
 				}
 				//counter_rez = counter_rez + int64(cc)
 				atomic.AddUint64(&counter_rez_r, uint64(1))
 				atomic.AddUint64(&counter_rez, uint64(cc))
-				runtime.Gosched()
+				//runtime.Gosched()
 
 			}
 		}
-	}()
+	}(done, gen_end)
 	fmt.Println("G")
 	time.Sleep(time.Duration(period_sec) * time.Second)
 
 	fmt.Println("GG")
 	done <- 1
-	zs.Close()
+	//	zs.Close()
 	runtime.Gosched()
+	<-gen_end
 
 	fmt.Println("GGG")
 	time.Sleep(500 * time.Millisecond)
 	fmt.Println("Packed send - ", counter_rez)
 	counter <- counter_rez
 	counterRes <- counter_rez_r
-	runtime.Gosched()
 	time.Sleep(500 * time.Millisecond)
-	<-gen_end
-	ticker.Stop()
+	runtime.Gosched()
+
+	//ticker.Stop()
 	fmt.Println("GGGG")
 	return rez_time
 }

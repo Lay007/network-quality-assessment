@@ -284,10 +284,16 @@ func (zs *ZSocket) SetMAX()  {
 		fmt.Printf("reuse port error: %v\n", errReusePort)
 		return
 	}
+	if err := syscall.SetsockoptInt(zs.socket, unix.SOL_SOCKET,  syscall.SO_RCVBUF, 0); err != nil {
+		fmt.Printf("reuse port error: %v\n", err)
+		return
+	}
+
 
 }
 
 func (zs *ZSocket) AddTimeStamping()  {	
+
 	if errReusePort := syscall.SetsockoptInt(zs.socket, unix.SOL_SOCKET, unix.SO_REUSEPORT, 1); errReusePort != nil {
 		fmt.Printf("reuse port error: %v\n", errReusePort)
 		return
