@@ -550,7 +550,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, addr *raw.A
 	conRcv.Close()
 	rez := <-counter
 	rezR := <-counterRes
-	rez = rez+rezR
+	rez = rez + rezR
 	fmt.Println("		 --->> rez_counterRez= ", rez)
 	fmt.Println("		 --->> time_gen_nano= ", time_gen_nano)
 	return int(rez), time_gen_nano
@@ -896,6 +896,124 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 	var Ring_col uint //128
 	Ring_col = 16
 
+	for i := 1; i <= 128; i++ {
+		if (period_nano * int64(Ring_col)) > (2000000) {
+			break
+		} else {
+			Ring_col = Ring_col + 8
+		}
+	}
+	addr := &raw.Addr{
+		HardwareAddr: ethernet.Broadcast,
+	}
+	period_nano = period_nano * int64(Ring_col)
+
+	var counter_rez uint64
+	var counter_rez_r uint64
+	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
+	fmt.Printf("\n   period_nano = %d \n", period_nano)
+
+	star_gen := time.Now()
+	var rez_time int64
+
+	done := make(chan int, 1)
+	gen_end := make(chan int, 1)
+	fmt.Println("Start generate: ", time.Now())
+	go func(done <-chan int, gen_end chan<- int) {
+		defer func() {
+			fmt.Println("Exit funcgenSocket")
+		}()
+
+		ifi, _ := net.InterfaceByIndex(ifiIndex)
+		zs, err := raw.ListenPacket(ifi, etherType, nil)
+		if err != nil {
+			fmt.Println("failed to listen: %v", err)
+
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+
+		ticker := time.NewTicker(time.Duration(period_nano))
+
+	ExitLoop:
+		for {
+			select {
+			case <-done:
+				fmt.Println("End generate: ", time.Now())
+				rez_time = (int64)(time.Since(star_gen))
+				runtime.Gosched()
+				zs.Close()
+				gen_end <- 1
+				break ExitLoop
+			//default:
+			case <-ticker.C:
+				//<-ticker.C
+				//fmt.Print(".")
+				for ind := 0; ind < int(Ring_col); ind++ {
+					if ind == 0 {
+						_, ee := zs.WriteTo(packet, addr)
+						if ee != nil {
+							fmt.Println("-Write buff error - ", ee)
+
+							//	rez_time = (int64)(time.Since(star_gen))
+							//	runtime.Gosched()
+							//	return
+							break
+						}
+						atomic.AddUint64(&counter_rez_r, uint64(1))
+
+					} else {
+						//	fmt.Print("w")
+						_, ee := zs.WriteTo(packetTemp, addr)
+						if ee != nil {
+							fmt.Println("-Write buff error - ", ee)
+							break
+						}
+						atomic.AddUint64(&counter_rez, uint64(1))
+
+					}
+				}
+			}
+		}
+	}(done, gen_end)
+	fmt.Println("G")
+	time.Sleep(time.Duration(period_sec) * time.Second)
+
+	fmt.Println("GG")
+	done <- 1
+	//	zs.Close()
+	runtime.Gosched()
+	<-gen_end
+
+	fmt.Println("GGG")
+	time.Sleep(500 * time.Millisecond)
+	fmt.Println("Packed send - ", counter_rez)
+	counter <- counter_rez
+	counterRes <- counter_rez_r
+	time.Sleep(500 * time.Millisecond)
+	runtime.Gosched()
+
+	//ticker.Stop()
+	fmt.Println("GGGG")
+	return rez_time
+}
+
+func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, thr int, counter chan uint64, counterRes chan uint64) int64 {
+
+	size_p := len(packet)
+	//os.page
+	period_nano := int64(size_p * 8 * 1000 / thr)
+	defer func() {
+		fmt.Println("Exit genSocket")
+	}()
+	fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
+	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
+	//packet_count := (int64(period_nano * 1000000000)) / period_nano
+	var Ring_col uint //128
+	Ring_col = 16
+
 	for i := 1; i <= 10; i++ {
 		if (period_nano * int64(Ring_col)) > (2000000) {
 			break
@@ -937,7 +1055,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 			fmt.Println("Exit funcgenSocket")
 		}()
 		//zs, err := NewZSocket(22, ENABLE_RX|ENABLE_TX, 256, MAX_ORDER, 4, nettypes.All)
-		zs, err := NewZSocket(ifiIndex, ENABLE_TX, 32768, Ring_col, nettypes.All)
+		zs, err := NewZSocket(ifiIndex, ENABLE_TX|DISABLE_TX_LOSS, 32768, Ring_col, nettypes.All)
 
 		//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
 		//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
