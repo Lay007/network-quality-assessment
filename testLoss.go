@@ -312,14 +312,16 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		bTemp := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
 		fmt.Println("*")
+		time.Sleep(time.Second * 1)
 		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
 		fmt.Println("**")
-		time.Sleep(time.Second * 2)
+
 		fmt.Println("***")
 		PacketsTx := <-counter
 		PacketsTxRes := <-counterRes
-		quit <- 1
-		time.Sleep(time.Second * 1)
+		//quit <- 1
+		runtime.Gosched()
+		time.Sleep(time.Second * 3)
 		testRez.rez_64 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Packet size - ", size_p)
@@ -333,12 +335,13 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
 		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
+		time.Sleep(time.Second * 1)
 		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
-		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
 		PacketsTxRes = <-counterRes
-		quit <- 1
-		time.Sleep(time.Second * 1)
+		//quit <- 1
+		runtime.Gosched()
+		time.Sleep(time.Second * 3)
 		testRez.rez_128 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Packet size - ", size_p)
@@ -352,12 +355,13 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
 		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
+		time.Sleep(time.Second * 1)
 		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
-		time.Sleep(time.Second * 2)
+
 		PacketsTx = <-counter
 		PacketsTxRes = <-counterRes
-		quit <- 1
-		time.Sleep(time.Second * 1)
+		//quit <- 1
+		time.Sleep(time.Second * 3)
 		testRez.rez_256 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Packet size - ", size_p)
@@ -371,12 +375,12 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
 		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
+		time.Sleep(time.Second * 1)
 		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
-		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
 		PacketsTxRes = <-counterRes
-		quit <- 1
-		time.Sleep(time.Second * 1)
+		//quit <- 1
+		time.Sleep(time.Second * 3)
 		testRez.rez_512 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Packet size - ", size_p)
@@ -390,12 +394,12 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
 		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
+		time.Sleep(time.Second * 1)
 		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
-		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
 		PacketsTxRes = <-counterRes
-		quit <- 1
-		time.Sleep(time.Second * 1)
+		//quit <- 1
+		time.Sleep(time.Second * 3)
 		testRez.rez_1024 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Packet size - ", size_p)
@@ -409,12 +413,12 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
 		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
+		time.Sleep(time.Second * 1)
 		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
-		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
 		PacketsTxRes = <-counterRes
-		quit <- 1
-		time.Sleep(time.Second * 1)
+		//quit <- 1
+		time.Sleep(time.Second * 3)
 		testRez.rez_1280 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Packet size - ", size_p)
@@ -428,12 +432,12 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, 1500, 0, test.id_test_type, test.test_type)
 		bTemp = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, 1500, 0, testTypeTemp, test.test_type)
 		go test.receivePacketsLoss(ifi.MTU, quit)
+		time.Sleep(time.Second * 1)
 		go genSocket(ifi.Index, b, bTemp, test.count_frames, thr_step, counter, counterRes)
-		time.Sleep(time.Second * 2)
 		PacketsTx = <-counter
 		PacketsTxRes = <-counterRes
-		quit <- 1
-		time.Sleep(time.Second * 1)
+		//quit <- 1
+		time.Sleep(time.Second * 3)
 		testRez.rez_1518 = float32(PacketsTxRes-uint64(test.numberRx)) / float32(PacketsTxRes)
 
 		fmt.Println(" Packet size - ", size_p)

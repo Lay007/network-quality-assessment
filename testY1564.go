@@ -337,7 +337,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	<-quit
 	PacketsRx := <-counter
 	PacketsRxRes := <-counterRes
-	test.rez_IR_s1 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+	test.rez_IR_s1 = float32(PacketsRx+PacketsRxRes) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_s1 = delay
 	test.rez_FVD_s1 = jitter
 	test.rez_FLR_s1 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
@@ -353,7 +353,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		<-quit
 		PacketsRx := <-counter
 		PacketsRxRes := <-counterRes
-		test.rez_IR_s2 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+		test.rez_IR_s2 = float32(PacketsRx+PacketsRxRes) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s2 = delay
 		test.rez_FVD_s2 = jitter
 		test.rez_FLR_s2 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
@@ -371,7 +371,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		<-quit
 		PacketsRx := <-counter
 		PacketsRxRes := <-counterRes
-		test.rez_IR_s3 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+		test.rez_IR_s3 = float32(PacketsRx+PacketsRxRes) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s3 = delay
 		test.rez_FVD_s3 = jitter
 		test.rez_FLR_s3 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
@@ -389,7 +389,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		<-quit
 		PacketsRx := <-counter
 		PacketsRxRes := <-counterRes
-		test.rez_IR_s4 = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+		test.rez_IR_s4 = float32(PacketsRx+PacketsRxRes) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 		test.rez_FTD_s4 = delay
 		test.rez_FVD_s4 = jitter
 		test.rez_FLR_s4 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
@@ -405,7 +405,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	<-quit
 	PacketsRx = <-counter
 	PacketsRxRes = <-counterRes
-	test.rez_IR_eir = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+	test.rez_IR_eir = float32(PacketsRx+PacketsRxRes) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_eir = delay
 	test.rez_FVD_eir = jitter
 	test.rez_FLR_eir = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
@@ -419,7 +419,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	<-quit
 	PacketsRx = <-counter
 	PacketsRxRes = <-counterRes
-	test.rez_IR_tp = float32(PacketsRx) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
+	test.rez_IR_tp = float32(PacketsRx+PacketsRxRes) * float32(test.block_size) * 8.0 / (float32(test.period) * 1000000.0)
 	test.rez_FTD_tp = delay
 	test.rez_FVD_tp = jitter
 	test.rez_FLR_tp = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
@@ -714,7 +714,7 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 				time.Sleep(1000 * time.Millisecond)
 				quit_receive <- 1
 				//time.Sleep(100 * time.Millisecond)
-				quit <- 1
+				quit <- 0
 				return floatDelay, float32(math.Max(float64(floatDelayMax-floatDelay), float64(floatDelay-floatDelayMin)))
 			}
 		}
@@ -748,11 +748,13 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 			cc++
 			if err != nil {
 				//fmt.Printf("failed to receive message: %v", err)
-				if err.Error() == "resource temporarily unavailable" {
-
+				if err.Error() == "i/o timeout" {
+					c.SetReadDeadline(start.Add(time.Hour * 24))
+					quit <- 0
+					runtime.Gosched()
 				}
 				//log.Fatalf("failed to receive message: %v", err)
-				c.SetReadDeadline(start.Add(time.Hour * 24))
+
 				//quit <- 1
 				//runtime.Gosched()
 				continue
@@ -861,12 +863,13 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 		_, _, err := c.ReadFrom(b)
 		if err != nil {
 			fmt.Println("failed to receive message: ", err)
-			if err.Error() == "resource temporarily unavailable" {
+			if err.Error() == "i/o timeout" {
 				//	(*test).number++
+
+				c.SetReadDeadline(start.Add(time.Hour * 24))
+				quit <- 1
+				runtime.Gosched()
 			}
-			c.SetReadDeadline(start.Add(time.Hour * 24))
-			quit <- 1
-			runtime.Gosched()
 			continue
 		}
 		//*/
