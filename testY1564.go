@@ -633,10 +633,11 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 
 	SolveDelayTicker := time.NewTicker(1 * time.Millisecond)
 	//	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, test.block_size, 1, test.id_test_type, test.test_type)
+	go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, test.block_size)
 
 	for range SolveDelayTicker.C {
 		//	for	 {
-		go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, test.block_size)
+	//	go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, test.block_size)
 
 		select {
 		//fmt.Println("Wait")
@@ -733,7 +734,7 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 	start := time.Now()
 	quit := make(chan int64, 10)
 	//fmt.Println("-> Begin Catch - ", start)
-	c.SetReadDeadline(start.Add(time.Microsecond * 3000))
+	c.SetReadDeadline(start.Add(time.Second * time.Duration(test.period)))
 	//ExitLoop:
 	for {
 		select {
@@ -762,10 +763,7 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 
 			}
 
-			if time.Since(start) > (time.Millisecond * 20000) {
-				quit <- 0
-				continue
-			}
+			
 
 			if (n) != packetSize {
 				continue
@@ -788,9 +786,9 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 
 			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 				//	(*test).numberRx++
-				if ((*test).numberRx % 100) != 0 {
-					return
-				}
+				//if ((*test).numberRx % 100) != 0 {
+				//	return
+				//}
 				var markerSFP11, markerSFP12, markerSFP2 int64
 				var ind uint
 
@@ -803,11 +801,11 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 					continue
 				}
 				if test.test_type == 1 {
-					quit <- (markerSFP12 - markerSFP11)
+					catchDetect <- (markerSFP12 - markerSFP11)
 				} else {
-					quit <- (t_time - markerSFP2)
+					catchDetect <- (t_time - markerSFP2)
 				}
-
+				runtime.Gosched()
 			}
 		}
 

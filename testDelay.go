@@ -611,7 +611,7 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 					fmt.Println(" --== End Packet ==--")
 				}
 
-				if markerSFP2 == 0 {
+				if (test.test_type == 2) && (markerSFP2 == 0) {
 					continue
 				}
 
