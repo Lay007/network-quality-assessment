@@ -651,8 +651,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	counter := test.count
 	detectPack := make(chan int, 10)
 	for range t.C {
-		fmt.Print(" ==> Start - ")
-		fmt.Println(time.Now())
+		//fmt.Print(" ==> Start - ")
+		//fmt.Println(time.Now())
 		if !circ {
 			counter--
 			if counter <= 0 {
@@ -677,7 +677,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			fmt.Println(" !!Error write")
 		}
 		//fmt.Println("Wait")
-		fmt.Println(<-detectPack)
+		<-detectPack
+		//fmt.Println(<-detectPack)
 		//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		//	go func() {
@@ -991,14 +992,14 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 	start := time.Now()
 	quit := make(chan int, 10)
-	fmt.Println("-> Begin Catch - ", start)
+	//fmt.Println("-> Begin Catch - ", start)
 	c.SetReadDeadline(start.Add(time.Microsecond * 3000))
 	//ExitLoop:
 	for {
 		select {
 		case key := <-quit:
 			catchDetect <- key
-			fmt.Println("Chanel go")
+			//fmt.Println("Chanel go")
 			return
 			//break ExitLoop
 		default:
@@ -1057,26 +1058,26 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 
 				(*test).number++
-				//*
-				fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
-				fmt.Println(time.Now())
-				//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
-				fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-				//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+				/*
+					fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+					fmt.Println(time.Now())
+					//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
+					fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
+					//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 
-				fmt.Printf("size     %x \n", b[2:4])
+					fmt.Printf("size     %x \n", b[2:4])
 
-				fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-				fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+					fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+					fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 
-				fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+					fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-				fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-				fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-				fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-				fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-				fmt.Println(" --== End Packet ==--")
-				//*/
+					fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+					fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+					fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+					fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+					fmt.Println(" --== End Packet ==--")
+					//*/
 				var markerSFP11, markerSFP12, markerSFP2 int64
 				var ind uint
 
@@ -1115,8 +1116,8 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 						}
 					}
 				}
-				fmt.Println("==>> number_pack - ", numberR)
-				fmt.Println("==>> number_test - ", test.number)
+				//fmt.Println("==>> number_pack - ", numberR)
+				//fmt.Println("==>> number_test - ", test.number)
 				if test_id.test_loss == true {
 					loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
 				}
@@ -1194,7 +1195,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				}
 
 				db.Close()
-				fmt.Printf("  ==>> %v  --> %s  - count = %v\n", id, time.Since(start), cc)
+				//fmt.Printf("  ==>> %v  --> %s  - count = %v\n", id, time.Since(start), cc)
 				quit <- 1
 			}
 			//else {
@@ -1208,7 +1209,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 	var mean_delay float32
 	size_s := 100
-	fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
+	//fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
 	if len((*test).delay_solve) == 0 {
 		(*test).delay_solve = append((*test).delay_solve, in_solve)
 		return in_solve
@@ -1304,7 +1305,7 @@ func (test *testSLA) getJitter() float32 {
 
 	jitter = float32((*test).delay_solve[l-1] - (*test).delay_solve[l-2])
 
-	fmt.Println("-->> (*test).delay_solve -> ", (*test).delay_solve)
+	//fmt.Println("-->> (*test).delay_solve -> ", (*test).delay_solve)
 
 	/*
 		var jitter, mean float32

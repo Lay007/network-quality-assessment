@@ -637,7 +637,7 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 
 	for range SolveDelayTicker.C {
 		//	for	 {
-	//	go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, test.block_size)
+		//	go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, test.block_size)
 
 		select {
 		//fmt.Println("Wait")
@@ -762,8 +762,6 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 				//quit <- 0
 
 			}
-
-			
 
 			if (n) != packetSize {
 				continue
