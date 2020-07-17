@@ -445,7 +445,7 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 
 			}
 		default:
-			if time.Since(timeStart) > time.Duration(test.count_tests)*time.Second {
+			if time.Since(timeStart) > time.Duration(test.count_packs)*time.Second {
 				fmt.Println(" --> Number = ", number)
 				fmt.Println(" --> Size = ", size)
 
