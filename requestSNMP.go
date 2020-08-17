@@ -229,6 +229,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 		default:
 			{
 				mux_SNMP.Lock()
+				g.Default.Retries=1
 				g.Default.Target = (*module).address_ip
 				err := g.Default.Connect()
 				if err != nil {
@@ -265,10 +266,15 @@ func (module *module_sfp) startSNMP(conf global_config) {
 
 					}
 				}
-				packet := NewPacket(metrics)
-				// Send packet to zabbix
-				z := NewSender(conf.zabbix_server_name, conf.zabbix_server_port)
-				z.Send(packet)
+
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				if (*module).zabbix_node != "" {
+					packet := NewPacket(metrics)
+					// Send packet to zabbix
+					z := NewSender(conf.zabbix_server_name, conf.zabbix_server_port)
+					z.Send(packet)
+				}
 				/*
 					db_SNMP, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 					if err != nil {
@@ -286,8 +292,6 @@ func (module *module_sfp) startSNMP(conf global_config) {
 				//	fmt.Println(" add metric - ", time.Now())
 				//db_SNMP.Close()
 
-				g.Default.Conn.Close()
-				mux_SNMP.Unlock()
 			}
 		}
 	}

@@ -84,7 +84,7 @@ func main() {
 
 	//time.Sleep(100 * time.Second)
 
-	modules := []module_sfp{}
+	//modules := []module_sfp{}
 
 	// подключение к БД и обновление списка сетевых интерфейсов
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
@@ -116,7 +116,6 @@ func main() {
 
 	// Оценка выполнения тестов
 	db.Exec("UPDATE test_sla_real SET status=1 WHERE status=2")
-
 	db.Exec("UPDATE test_throughput SET status=4 WHERE status=2")
 	db.Exec("UPDATE test_bert SET status=4 WHERE status=2")
 	db.Exec("UPDATE test_latency SET status=4 WHERE status=2")
@@ -167,7 +166,7 @@ func main() {
 		}
 
 		fmt.Println(conf.server_ip)
-
+/*
 		// Stop check SNMP
 		for i_m, _ := range modules {
 			fmt.Println("Chan stop ", modules[i_m].address_ip)
@@ -207,7 +206,7 @@ func main() {
 			go (&modules[_i_m]).startSNMP(*conf)
 		}
 		//go zabbixHello("SFP-SLA_4401")
-
+*/
 		if conf.net_interface_name == "0" {
 			fmt.Println("  Net interface not changed")
 			db.Close()
