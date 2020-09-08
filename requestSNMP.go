@@ -4,12 +4,12 @@ import (
 	"fmt"
 	//	"log"
 	. "./go-zabbix"
+	"database/sql"
 	g "github.com/soniah/gosnmp"
 	"net"
+	"strconv"
 	"sync"
 	"time"
-
-	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -213,6 +213,21 @@ func (module *module_sfp) startSNMP(conf global_config) {
 		fmt.Println("null net_interface_name")
 		return
 	}
+	envTarget := (*module).address_ip
+	envPort := "161"
+
+	port, _ := strconv.ParseUint(envPort, 10, 16)
+
+	// Build our own GoSNMP struct, rather than using g.Default.
+	// Do verbose logging of packets.
+	params := &g.GoSNMP{
+		Target:    envTarget,
+		Port:      uint16(port),
+		Community: "public",
+		Version:   g.Version2c,
+		Timeout: time.Millisecond*100,
+		Retries: 1,
+	}
 
 	var SFP_laz, SFP_com int64
 	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
@@ -229,18 +244,21 @@ func (module *module_sfp) startSNMP(conf global_config) {
 		default:
 			{
 				mux_SNMP.Lock()
-				g.Default.Retries=1
-				g.Default.Target = (*module).address_ip
-				err := g.Default.Connect()
+				//	g.Default.Retries=1
+				//	g.Default.Target = (*module).address_ip
+				//	err := g.Default.Connect()
+				err := params.Connect()
 				if err != nil {
-					fmt.Printf("Connect to SFP error: %v", err)
+					fmt.Print("Module : ", envTarget)
+					fmt.Println("Connect() err: ", err)
 					mux_SNMP.Unlock()
 					continue
 				}
-
-				result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+defer params.Conn.Close()
+				result, err2 := params.Get(oids) // Get() accepts up to g.MAX_OIDS
 				if err2 != nil {
-					fmt.Printf("Get() err: %v", err2)
+					fmt.Print("Module : ", envTarget)
+					fmt.Println("Get() err: ", err2)
 					mux_SNMP.Unlock()
 					continue
 				}
@@ -266,8 +284,8 @@ func (module *module_sfp) startSNMP(conf global_config) {
 
 					}
 				}
-
-				g.Default.Conn.Close()
+				//params.Conn.Close()
+				//g.Default.Conn.Close()
 				mux_SNMP.Unlock()
 				if (*module).zabbix_node != "" {
 					packet := NewPacket(metrics)
