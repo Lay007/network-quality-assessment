@@ -257,7 +257,7 @@ func main() {
 		defer row_test_berst.Close()
 		if err != nil {
 			db.Close()
-			row_test_berst.Close()
+			//row_test_berst.Close()
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
@@ -268,7 +268,7 @@ func main() {
 		defer row_test_latency.Close()
 		if err != nil {
 			db.Close()
-			row_test_latency.Close()
+			//row_test_latency.Close()
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
@@ -279,7 +279,7 @@ func main() {
 		defer row_test_loss.Close()
 		if err != nil {
 			db.Close()
-			row_test_loss.Close()
+			//row_test_loss.Close()
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
@@ -290,7 +290,7 @@ func main() {
 		defer row_test_y1564.Close()
 		if err != nil {
 			db.Close()
-			row_test_y1564.Close()
+			//row_test_y1564.Close()
 			fmt.Println(" -!! Error !!-")
 			fmt.Println(err)
 			fmt.Println(" ----=====----")
@@ -692,7 +692,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			if err == nil {
 				rez_f, er := db.Query("SELECT id FROM test_sla_real WHERE id=?", id)
 				if er != nil {
-					rez_f.Close()
+					//	rez_f.Close()
 					break
 				}
 

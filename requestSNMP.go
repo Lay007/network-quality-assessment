@@ -225,8 +225,8 @@ func (module *module_sfp) startSNMP(conf global_config) {
 		Port:      uint16(port),
 		Community: "public",
 		Version:   g.Version2c,
-		Timeout: time.Millisecond*100,
-		Retries: 1,
+		Timeout:   time.Millisecond * 100,
+		Retries:   1,
 	}
 
 	var SFP_laz, SFP_com int64
@@ -254,11 +254,12 @@ func (module *module_sfp) startSNMP(conf global_config) {
 					mux_SNMP.Unlock()
 					continue
 				}
-defer params.Conn.Close()
+				defer params.Conn.Close()
 				result, err2 := params.Get(oids) // Get() accepts up to g.MAX_OIDS
 				if err2 != nil {
 					fmt.Print("Module : ", envTarget)
 					fmt.Println("Get() err: ", err2)
+					params.Conn.Close()
 					mux_SNMP.Unlock()
 					continue
 				}
@@ -269,19 +270,13 @@ defer params.Conn.Close()
 					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
 
 						SFP_com = g.ToBigInt(variable.Value).Int64() * 8
-
-						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_lazer", fmt.Sprint(SFP_com), time.Now().Unix()))
-
-						// Create instance of Packet class
-
+						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_lazer", fmt.Sprint(SFP_com), time.Now().Unix()))						
 					}
 					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
 						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
 
 						SFP_laz = g.ToBigInt(variable.Value).Int64() * 8
-
 						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_comm", fmt.Sprint(SFP_laz), time.Now().Unix()))
-
 					}
 				}
 				//params.Conn.Close()
