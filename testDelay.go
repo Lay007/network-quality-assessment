@@ -438,7 +438,7 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 					if delayMax < detect {
 						delayMax = detect
 					}
-					if delayMin > detect {
+					if (delayMin > detect) && (float32(detect) > (float32(delay)/float32(number))*0.70) {
 						delayMin = detect
 					}
 				}

@@ -270,7 +270,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
 
 						SFP_com = g.ToBigInt(variable.Value).Int64() * 8
-						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_lazer", fmt.Sprint(SFP_com), time.Now().Unix()))						
+						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_lazer", fmt.Sprint(SFP_com), time.Now().Unix()))
 					}
 					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
 						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
