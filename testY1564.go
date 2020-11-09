@@ -746,6 +746,7 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 		default:
 
 			n, _, err := c.ReadFrom(b)
+			at_time :=time.Now()
 			cc++
 			if err != nil {
 				//fmt.Printf("failed to receive message: %v", err)
@@ -768,10 +769,12 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 			}
 
 			//t_time := int64(float64(time.Now().UnixNano() - delta_nano )*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
-			delta_nano := int64((2208988800) * 1000000000)
-			t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
+		    delta_nano := int64((2208988800) * 1000000000)
+		
+			t_time := int64(float64(at_time.UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
 			t_time = t_time & int64(0xFFFFFFFFFFFFFF)
-
+			//fmt.Println("  Now real - ",time.Now().UnixNano());
+			
 			//n, addr, err := c.ReadFrom(b)
 			// Unpack Ethernet II frame into Go representation.
 			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
