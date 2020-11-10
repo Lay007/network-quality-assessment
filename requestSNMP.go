@@ -12,7 +12,26 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/go-ping/ping"
 )
+
+func testPing(ip string) int {
+	pinger, err := ping.NewPinger(ip)
+	if err != nil {
+		return 1
+	}
+	pinger.Count = 3
+	er := pinger.Run()
+	if er != nil {
+		return 1
+	}
+	stats := pinger.Statistics()
+	if stats.PacketsRecv == 0 {
+		return 1
+	}
+	return 0
+}
 
 var mux_SNMP sync.Mutex
 var db_SNMP *sql.DB
