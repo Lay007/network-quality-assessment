@@ -1123,7 +1123,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				//*
 				if test_id.test_type == 1 {
 					if test_id.test_delay_1 == true {
-						rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP11,markerSFP2, markerSFP12)
+						rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP11, markerSFP2, markerSFP12)
 						delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
 						delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
 						if test_id.test_delay_1_jitter == true {
@@ -1244,8 +1244,8 @@ func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (in
 
 	size_s := 10000
 
-	T_ideal := (SFP_T12- SFP_T11)/2
-	in_delay_to := int64(float64(T_ideal)*(1-(math.Atan(float64(1- (SFP_T2 - SFP_T11)/T_ideal)))/ (math.Pi /2)))
+	T_ideal := (SFP_T12 - SFP_T11) / 2
+	in_delay_to := int64(float64(T_ideal) * (1 - (math.Atan(float64(1-(SFP_T2-SFP_T11)/T_ideal)))/(math.Pi/2)))
 
 	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
 	(*test).delay_to_sum += in_delay_to
@@ -1255,7 +1255,7 @@ func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (in
 	}
 	mean_to := (float32((*test).delay_to_sum) / float32(len((*test).delay_solve_to)))
 
-	in_delay_un := int64(float64(T_ideal)*(1-(math.Atan(float64(1- (SFP_T12 - SFP_T2)/T_ideal)))/ (math.Pi /2)))
+	in_delay_un := int64(float64(T_ideal) * (1 - (math.Atan(float64(1-(SFP_T12-SFP_T2)/T_ideal)))/(math.Pi/2)))
 
 	(*test).delay_solve_un = append((*test).delay_solve_un, in_delay_un)
 	(*test).delay_un_sum += in_delay_un
