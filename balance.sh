@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# from http://habrahabr.ru/post/108240/
 ncpus=`grep -ciw ^processor /proc/cpuinfo`
 test "$ncpus" -gt 1 || exit 1
 

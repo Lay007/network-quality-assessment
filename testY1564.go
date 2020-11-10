@@ -399,6 +399,8 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	}
 
+	runtime.Gosched()
+
 	go test.genFramesY1564(test.CIR+test.EIR, counter, counterRes)
 	delay, jitter = test.getMetricsY1564(quit)
 	time.Sleep(time.Second * 2)
@@ -412,6 +414,8 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	PacketsRx = 0
 	test.numberRx = 0
+
+	runtime.Gosched()
 
 	go test.genFramesY1564(test.CIR+test.TP, counter, counterRes)
 	delay, jitter = test.getMetricsY1564(quit)
