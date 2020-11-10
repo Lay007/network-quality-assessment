@@ -29,8 +29,8 @@ func testPing(ip string) int {
 		return 1
 	}
 	stats := pinger.Statistics()
+	fmt.Println(" Ping st: ",stats)
 	if stats.PacketsRecv == 0 {
-		fmt.Println(" Ping st: ",err)
 		return 1
 	}
 	return 0

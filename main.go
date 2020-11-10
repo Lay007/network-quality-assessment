@@ -597,7 +597,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}
 	}
 
-	db.Close()
+	
 
 	var test_this testSLA
 
@@ -637,7 +637,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		
+		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
 
 
@@ -646,7 +646,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		fmt.Println(" ----=====----")
 		return
 	}
-
+	db.Close()
 	var number uint32
 
 	number = 1
