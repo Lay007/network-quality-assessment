@@ -78,9 +78,7 @@ func (h *iphdr) checksum() {
 
 func main() {
 
-	//mainGen()
-	//return
-	runtime.GOMAXPROCS(1024)
+	runtime.GOMAXPROCS(4)
 
 	//time.Sleep(100 * time.Second)
 
