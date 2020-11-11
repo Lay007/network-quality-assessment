@@ -1262,7 +1262,7 @@ func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (in
 	size_s := 10000
 
 	T_ideal := (SFP_T12 - SFP_T11) / 2
-	in_delay_to := int64(float64(T_ideal) * (1 - (math.Atan(float64(1-(SFP_T2-SFP_T11)/T_ideal)))/(math.Pi/2)))
+	in_delay_to := SFP_T2-SFP_T11
 
 	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
 	(*test).delay_to_sum += in_delay_to
@@ -1271,6 +1271,11 @@ func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (in
 		test.delay_solve_to = (*test).delay_solve_to[1:(size_s + 1)]
 	}
 	mean_to := int64(float32((*test).delay_to_sum) / float32(len((*test).delay_solve_to)))
+
+
+	//in_delay_to := int64(float64(T_ideal) * (1 - (math.Atan(float64(1-(SFP_T2-SFP_T11)/T_ideal)))/(math.Pi/2)))
+	mean_to = int64(float64(T_ideal) * (1 - (math.Atan(float64(1-(mean_to)/T_ideal)))/(math.Pi/2)))
+
 
 	mean_un := int64((SFP_T12 - SFP_T11) - mean_to)
 
