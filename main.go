@@ -1095,7 +1095,9 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				}
 
 				if markerSFP11 > markerSFP12 {
-					return
+					tmp:=markerSFP11
+					markerSFP11=markerSFP12
+					markerSFP12=tmp
 				}
 
 				var numberR uint32
