@@ -1259,7 +1259,7 @@ func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (int64, int64) {
 
-	size_s := 10000
+	size_s := 60*20
 
 	T_ideal := (SFP_T12 - SFP_T11) / 2
 	in_delay_to := SFP_T2-SFP_T11
