@@ -19,17 +19,17 @@ import (
 func testPing(ip string) int {
 	pinger, err := ping.NewPinger(ip)
 	if err != nil {
-		fmt.Println(" Error new ping: ",err)
+		fmt.Println(" Error new ping: ", err)
 		return 1
 	}
 	pinger.Count = 3
 	er := pinger.Run()
 	if er != nil {
-		fmt.Println(" Error ping run: ",err)
+		fmt.Println(" Error ping run: ", err)
 		return 1
 	}
 	stats := pinger.Statistics()
-	fmt.Println(" Ping st: ",stats)
+	fmt.Println(" Ping st: ", stats)
 	if stats.PacketsRecv == 0 {
 		return 1
 	}

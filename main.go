@@ -78,7 +78,7 @@ func (h *iphdr) checksum() {
 
 func main() {
 
-	runtime.GOMAXPROCS(4)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	//time.Sleep(100 * time.Second)
 
@@ -424,7 +424,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
-		
+
 		log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
@@ -595,8 +595,6 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}
 	}
 
-	
-
 	var test_this testSLA
 
 	var test_type uint16
@@ -637,7 +635,6 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
-
 
 		fmt.Println(" -!! Error Ping !!-")
 		fmt.Println(err)
@@ -1257,10 +1254,10 @@ func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 //var mass_solve []int64
 func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (int64, int64) {
 
-	size_s := 60*20
+	size_s := 60 * 20
 
 	T_ideal := (SFP_T12 - SFP_T11) / 2
-	in_delay_to := SFP_T2-SFP_T11
+	in_delay_to := SFP_T2 - SFP_T11
 
 	(*test).delay_solve_to = append((*test).delay_solve_to, in_delay_to)
 	(*test).delay_to_sum += in_delay_to
@@ -1270,10 +1267,8 @@ func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (in
 	}
 	mean_to := int64(float32((*test).delay_to_sum) / float32(len((*test).delay_solve_to)))
 
-
 	//in_delay_to := int64(float64(T_ideal) * (1 - (math.Atan(float64(1-(SFP_T2-SFP_T11)/T_ideal)))/(math.Pi/2)))
 	mean_to = int64(float64(T_ideal) * (1 - (math.Atan(float64(1-(mean_to)/T_ideal)))/(math.Pi/2)))
-
 
 	mean_un := int64((SFP_T12 - SFP_T11) - mean_to)
 
