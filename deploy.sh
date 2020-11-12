@@ -1,5 +1,5 @@
 #!/bin/bash
-echo " =>> Server SFP SLA"
+echo " =>> Deploy generator"
 
 #./go build
 
@@ -13,7 +13,4 @@ systemctl daemon-reload
 systemctl enable Server_SFP_SLA
 systemctl start Server_SFP_SLA
 
-
-#git pull
-
-#sudo ./Server_SFP_SLA
+echo " =>> Deploy generator succes"
