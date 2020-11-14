@@ -24,6 +24,6 @@ echo " =>> MySQL config succes"
 
 echo " =>> Deploy web-config"
 
-#tar -C / -xvf httpServerSLA.tar.gz
+tar -C / -xvf httpServerSLA.tar.gz
 
 echo " =>> Deploy web-config succes"
