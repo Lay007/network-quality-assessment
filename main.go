@@ -108,7 +108,11 @@ func main() {
 		}
 		//net_name = device.Name
 		for _, address := range device.Addresses {
-			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
+			_, erex := db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
+
+			if erex != nil {
+				fmt.Println("Error add")
+			}
 		}
 	}
 
@@ -1095,9 +1099,9 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				}
 
 				if markerSFP11 > markerSFP12 {
-					tmp:=markerSFP11
-					markerSFP11=markerSFP12
-					markerSFP12=tmp
+					tmp := markerSFP11
+					markerSFP11 = markerSFP12
+					markerSFP12 = tmp
 				}
 
 				var numberR uint32
