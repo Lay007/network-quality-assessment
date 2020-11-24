@@ -230,7 +230,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 
 func (module *module_sfp) startSNMP(conf global_config) {
 
-	//fmt.Println("Start SNMP_check - ", (*module).address_ip)
+	fmt.Println("Start SNMP_check - ", (*module).address_ip)
 	if conf.net_interface_name == "" {
 		fmt.Println("null net_interface_name")
 		return
