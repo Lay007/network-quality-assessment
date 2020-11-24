@@ -260,7 +260,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 	for range timer_SNMP.C {
 		select {
 		case <-(*module).chan_stop:
-			//fmt.Println("End SNMP_check - ", (*module).address_ip)
+			fmt.Println("End SNMP_check - ", (*module).address_ip)
 			timer_SNMP.Stop()
 			return
 		default:
