@@ -109,7 +109,7 @@ func main() {
 		//net_name = device.Name
 		for _, address := range device.Addresses {
 			res, erex := db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
-			fmt.Println(res)
+			//fmt.Println(res)
 			if erex != nil {
 				fmt.Println("Error add")
 			}
@@ -126,7 +126,7 @@ func main() {
 	db.Close()
 
 	db_SNMP, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-	defer db_SNMP.Close()
+	//defer db_SNMP.Close()
 	t := time.NewTicker(15 * time.Second) //проверка один раз в 15 секунд
 	for range t.C {
 
