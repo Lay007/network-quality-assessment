@@ -89,6 +89,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Error_BD = ",err)
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
 	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
@@ -108,11 +109,9 @@ func main() {
 		}
 		//net_name = device.Name
 		for _, address := range device.Addresses {
-			res, erex := db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
+			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
 			//fmt.Println(res)
-			if erex != nil {
-				fmt.Println("Error add")
-			}
+			
 		}
 	}
 

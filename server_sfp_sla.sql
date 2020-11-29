@@ -62,14 +62,6 @@ CREATE TABLE `modules_sfp_sla` (
   `location` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Дамп данных таблицы `modules_sfp_sla`
---
-
-INSERT INTO `modules_sfp_sla` (`id`, `mac`, `name`, `address_ip`, `version`, `zabbix_node_name`, `location`) VALUES
-(1, 0, 'Модуль 1 ', '10.0.10.172', '1', '', ''),
-(2, 0, 'Модуль 2', '10.0.10.175', '1', '', '');
-
 -- --------------------------------------------------------
 
 --
@@ -125,14 +117,7 @@ CREATE TABLE `test_bert` (
   `status` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Дамп данных таблицы `test_bert`
---
 
-INSERT INTO `test_bert` (`id`, `test_type`, `module_first`, `module_second`, `thr_begin`, `count_prob_packs`, `count_probs`, `rez_64`, `rez_128`, `rez_256`, `rez_512`, `rez_1024`, `rez_1280`, `rez_1518`, `rez_4096`, `rez_9000`, `datetime_start`, `datetime_end`, `status`) VALUES
-(2, 0, 2, 1, 1000, 10, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 1);
-
--- --------------------------------------------------------
 
 --
 -- Структура таблицы `test_frame_loss`
@@ -152,14 +137,6 @@ CREATE TABLE `test_frame_loss` (
   `status` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Дамп данных таблицы `test_frame_loss`
---
-
-INSERT INTO `test_frame_loss` (`id`, `test_type`, `module_first`, `module_second`, `thr_begin`, `step`, `count_frames`, `count_steps`, `datetime_start`, `datetime_end`, `status`) VALUES
-(1, 1, 2, 1, 1000, 1, 10, 5, NULL, NULL, 1);
-
--- --------------------------------------------------------
 
 --
 -- Структура таблицы `test_frame_loss_rez`
@@ -220,14 +197,6 @@ CREATE TABLE `test_latency` (
   `status` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Дамп данных таблицы `test_latency`
---
-
-INSERT INTO `test_latency` (`id`, `test_type`, `module_first`, `module_second`, `thr_begin`, `count_packs`, `count_tests`, `rez_64`, `rez_64_max`, `rez_64_min`, `rez_128`, `rez_128_max`, `rez_128_min`, `rez_256`, `rez_256_max`, `rez_256_min`, `rez_512`, `rez_512_max`, `rez_512_min`, `rez_1024`, `rez_1024_max`, `rez_1024_min`, `rez_1280`, `rez_1280_max`, `rez_1280_min`, `rez_1518`, `rez_1518_max`, `rez_1518_min`, `datetime_start`, `datetime_end`, `status`) VALUES
-(10, 1, 2, 1, 1000, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 1);
-
--- --------------------------------------------------------
 
 --
 -- Структура таблицы `test_sla_real`
@@ -261,14 +230,6 @@ CREATE TABLE `test_sla_real` (
   `status` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Дамп данных таблицы `test_sla_real`
---
-
-INSERT INTO `test_sla_real` (`id`, `test_type`, `name`, `module_first`, `module_second`, `block_size`, `clock`, `count`, `node_zabbix`, `test_delay`, `test_delay_jitter`, `test_loss`, `test_delay_1`, `test_delay1_jitter`, `test_load_sfp1_to_laser`, `test_load_sfp1_to_com`, `test_load_sfp2_to_laser`, `test_load_sfp2_to_com`, `data_start`, `delay_max`, `jitter_max`, `delay1_max`, `jitter1_max`, `loss_max`, `status`) VALUES
-(14, 1, 'Тест SLA', 1, 2, 64, 1000, 0, 'SFP-SLA_4401', 1, 1, 1, 1, 1, NULL, NULL, NULL, NULL, NULL, 30, 5, 0, 0, 0.01, 1);
-
--- --------------------------------------------------------
 
 --
 -- Структура таблицы `test_sla_real_alarm`
@@ -331,14 +292,6 @@ CREATE TABLE `test_throughput` (
   `status` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Дамп данных таблицы `test_throughput`
---
-
-INSERT INTO `test_throughput` (`id`, `test_type`, `module_first`, `module_second`, `thr_begin`, `count`, `ch_type`, `max_loss`, `rez_64`, `rez_128`, `rez_256`, `rez_512`, `rez_1024`, `rez_1280`, `rez_1518`, `rez_4096`, `rez_9000`, `datetime_start`, `datetime_end`, `status`) VALUES
-(17, 1, 2, 1, 1000, 20, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1);
-
--- --------------------------------------------------------
 
 --
 -- Структура таблицы `test_y1564`
@@ -389,14 +342,6 @@ CREATE TABLE `test_y1564` (
   `status` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Дамп данных таблицы `test_y1564`
---
-
-INSERT INTO `test_y1564` (`id`, `test_type`, `module_first`, `module_second`, `block_size`, `ToS`, `VLAN_priority`, `CIR`, `EIR`, `TP`, `period`, `step_count`, `max_FTD`, `max_FVD`, `max_FLR`, `rez_IR_s1`, `rez_FTD_s1`, `rez_FVD_s1`, `rez_FLR_s1`, `rez_IR_s2`, `rez_FTD_s2`, `rez_FVD_s2`, `rez_FLR_s2`, `rez_IR_s3`, `rez_FTD_s3`, `rez_FVD_s3`, `rez_FLR_s3`, `rez_IR_s4`, `rez_FTD_s4`, `rez_FVD_s4`, `rez_FLR_s4`, `rez_IR_eir`, `rez_FTD_eir`, `rez_FVD_eir`, `rez_FLR_eir`, `rez_IR_tp`, `rez_FTD_tp`, `rez_FVD_tp`, `rez_FLR_tp`, `datetime_start`, `datetime_end`, `status`) VALUES
-(4, 1, 2, 1, 1024, 0, 0, 1000, 100, 200, 1000, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1);
-
--- --------------------------------------------------------
 
 --
 -- Структура таблицы `users`
@@ -433,7 +378,7 @@ CREATE TABLE `zabbix_node` (
 --
 
 INSERT INTO `zabbix_node` (`id`, `name`, `description`) VALUES
-(1, 'SFP-SLA_4400', 'ÐœÐ¾Ð´ÑƒÐ»ÑŒ SFP Ñ Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶ÐºÐ¾Ð¹ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¹ SLA'),
+(1, 'SFP-SLA_4400', ''),
 (2, 'SFP-SLA_4401', '');
 
 --
@@ -459,7 +404,7 @@ ALTER TABLE `modules_sfp_sla`
 --
 ALTER TABLE `modules_sfp_sla_load_rez`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `module_id` (`module_id`);
+  ADD KEY `module_id` (`module_id`);
 
 --
 -- Индексы таблицы `net_interfaces_from_server_sla`
@@ -648,8 +593,8 @@ ALTER TABLE `zabbix_node`
 --
 -- Ограничения внешнего ключа таблицы `modules_sfp_sla_load_rez`
 --
-ALTER TABLE `modules_sfp_sla_load_rez`
-  ADD CONSTRAINT `modules_sfp_sla_load_rez_ibfk_1` FOREIGN KEY (`module_id`) REFERENCES `modules_sfp_sla` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+-- ALTER TABLE `modules_sfp_sla_load_rez`
+--  ADD CONSTRAINT `modules_sfp_sla_load_rez_ibfk_1` FOREIGN KEY (`module_id`) REFERENCES `modules_sfp_sla` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Ограничения внешнего ключа таблицы `test_bert`
