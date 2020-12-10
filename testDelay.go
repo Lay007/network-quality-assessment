@@ -191,6 +191,21 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		}
 	}
 	db.Exec("UPDATE test_latency SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
+
+	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		return
+	}
+
+	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		return
+	}
+
 	db.Close()
 
 	fmt.Println(ipsrcstr)

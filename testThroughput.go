@@ -211,8 +211,6 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	db.Exec("UPDATE test_throughput SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
 
-	db.Close()
-
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
 	fmt.Println(ipdst_2sfpsla_str)
@@ -333,6 +331,22 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		db.Close()
 
 	}
+
+	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		return
+	}
+
+	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		return
+	}
+
+	db.Close()
 	fmt.Println(" Rez find : ", rez)
 	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 

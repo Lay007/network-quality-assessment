@@ -707,19 +707,22 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		check_count--
 		if check_count < 0 {
 
-			if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-				db.Close()
-		
-				return
-			}
-		
-			if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-				db.Close()
+			go func() {
 
-				return
-			}
+				if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+					db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+					db_go.Close()
+					return
+				}
+
+				if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+					db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+					db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+					db_go.Close()
+					return
+				}
+			}()
 
 			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err == nil {
@@ -728,7 +731,6 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 					//	rez_f.Close()
 					break
 				}
-
 				if rez_f.Next() {
 					rez := 5
 					rez_f.Scan(&rez)

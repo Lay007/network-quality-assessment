@@ -311,6 +311,22 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		db.Close()
 
 	}
+
+	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		return
+	}
+
+	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		return
+	}
+
+	db.Close()
 	fmt.Println(" Rez find : ", rez)
 
 	var count_rez, count_rez_uni int
