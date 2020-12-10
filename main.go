@@ -89,7 +89,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Error_BD = ",err)
+	fmt.Println("Error_BD = ", err)
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
 	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
@@ -111,7 +111,7 @@ func main() {
 		for _, address := range device.Addresses {
 			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
 			//fmt.Println(res)
-			
+
 		}
 	}
 
@@ -640,10 +640,17 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		db.Close()
 
 		fmt.Println(" -!! Error Ping !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
 		return
 	}
+
+	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		fmt.Println(" -!! Error Ping !!-")
+		return
+	}
+
 	db.Close()
 	var number uint32
 
@@ -699,22 +706,41 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
 		if check_count < 0 {
+
+			if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+		
+				return
+			}
+		
+			if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+
+				return
+			}
+
 			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err == nil {
-				rez_f, er := db.Query("SELECT id FROM test_sla_real WHERE id=?", id)
+				rez_f, er := db.Query("SELECT status FROM test_sla_real WHERE id=?", id)
 				if er != nil {
 					//	rez_f.Close()
 					break
 				}
 
-				if !rez_f.Next() {
+				if rez_f.Next() {
+					rez := 5
+					rez_f.Scan(&rez)
 					rez_f.Close()
-					break
+					if rez == 4 {
+						break
+					}
 				}
 				rez_f.Close()
 			}
 			db.Close()
-			check_count = 10
+			check_count = 20
 		}
 	}
 

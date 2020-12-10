@@ -331,3 +331,74 @@ func (module *module_sfp) startSNMP(conf global_config) {
 		}
 	}
 }
+
+func check_SNMP(ip string) int {
+
+	envTarget := ip
+	envPort := "161"
+
+	port, _ := strconv.ParseUint(envPort, 10, 16)
+
+	// Build our own GoSNMP struct, rather than using g.Default.
+	// Do verbose logging of packets.
+	params := &g.GoSNMP{
+		Target:    envTarget,
+		Port:      uint16(port),
+		Community: "public",
+		Version:   g.Version2c,
+		Timeout:   time.Millisecond * 100,
+		Retries:   1,
+	}
+
+	rez := 0
+
+	to := time.After(5 * time.Second)
+
+	done := make(chan bool, 1)
+
+	oids := []string{".1.3.6.1.4.1.2010.1.13.0"}
+
+	go func() {
+		timer_SNMP := time.NewTicker(900 * time.Millisecond)
+		for range timer_SNMP.C {
+			select {
+			case <-to:
+				done <- true
+				timer_SNMP.Stop()
+				return
+			default:
+				mux_SNMP.Lock()
+				err := params.Connect()
+				if err != nil {
+					fmt.Print("Module : ", envTarget)
+					fmt.Println("Connect() err: ", err)
+					mux_SNMP.Unlock()
+					continue
+				}
+				defer params.Conn.Close()
+				result, err2 := params.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Print("Module : ", envTarget)
+					fmt.Println("Get() err: ", err2)
+					params.Conn.Close()
+					mux_SNMP.Unlock()
+					continue
+				}
+
+				for range result.Variables {
+					rez++
+				}
+				mux_SNMP.Unlock()
+
+			}
+		}
+	}()
+
+	<-done
+	if rez > 3 {
+		return 0
+	} else {
+		return 1
+	}
+
+}
