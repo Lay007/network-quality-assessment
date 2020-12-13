@@ -270,19 +270,11 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		bpf.RetConstant{Val: 0},
 	})
 
-	period_test := test.count // период теста - 10 секунд
 
-	size := 64
-	fmt.Println("->> test.thr_begin = ", test.thr_begin)
-	period_nano := int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
-	packet_count := (int64(period_test * 1000000000)) / period_nano
-
-	fmt.Println("->> period_nano  = ", period_nano)
-	fmt.Println("->> packet_count = ", packet_count)
 
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 
-	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, test_type, test.test_type)
+	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, test_type, test.test_type, 1024, int64(1024 * 8 * 1000 / test.thr_begin))
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
@@ -335,14 +327,12 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
-
 		return
 	}
 
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
-
 		return
 	}
 
@@ -350,14 +340,23 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println(" Rez find : ", rez)
 	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
+
+	period_test := test.count // период теста - 10 секунд
+
+	size := 64
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
+	period_nano := int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	packet_count := (int64(period_test * 1000000000)) / period_nano
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count)
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 64, number, test_type, test.test_type)
 
-	//genSocket(ifi.Index, b, period_test, test.thr_begin)
-
-	//count_rez, per := test_c.testMax(b, c, addr, ifi.MTU, ipdst_1sfpsla_str, counter, test_type)
 	count_rez, per := test_c.testThrGen(net_interface_name, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
 	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+
+
 
 	fmt.Printf("End 64 goroutine num: %d\n", runtime.NumGoroutine())
 

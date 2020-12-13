@@ -196,7 +196,6 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		}
 	}
 	db.Exec("UPDATE test_y1564 SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
-	db.Close()
 
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
@@ -242,8 +241,8 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		HardwareAddr: ethernet.Broadcast,
 	}
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
-
-	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.id_test_type, test.test_type)
+	
+	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.id_test_type, test.test_type, 1024, int64(1024 * 8 * 1000 / test.CIR) )
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
 		return
@@ -292,6 +291,21 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	}
 	fmt.Println(" Rez find : ", rez)
+
+	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		return
+	}
+
+	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Close()
+
+		return
+	}
+	db.Close()
 
 	test.id_test_type = 0xE000 + (uint16(id) & 0x1FFF)
 	test.id_test_type_temp = 0x2000 + (uint16(id) & 0x1FFF)
@@ -345,19 +359,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	PacketsRx = 0
 	test.numberRx = 0
 
-	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-		db.Close()
 
-		return
-	}
-
-	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-		db.Close()
-
-		return
-	}
 
 	if test.step_count > 1 {
 

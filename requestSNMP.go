@@ -39,7 +39,10 @@ func testPing(ip string) int {
 var mux_SNMP sync.Mutex
 var db_SNMP *sql.DB
 
-func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, test_type uint16, testWay int) int {
+func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, test_type uint16, testWay int, packet_size int, period_nano_gen_s int64) int {
+
+period_nano_gen:=(int64) (5*1024*period_nano_gen_s)/(int64)(packet_size) // 20% от исходной
+count_gen:=10000000000/period_nano_gen;
 
 	fmt.Println(" ==> TEST SFP way ==")
 
@@ -124,8 +127,8 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	b := packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst, 1024, 1, test_type, testWay)
 
 	go func() {
-		cc := 100000
-		ticker := time.NewTicker(100 * time.Microsecond)
+		cc := count_gen									
+		ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
 		for range ticker.C {
 			cc--
 			if cc > 0 {
@@ -215,6 +218,9 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 
 	fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", SFP1_com_load, SFP1_laz_load)
 	fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v \n", SFP2_com_load, SFP2_laz_load)
+
+	min_load:=7*(1024*1000000000/period_nano_gen);
+	fmt.Printf("\n  Min_load - %v \n", min_load)
 
 	if (SFP1_com_load > 40000000) && (SFP1_laz_load > 40000000) && ((float32(SFP1_laz_load)/float32(SFP1_com_load) > 1.7) || (float32(SFP1_com_load)/float32(SFP1_laz_load) > 1.7)) {
 		return 2
