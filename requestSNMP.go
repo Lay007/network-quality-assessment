@@ -29,7 +29,7 @@ func testPing(ip string) int {
 		return 1
 	}
 	stats := pinger.Statistics()
-	fmt.Println(" Ping st: ", stats)
+	//	fmt.Println(" Ping st: ", stats)
 	if stats.PacketsRecv == 0 {
 		return 1
 	}
@@ -41,8 +41,8 @@ var db_SNMP *sql.DB
 
 func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, test_type uint16, testWay int, packet_size int, period_nano_gen_s int64) int {
 
-period_nano_gen:=(int64) (5*1024*period_nano_gen_s)/(int64)(packet_size) // 20% от исходной
-count_gen:=10000000000/period_nano_gen;
+	period_nano_gen := (int64)(5*1024*period_nano_gen_s) / (int64)(packet_size) // 20% от исходной
+	count_gen := 10000000000 / period_nano_gen
 
 	fmt.Println(" ==> TEST SFP way ==")
 
@@ -118,7 +118,7 @@ count_gen:=10000000000/period_nano_gen;
 	fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", float32(SFP1_com_init*8)/10000000.0, float32(SFP1_laz_init*8)/10000000.0)
 	fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v ", float32(SFP2_com_init*8)/10000000.0, float32(SFP2_laz_init*8)/10000000.0)
 
-	fmt.Printf("->Generate<-")
+	fmt.Printf("\n->Generate<-\n\n")
 
 	ipsrc := net.ParseIP(ip_server)
 	ipdst1 := net.ParseIP(ip_1sfpsla_str)
@@ -127,7 +127,7 @@ count_gen:=10000000000/period_nano_gen;
 	b := packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst, 1024, 1, test_type, testWay)
 
 	go func() {
-		cc := count_gen									
+		cc := count_gen
 		ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
 		for range ticker.C {
 			cc--
@@ -219,16 +219,20 @@ count_gen:=10000000000/period_nano_gen;
 	fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", SFP1_com_load, SFP1_laz_load)
 	fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v \n", SFP2_com_load, SFP2_laz_load)
 
-	min_load:=7*(1024*1000000000/period_nano_gen);
+	min_load := 7 * (1024 * 1000000000 / period_nano_gen)
 	fmt.Printf("\n  Min_load - %v \n", min_load)
 
-	if (SFP1_com_load > 40000000) && (SFP1_laz_load > 40000000) && ((float32(SFP1_laz_load)/float32(SFP1_com_load) > 1.7) || (float32(SFP1_com_load)/float32(SFP1_laz_load) > 1.7)) {
+	if (SFP1_com_load > min_load) && (SFP1_laz_load > min_load) && ((float32(SFP1_laz_load)/float32(SFP1_com_load) > 1.7) || (float32(SFP1_com_load)/float32(SFP1_laz_load) > 1.7)) {
+		fmt.Printf("\n  Modules state change \n")
 		return 2
 	} else {
-		if (SFP2_com_load > 40000000) && (SFP2_laz_load > 40000000) && ((float32(SFP2_laz_load)/float32(SFP2_com_load) > 1.7) || (float32(SFP2_com_load)/float32(SFP2_laz_load) > 1.7)) {
-
+		fmt.Printf("\n  SFP2_laz / SFP2_com %f \n", float32(SFP2_laz_load)/float32(SFP2_com_load))
+		fmt.Printf("\n  SFP2_com / SFP2_laz %f \n", float32(SFP2_com_load)/float32(SFP2_laz_load))
+		if (SFP2_com_load > min_load) && (SFP2_laz_load > min_load) && ((float32(SFP2_laz_load)/float32(SFP2_com_load) > 1.7) || (float32(SFP2_com_load)/float32(SFP2_laz_load) > 1.7)) {
+			fmt.Printf("\n  Modules state change \n")
 			return 2
 		} else {
+			fmt.Printf("\n  Modules state OK \n")
 			return 1
 		}
 	}

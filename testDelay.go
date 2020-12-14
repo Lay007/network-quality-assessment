@@ -253,7 +253,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	}
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 
-	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.id_test_type, test.test_type, 1024, int64(1024 * 8 * 1000 / test.thr_begin))
+	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.id_test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
 		return

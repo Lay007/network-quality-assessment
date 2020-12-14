@@ -241,8 +241,8 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		HardwareAddr: ethernet.Broadcast,
 	}
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
-	
-	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.id_test_type, test.test_type, 1024, int64(1024 * 8 * 1000 / test.CIR) )
+
+	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.id_test_type, test.test_type, 1024, int64(1024*8*1000/test.CIR))
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
 		return
@@ -358,8 +358,6 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	PacketsRx = 0
 	test.numberRx = 0
-
-
 
 	if test.step_count > 1 {
 
@@ -867,13 +865,10 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 	t_ips[0] = byte((test.id_test_type >> 8) & 0xFF)
 	start := time.Now()
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(1+test.period)))
-	//debug.SetGCPercent(-1)
 	fmt.Println("Start receive: ", time.Now())
 	for {
 		select {
 		case <-quit:
-			//quit <- k
-			//	runtime.GC()
 			fmt.Println("End receive: ", time.Now())
 			fmt.Println("Packets receive = ", test.numberRx)
 			return
@@ -883,7 +878,6 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 		if err != nil {
 			fmt.Println("failed to receive message: ", err)
 			if err.Error() == "i/o timeout" {
-				//	(*test).number++
 
 				c.SetReadDeadline(start.Add(time.Hour * 24))
 				quit <- 1
@@ -891,23 +885,6 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 			}
 			continue
 		}
-		//*/
-		// Unpack Ethernet II frame into Go representation.
-		//	if err := (&f).UnmarshalBinary(b[:n]); err != nil {
-		//		fmt.Println("failed to unmarshal ethernet frame: %v", err)
-		//	}
-		//fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
-
-		//fmt.Printf("\n\n--=T_so %x - \n", ips)
-
-		// Display source of message and message itself.
-		//	if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
-		//count++
-		//	fmt.Printf("-->>Detect")
-		//	counter <-count
-		//(*test).numberCounter = uint32(count)
 		atomic.AddUint64(&test.numberRx, uint64(1))
-		//(*test).numberRx++
-		//	}
 	}
 }
