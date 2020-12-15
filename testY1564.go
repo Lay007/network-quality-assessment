@@ -679,10 +679,12 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 			}
 		default:
 			if time.Since(timeStart) > time.Duration(time.Duration(test.period)*time.Second) {
-				fmt.Println(" --> Number = ", number)
+				fmt.Println("\n --> Number = ", number)
 				fmt.Println(" --> Size = ", test.block_size)
 
+				if number>0 {
 				floatDelay = (float32(delay) / float32(number)) * 1000000.0 / float32(math.Pow(2, 32))
+				}
 				floatDelayMax = float32(delayMax) * 1000000.0 / float32(math.Pow(2, 32))
 				floatDelayMin = float32(delayMin) * 1000000.0 / float32(math.Pow(2, 32))
 				/*

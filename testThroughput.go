@@ -342,7 +342,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
 	period_test := test.count // период теста - 10 секунд
-	//error_koef:=0.0;
+	var error_koef float32
+	error_koef=0.9995
 
 	step := test.thr_begin
 	thr_current := test.thr_begin
@@ -369,7 +370,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			fmt.Println("->> Counter = ", test_c.numberCounter)
 			time.Sleep(time.Second * 3)
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				thr_current += step
 			} else {
 				thr_current -= step
@@ -400,7 +401,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -430,7 +431,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -460,7 +461,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -494,7 +495,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			fmt.Println("->> Counter = ", test_c.numberCounter)
 			time.Sleep(time.Second * 3)
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				thr_current += step
 			} else {
 				thr_current -= step
@@ -525,7 +526,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -555,7 +556,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -585,7 +586,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -619,7 +620,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			fmt.Println("->> Counter = ", test_c.numberCounter)
 			time.Sleep(time.Second * 3)
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				thr_current += step
 			} else {
 				thr_current -= step
@@ -650,7 +651,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -680,7 +681,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -710,7 +711,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -742,7 +743,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			fmt.Println("->> Counter = ", test_c.numberCounter)
 			time.Sleep(time.Second * 3)
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				thr_current += step
 			} else {
 				thr_current -= step
@@ -773,7 +774,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -803,7 +804,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -833,7 +834,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -865,7 +866,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			fmt.Println("->> Counter = ", test_c.numberCounter)
 			time.Sleep(time.Second * 3)
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				thr_current += step
 			} else {
 				thr_current -= step
@@ -896,7 +897,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -926,7 +927,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -956,7 +957,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -988,7 +989,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			fmt.Println("->> Counter = ", test_c.numberCounter)
 			time.Sleep(time.Second * 3)
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				thr_current += step
 			} else {
 				thr_current -= step
@@ -1019,7 +1020,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -1049,7 +1050,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -1079,7 +1080,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -1111,7 +1112,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			fmt.Println("->> Counter = ", test_c.numberCounter)
 			time.Sleep(time.Second * 3)
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				thr_current += step
 			} else {
 				thr_current -= step
@@ -1142,7 +1143,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -1172,7 +1173,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
@@ -1202,7 +1203,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			thr_current -= step
 
-			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= 0.99) {
+			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
 				break
 			}
 
