@@ -343,7 +343,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	period_test := test.count // период теста - 10 секунд
 	var error_koef float32
-	error_koef=0.9995
+	error_koef = 0.9995
 
 	step := test.thr_begin
 	thr_current := test.thr_begin
@@ -1738,6 +1738,10 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 	var Ring_col uint //128
 	Ring_col = 16
 
+	ColRes := uint(0)
+
+	period_res := int64(200000)
+
 	for i := 1; i <= 128; i++ {
 		if (period_nano * int64(Ring_col)) > (2000000) {
 			break
@@ -1749,6 +1753,11 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 		HardwareAddr: ethernet.Broadcast,
 	}
 	period_nano = period_nano * int64(Ring_col)
+	if period_nano <= period_res {
+		ColRes = Ring_col
+	} else {
+		ColRes = uint(1 + ((float32((Ring_col - 1)) * float32(period_res)) / float32(period_nano)))
+	}
 
 	var counter_rez uint64
 	var counter_rez_r uint64
@@ -1794,7 +1803,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 				//<-ticker.C
 				//fmt.Print(".")
 				for ind := 0; ind < int(Ring_col); ind++ {
-					if ind == 0 {
+					if ind < int(ColRes) {
 						_, ee := zs.WriteTo(packet, addr)
 						if ee != nil {
 							fmt.Println("-Write buff error - ", ee)

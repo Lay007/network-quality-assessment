@@ -251,16 +251,6 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		bpf.RetConstant{Val: 0},
 	})
 
-	period_test := test.count_prob_packs // период теста - 10 секунд
-
-	size := 64
-	fmt.Println("->> test.thr_begin = ", test.thr_begin)
-	period_nano := int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
-	packet_count := (int64(period_test * 1000000000)) / period_nano
-
-	fmt.Println("->> period_nano  = ", period_nano)
-	fmt.Println("->> packet_count = ", packet_count)
-
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 
 	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, test_type, test.test_type, 1024, int64(1024*8*1000/(test.thr_begin)))
@@ -331,18 +321,43 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 	var count_rez, count_rez_uni int
 	var per, per_uni int64
-	size = 64
+	period_test := test.count_prob_packs // период теста - 10 секунд
+
+	size := 64
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
+	period_nano := int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count)
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 	count_rez = 0
 	per = 0
+
+	var error_koef float32
+	error_koef = 0.9995
+
+	count_probs_one_test := 50
+	packet_count_step_packets := 1000
+	packet_count_start := int64(period_test)
+	packet_count_OK := 0
+
 	for k := 0; k < test.count_probs; k++ {
-		test_c.numberCounter = 0
-		count_rez_uni, _, per_uni = test_c.testThrGen(net_interface_name, b, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
-		count_rez = count_rez + count_rez_uni
-		per = per + per_uni
+		packet_count := packet_count_start
+		for j := 0; j < count_probs_one_test; j++ {
+			test_c.numberCounter = 0
+			count_rez_uni, _, per_uni = test_c.testThrGen(net_interface_name, b, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
+
+			if (test_c.numberCounter >= uint64(count_rez_uni)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_uni) >= error_koef) {
+				continue
+				packet_count += packet_count_step_packets
+			} else {
+				break
+			}
+		}
+		packet_count_OK += packet_count
 	}
-	test.rez_64 = (float32)(64.0 * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
+	test.rez_64 = packet_count_OK / test.count_probs
 	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
 
 	size = 128
