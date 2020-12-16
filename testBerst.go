@@ -326,43 +326,73 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	size := 64
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
 	period_nano := int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	packet_count_start := int64(period_test)
 
 	fmt.Println("->> period_nano  = ", period_nano)
-	fmt.Println("->> packet_count = ", packet_count)
+	fmt.Println("->> packet_count = ", packet_count_start)
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	fmt.Println("->> ",len(b))
 	count_rez = 0
 	per = 0
-
+/*
 	var error_koef float32
 	error_koef = 0.9995
 
 	count_probs_one_test := 50
-	packet_count_step_packets := 1000
-	packet_count_start := int64(period_test)
-	packet_count_OK := 0
+	packet_count_step_packets := int64(10000)
+	
+	packet_count_OK := int64(0)
+
+
 
 	for k := 0; k < test.count_probs; k++ {
 		packet_count := packet_count_start
 		for j := 0; j < count_probs_one_test; j++ {
 			test_c.numberCounter = 0
+
+cnt:=packet_count
+
+			go func() {
+				for {
+					cnt--
+					c.WriteTo(b, addr)
+					if cnt < 0 {
+						break
+					}
+				}
+				rez_time = (int64)(time.Since(gen_start))
+				fmt.Println("rez_time = ", rez_time)
+			}()
+			//}
+		
+			quit := make(chan int)
+			go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit, t_type)
+			time.Sleep(time_to_Sleep)
+		
+			rez_count := test.numberCounter
+			fmt.Println("rez_count= ", rez_count)
+			quit <- 1
+
+
+
 			count_rez_uni, _, per_uni = test_c.testThrGen(net_interface_name, b, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
 
 			if (test_c.numberCounter >= uint64(count_rez_uni)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_uni) >= error_koef) {
 				continue
-				packet_count += packet_count_step_packets
+				packet_count += int64(packet_count_step_packets)
 			} else {
 				break
 			}
 		}
 		packet_count_OK += packet_count
 	}
-	test.rez_64 = packet_count_OK / test.count_probs
-	fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-
+	test.rez_64 = float32(packet_count_OK) / float32(test.count_probs)
+	fmt.Println("->> rez_64 = ", test.rez_64)
+*/
 	size = 128
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
-	packet_count = (int64(period_test * 1000000000)) / period_nano
+	packet_count := (int64(period_test * 1000000000)) / period_nano
 
 	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, 128, number, test_type, test.test_type)
 	count_rez = 0
