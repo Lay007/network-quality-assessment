@@ -635,20 +635,31 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
-	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-		db.Close()
+	detectPack := make(chan int, 10)
 
-		fmt.Println(" -!! Error Ping !!-")
-		return
-	}
+	go func() {
+		t_check := time.NewTicker(20 * time.Second)
+		for range t_check.C {
+		if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+			db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+			fmt.Println("Test ping falue")
+			db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db_go.Close()
+			return
+		}
 
-	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-		db.Close()
-		fmt.Println(" -!! Error check SNMP !!-")
-		return
+		if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+
+			db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+			fmt.Println("Test check SNMP falue")
+			db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db_go.Close()
+			for i:=0; i<10; i++ {
+			detectPack<-0}
+			return
+		}
 	}
+	}()
 
 	db.Close()
 	var number uint32
@@ -665,7 +676,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 	check_count := 10
 	counter := test.count
-	detectPack := make(chan int, 10)
+	
 	for range t.C {
 		//fmt.Print(" ==> Start - ")
 		//fmt.Println(time.Now())
@@ -692,38 +703,9 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			time.Sleep(time.Millisecond * 1)
 			fmt.Println(" !!Error write")
 		}
-		//fmt.Println("Wait")
-		<-detectPack
-		//fmt.Println(<-detectPack)
-		//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
-		//	go func() {
-		//		time.Sleep(time.Millisecond * 1)
-		//		c.WriteTo(b, addr)
-		//	}()
-
-		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 		check_count--
-		if check_count < 0 {
-
-			go func() {
-
-				if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-					db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-					fmt.Println("Test ping falue")
-					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-					db_go.Close()
-					return
-				}
-
-				if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-					db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-					fmt.Println("Test check SNMP falue")
-					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-					db_go.Close()
-					return
-				}
-			}()
+		
 
 			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err == nil {
@@ -741,8 +723,20 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				rez_f.Close()
 			}
 			db.Close()
-			check_count = 20
-		}
+			check_count = 10
+		
+		//fmt.Println("Wait")
+		<-detectPack
+		//fmt.Println(<-detectPack)
+		//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+
+		//	go func() {
+		//		time.Sleep(time.Millisecond * 1)
+		//		c.WriteTo(b, addr)
+		//	}()
+
+		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
+
 	}
 
 }
