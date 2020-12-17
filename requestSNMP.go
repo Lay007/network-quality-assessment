@@ -303,6 +303,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 
 						SFP_com = g.ToBigInt(variable.Value).Int64() * 8
 						metrics = append(metrics, NewMetric((*module).zabbix_node, "band_to_lazer", fmt.Sprint(SFP_com), time.Now().Unix()))
+						
 					}
 					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
 						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
@@ -331,6 +332,15 @@ func (module *module_sfp) startSNMP(conf global_config) {
 						return
 					}*/
 				//rez,er:=
+				id_test := 0
+				row_mod := db_SNMP.QueryRow("SELECT id FROM modules_sfp_sla WHERE id=?", (*module).id)
+				err = row_mod.Scan(&id_test)
+
+				if err != nil || id_test == 0 {
+					fmt.Println(" -!! Error check module !!-")
+					return
+				}
+
 				db_SNMP.Exec("INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) VALUES(?, NOW(), ?, ?)", (*module).id, SFP_laz, SFP_com)
 				//fmt.Println("Rez add module metric: ",rez)
 				//fmt.Println("Error add module metric: ",er)

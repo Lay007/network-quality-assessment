@@ -755,8 +755,8 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 	quit := make(chan int64, 10)
 	//fmt.Println("-> Begin Catch - ", start)
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(test.period)))
-	if packetSize==64 {
-		packetSize+=2
+	if packetSize == 64 {
+		packetSize += 2
 	}
 	//ExitLoop:
 	for {

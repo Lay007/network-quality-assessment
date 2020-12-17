@@ -208,7 +208,7 @@ func main() {
 		}
 		//go zabbixHello("SFP-SLA_4401")
 		//*/
-		if conf.net_interface_name == "0" {
+		if (conf.net_interface_name == "") || (conf.net_interface_name == "0") {
 			fmt.Println("  Net interface not changed")
 			db.Close()
 			continue
@@ -646,8 +646,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
-
-		fmt.Println(" -!! Error Ping !!-")
+		fmt.Println(" -!! Error check SNMP !!-")
 		return
 	}
 
@@ -711,6 +710,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 				if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 					db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+					fmt.Println("Test ping falue")
 					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 					db_go.Close()
 					return
@@ -718,7 +718,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 				if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
 					db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-					db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+					fmt.Println("Test check SNMP falue")
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 					db_go.Close()
 					return
 				}
@@ -726,17 +727,15 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 			if err == nil {
-				rez_f, er := db.Query("SELECT status FROM test_sla_real WHERE id=?", id)
-				if er != nil {
-					//	rez_f.Close()
-					break
-				}
+				rez_f, _ := db.Query("SELECT status FROM test_sla_real WHERE id=?", id)
+
 				if rez_f.Next() {
 					rez := 5
 					rez_f.Scan(&rez)
 					rez_f.Close()
 					if rez == 4 {
-						break
+						db.Close()
+						return
 					}
 				}
 				rez_f.Close()

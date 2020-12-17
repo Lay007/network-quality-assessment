@@ -305,7 +305,6 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
-
 		return
 	}
 
@@ -319,9 +318,11 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	db.Close()
 	fmt.Println(" Rez find : ", rez)
 
-	var count_rez, count_rez_uni int
-	var per, per_uni int64
+
 	period_test := test.count_prob_packs // период теста - 10 секунд
+	c, _ := raw.ListenPacket(ifi, etherType, nil)
+	count_probs_one_test := 1000
+	packet_count_step_packets := int64(period_test)
 
 	size := 64
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
@@ -332,64 +333,311 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	fmt.Println("->> packet_count = ", packet_count_start)
 
 	b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
-	fmt.Println("->> ",len(b))
-	count_rez = 0
-	per = 0
-/*
-	var error_koef float32
-	error_koef = 0.9995
-
-	count_probs_one_test := 50
-	packet_count_step_packets := int64(10000)
-	
 	packet_count_OK := int64(0)
-
-
 
 	for k := 0; k < test.count_probs; k++ {
 		packet_count := packet_count_start
 		for j := 0; j < count_probs_one_test; j++ {
 			test_c.numberCounter = 0
-
-cnt:=packet_count
-
+			cnt := packet_count
+			quit := make(chan int)
 			go func() {
+				time.Sleep(100 * time.Millisecond)
 				for {
 					cnt--
 					c.WriteTo(b, addr)
 					if cnt < 0 {
+						time.Sleep(100 * time.Millisecond)
+						quit <- 1
 						break
 					}
 				}
-				rez_time = (int64)(time.Since(gen_start))
-				fmt.Println("rez_time = ", rez_time)
 			}()
-			//}
-		
-			quit := make(chan int)
-			go (*test).receivePackets(c, mtu, ipdst_1sfpsla_str, quit, t_type)
-			time.Sleep(time_to_Sleep)
-		
-			rez_count := test.numberCounter
+			(test_c).receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit, test_type)
+			rez_count := test_c.numberCounter
 			fmt.Println("rez_count= ", rez_count)
-			quit <- 1
-
-
-
-			count_rez_uni, _, per_uni = test_c.testThrGen(net_interface_name, b, b, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, test.thr_begin, test_type)
-
-			if (test_c.numberCounter >= uint64(count_rez_uni)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_uni) >= error_koef) {
+			if (test_c.numberCounter >= uint64(packet_count))  {
 				continue
 				packet_count += int64(packet_count_step_packets)
 			} else {
 				break
 			}
 		}
-		packet_count_OK += packet_count
+		packet_count_OK += int64(test_c.numberCounter)
 	}
 	test.rez_64 = float32(packet_count_OK) / float32(test.count_probs)
 	fmt.Println("->> rez_64 = ", test.rez_64)
-*/
+
+	size = 128
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
+	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	packet_count_start = int64(period_test)
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count_start)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	packet_count_OK = int64(0)
+
+	for k := 0; k < test.count_probs; k++ {
+		packet_count := packet_count_start
+		for j := 0; j < count_probs_one_test; j++ {
+			test_c.numberCounter = 0
+			cnt := packet_count
+			quit := make(chan int)
+			go func() {
+				time.Sleep(100 * time.Millisecond)
+				for {
+					cnt--
+					c.WriteTo(b, addr)
+					if cnt < 0 {
+						time.Sleep(100 * time.Millisecond)
+						quit <- 1
+						break
+					}
+				}
+			}()
+			(test_c).receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit, test_type)
+			rez_count := test_c.numberCounter
+			fmt.Println("rez_count= ", rez_count)
+			if (test_c.numberCounter >= uint64(packet_count))  {
+				continue
+				packet_count += int64(packet_count_step_packets)
+			} else {
+				break
+			}
+		}
+		packet_count_OK += int64(test_c.numberCounter)
+	}
+	test.rez_128 = float32(packet_count_OK) / float32(test.count_probs)
+	fmt.Println("->> rez_128 = ", test.rez_128)
+
+
+
+	size = 256
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
+	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	packet_count_start = int64(period_test)
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count_start)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	packet_count_OK = int64(0)
+
+	for k := 0; k < test.count_probs; k++ {
+		packet_count := packet_count_start
+		for j := 0; j < count_probs_one_test; j++ {
+			test_c.numberCounter = 0
+			cnt := packet_count
+			quit := make(chan int)
+			go func() {
+				time.Sleep(100 * time.Millisecond)
+				for {
+					cnt--
+					c.WriteTo(b, addr)
+					if cnt < 0 {
+						time.Sleep(100 * time.Millisecond)
+						quit <- 1
+						break
+					}
+				}
+			}()
+			(test_c).receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit, test_type)
+			rez_count := test_c.numberCounter
+			fmt.Println("rez_count= ", rez_count)
+			if (test_c.numberCounter >= uint64(packet_count))  {
+				continue
+				packet_count += int64(packet_count_step_packets)
+			} else {
+				break
+			}
+		}
+		packet_count_OK += int64(test_c.numberCounter)
+	}
+	test.rez_256 = float32(packet_count_OK) / float32(test.count_probs)
+	fmt.Println("->> rez_256 = ", test.rez_256)
+
+
+	size = 512
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
+	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	packet_count_start = int64(period_test)
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count_start)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	packet_count_OK = int64(0)
+
+	for k := 0; k < test.count_probs; k++ {
+		packet_count := packet_count_start
+		for j := 0; j < count_probs_one_test; j++ {
+			test_c.numberCounter = 0
+			cnt := packet_count
+			quit := make(chan int)
+			go func() {
+				time.Sleep(100 * time.Millisecond)
+				for {
+					cnt--
+					c.WriteTo(b, addr)
+					if cnt < 0 {
+						time.Sleep(100 * time.Millisecond)
+						quit <- 1
+						break
+					}
+				}
+			}()
+			(test_c).receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit, test_type)
+			rez_count := test_c.numberCounter
+			fmt.Println("rez_count= ", rez_count)
+			if (test_c.numberCounter >= uint64(packet_count))  {
+				continue
+				packet_count += int64(packet_count_step_packets)
+			} else {
+				break
+			}
+		}
+		packet_count_OK += int64(test_c.numberCounter)
+	}
+	test.rez_512 = float32(packet_count_OK) / float32(test.count_probs)
+	fmt.Println("->> rez_512 = ", test.rez_512)
+
+
+	size = 1024
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
+	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	packet_count_start = int64(period_test)
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count_start)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	packet_count_OK = int64(0)
+
+	for k := 0; k < test.count_probs; k++ {
+		packet_count := packet_count_start
+		for j := 0; j < count_probs_one_test; j++ {
+			test_c.numberCounter = 0
+			cnt := packet_count
+			quit := make(chan int)
+			go func() {
+				time.Sleep(100 * time.Millisecond)
+				for {
+					cnt--
+					c.WriteTo(b, addr)
+					if cnt < 0 {
+						time.Sleep(100 * time.Millisecond)
+						quit <- 1
+						break
+					}
+				}
+			}()
+			(test_c).receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit, test_type)
+			rez_count := test_c.numberCounter
+			fmt.Println("rez_count= ", rez_count)
+			if (test_c.numberCounter >= uint64(packet_count))  {
+				continue
+				packet_count += int64(packet_count_step_packets)
+			} else {
+				break
+			}
+		}
+		packet_count_OK += int64(test_c.numberCounter)
+	}
+	test.rez_1024 = float32(packet_count_OK) / float32(test.count_probs)
+	fmt.Println("->> rez_1024 = ", test.rez_1024)
+
+
+	size = 1280
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
+	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	packet_count_start = int64(period_test)
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count_start)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	packet_count_OK = int64(0)
+
+	for k := 0; k < test.count_probs; k++ {
+		packet_count := packet_count_start
+		for j := 0; j < count_probs_one_test; j++ {
+			test_c.numberCounter = 0
+			cnt := packet_count
+			quit := make(chan int)
+			go func() {
+				time.Sleep(100 * time.Millisecond)
+				for {
+					cnt--
+					c.WriteTo(b, addr)
+					if cnt < 0 {
+						time.Sleep(100 * time.Millisecond)
+						quit <- 1
+						break
+					}
+				}
+			}()
+			(test_c).receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit, test_type)
+			rez_count := test_c.numberCounter
+			fmt.Println("rez_count= ", rez_count)
+			if (test_c.numberCounter >= uint64(packet_count))  {
+				continue
+				packet_count += int64(packet_count_step_packets)
+			} else {
+				break
+			}
+		}
+		packet_count_OK += int64(test_c.numberCounter)
+	}
+	test.rez_1280 = float32(packet_count_OK) / float32(test.count_probs)
+	fmt.Println("->> rez_1280 = ", test.rez_1280)
+
+
+	size = 1500
+	fmt.Println("->> test.thr_begin = ", test.thr_begin)
+	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
+	packet_count_start = int64(period_test)
+
+	fmt.Println("->> period_nano  = ", period_nano)
+	fmt.Println("->> packet_count = ", packet_count_start)
+
+	b = packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
+	packet_count_OK = int64(0)
+
+	for k := 0; k < test.count_probs; k++ {
+		packet_count := packet_count_start
+		for j := 0; j < count_probs_one_test; j++ {
+			test_c.numberCounter = 0
+			cnt := packet_count
+			quit := make(chan int)
+			go func() {
+				time.Sleep(100 * time.Millisecond)
+				for {
+					cnt--
+					c.WriteTo(b, addr)
+					if cnt < 0 {
+						time.Sleep(100 * time.Millisecond)
+						quit <- 1
+						break
+					}
+				}
+			}()
+			(test_c).receivePackets(c, ifi.MTU, ipdst_1sfpsla_str, quit, test_type)
+			rez_count := test_c.numberCounter
+			fmt.Println("rez_count= ", rez_count)
+			if (test_c.numberCounter >= uint64(packet_count))  {
+				continue
+				packet_count += int64(packet_count_step_packets)
+			} else {
+				break
+			}
+		}
+		packet_count_OK += int64(test_c.numberCounter)
+	}
+	test.rez_1518 = float32(packet_count_OK) / float32(test.count_probs)
+	fmt.Println("->> rez_1518 = ", test.rez_1518)
+	/*
 	size = 128
 	period_nano = int64(size * 8 * 1000000000 / (test.thr_begin * 1000 * 1000))
 	packet_count := (int64(period_test * 1000000000)) / period_nano
