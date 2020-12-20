@@ -616,7 +616,8 @@ func (test *testY1564) genFramesY1564(thr int, counter chan uint64, counterRes c
 func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 
 	var delay, delayMax, delayMin int64
-	var floatDelay, floatDelayMax, floatDelayMin float32
+	var jitter, delayPrep int64
+	var floatDelay, floatDelayMax, floatDelayMin, floatJitter float32
 
 	detectPackDelay := make(chan int64, 10)
 	number := 0
@@ -664,6 +665,10 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 			if detect > 0 {
 				number++
 				delay = delay + detect
+				if number>1{
+				jitter +=int64(math.Abs(float64(detect-delayPrep)))
+				}
+				delayPrep = detect
 				if number == 1 {
 					delayMax = detect
 					delayMin = detect
@@ -684,6 +689,8 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 
 				if number > 0 {
 					floatDelay = (float32(delay) / float32(number)) * 1000000.0 / float32(math.Pow(2, 32))
+					floatJitter = (float32(jitter) / float32(number)) * 1000000.0 / float32(math.Pow(2, 32))
+
 				}
 				floatDelayMax = float32(delayMax) * 1000000.0 / float32(math.Pow(2, 32))
 				floatDelayMin = float32(delayMin) * 1000000.0 / float32(math.Pow(2, 32))
@@ -736,7 +743,8 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 				quit_receive <- 1
 				//time.Sleep(100 * time.Millisecond)
 				quit <- 0
-				return floatDelay, float32(math.Max(float64(floatDelayMax-floatDelay), float64(floatDelay-floatDelayMin)))
+			//	return floatDelay, float32(math.Max(float64(floatDelayMax-floatDelay), float64(floatDelay-floatDelayMin)))
+				return floatDelay, floatJitter
 			}
 		}
 	}

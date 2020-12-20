@@ -391,11 +391,12 @@ func check_SNMP(ip string) int {
 				err := params.Connect()
 				if err != nil {
 					fmt.Print("Module : ", envTarget)
-					fmt.Println("Connect() err: ", err)
+					fmt.Println("  Connect() err: ", err)
+					params.Conn.Close()
 					mux_SNMP.Unlock()
 					continue
 				}
-				defer params.Conn.Close()
+				
 				result, err2 := params.Get(oids) // Get() accepts up to g.MAX_OIDS
 				if err2 != nil {
 					fmt.Print("Module : ", envTarget)
@@ -406,6 +407,7 @@ func check_SNMP(ip string) int {
 				}
 
 				for range result.Variables {
+
 					rez++
 				}
 				mux_SNMP.Unlock()
@@ -415,6 +417,7 @@ func check_SNMP(ip string) int {
 	}()
 
 	<-done
+	fmt.Println("\nModule : %s, rez = %d",ip,rez)
 	if rez > 3 {
 		return 0
 	} else {
