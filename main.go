@@ -638,27 +638,53 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	detectPack := make(chan int, 10)
 
 	go func() {
+		ind:=0
 		t_check := time.NewTicker(20 * time.Second)
+		db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		for range t_check.C {
-		if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-			db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-			fmt.Println("Test ping falue")
-			db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-			db_go.Close()
-			return
-		}
+			rez_f, _ := db_go.Query("SELECT status FROM test_sla_real WHERE id=?", id)
+			if rez_f.Next() {
+				rez := 5
+				rez_f.Scan(&rez)
+				rez_f.Close()
+				if rez > 4 {
+					db_go.Close()
+					return
+				}
+			} else {
+				db_go.Close()
+				return	
+			}
 
-		if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+			if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+	
+				fmt.Println("Test ping falue")
+				if (ind==0){
+				    db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id) // Ошибка выполнения
+				} else {
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id) // Ошибка выполнения	
+				}
+				db_go.Close()
+				return
+			}
 
-			db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-			fmt.Println("Test check SNMP falue")
-			db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-			db_go.Close()
-			for i:=0; i<10; i++ {
-			detectPack<-0}
-			return
+			if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+
+				fmt.Println("Test check SNMP falue")
+				if (ind==0){
+				    db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id) // Ошибка выполнения
+				} else {
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id) // Ошибка выполнения	
+				}
+				
+				db_go.Close()
+				for i := 0; i < 10; i++ {
+					detectPack <- 0
+				}
+				return
+			}
+			ind++
 		}
-	}
 	}()
 
 	db.Close()
@@ -676,7 +702,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	}
 	check_count := 10
 	counter := test.count
-	
+
 	for range t.C {
 		//fmt.Print(" ==> Start - ")
 		//fmt.Println(time.Now())
@@ -705,26 +731,28 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		}
 
 		check_count--
-		
 
-			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-			if err == nil {
-				rez_f, _ := db.Query("SELECT status FROM test_sla_real WHERE id=?", id)
-
-				if rez_f.Next() {
-					rez := 5
-					rez_f.Scan(&rez)
-					rez_f.Close()
-					if rez == 4 {
-						db.Close()
-						return
-					}
-				}
+		if check_count<0 {
+		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		if err == nil {
+			rez_f, _ := db.Query("SELECT status FROM test_sla_real WHERE id=?", id)
+			if rez_f.Next() {
+				rez := 5
+				rez_f.Scan(&rez)
 				rez_f.Close()
+				if rez > 4 {
+					db.Close()
+					return
+				}
+			} else {
+				db.Close()
+				return	
 			}
-			db.Close()
-			check_count = 10
-		
+			rez_f.Close()
+		}
+		db.Close()
+		check_count = 10
+	}
 		//fmt.Println("Wait")
 		<-detectPack
 		//fmt.Println(<-detectPack)

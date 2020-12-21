@@ -665,8 +665,8 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 			if detect > 0 {
 				number++
 				delay = delay + detect
-				if number>1{
-				jitter +=int64(math.Abs(float64(detect-delayPrep)))
+				if number > 1 {
+					jitter += int64(math.Abs(float64(detect - delayPrep)))
 				}
 				delayPrep = detect
 				if number == 1 {
@@ -743,7 +743,7 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 				quit_receive <- 1
 				//time.Sleep(100 * time.Millisecond)
 				quit <- 0
-			//	return floatDelay, float32(math.Max(float64(floatDelayMax-floatDelay), float64(floatDelay-floatDelayMin)))
+				//	return floatDelay, float32(math.Max(float64(floatDelayMax-floatDelay), float64(floatDelay-floatDelayMin)))
 				return floatDelay, floatJitter
 			}
 		}

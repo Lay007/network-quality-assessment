@@ -342,6 +342,7 @@ func (module *module_sfp) startSNMP(conf global_config) {
 				}
 
 				db_SNMP.Exec("INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) VALUES(?, NOW(), ?, ?)", (*module).id, SFP_laz, SFP_com)
+
 				//fmt.Println("Rez add module metric: ",rez)
 				//fmt.Println("Error add module metric: ",er)
 				//	fmt.Println(" add metric - ", time.Now())
@@ -396,7 +397,7 @@ func check_SNMP(ip string) int {
 					mux_SNMP.Unlock()
 					continue
 				}
-				
+
 				result, err2 := params.Get(oids) // Get() accepts up to g.MAX_OIDS
 				if err2 != nil {
 					fmt.Print("Module : ", envTarget)
@@ -417,7 +418,7 @@ func check_SNMP(ip string) int {
 	}()
 
 	<-done
-	fmt.Println("\nModule : %s, rez = %d",ip,rez)
+	fmt.Println("\nModule : %s, rez = %d", ip, rez)
 	if rez > 3 {
 		return 0
 	} else {
