@@ -638,7 +638,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	detectPack := make(chan int, 10)
 
 	go func() {
-		ind:=0
+		ind := 0
 		t_check := time.NewTicker(20 * time.Second)
 		db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		for range t_check.C {
@@ -653,16 +653,16 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				}
 			} else {
 				db_go.Close()
-				return	
+				return
 			}
 
 			if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-	
+
 				fmt.Println("Test ping falue")
-				if (ind==0){
-				    db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id) // Ошибка выполнения
+				if ind == 0 {
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id) // Ошибка выполнения
 				} else {
-					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id) // Ошибка выполнения	
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id) // Ошибка выполнения
 				}
 				db_go.Close()
 				return
@@ -671,12 +671,12 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
 
 				fmt.Println("Test check SNMP falue")
-				if (ind==0){
-				    db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id) // Ошибка выполнения
+				if ind == 0 {
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id) // Ошибка выполнения
 				} else {
-					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id) // Ошибка выполнения	
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id) // Ошибка выполнения
 				}
-				
+
 				db_go.Close()
 				for i := 0; i < 10; i++ {
 					detectPack <- 0
@@ -732,27 +732,27 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 		check_count--
 
-		if check_count<0 {
-		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-		if err == nil {
-			rez_f, _ := db.Query("SELECT status FROM test_sla_real WHERE id=?", id)
-			if rez_f.Next() {
-				rez := 5
-				rez_f.Scan(&rez)
-				rez_f.Close()
-				if rez > 4 {
+		if check_count < 0 {
+			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+			if err == nil {
+				rez_f, _ := db.Query("SELECT status FROM test_sla_real WHERE id=?", id)
+				if rez_f.Next() {
+					rez := 5
+					rez_f.Scan(&rez)
+					rez_f.Close()
+					if rez > 4 {
+						db.Close()
+						return
+					}
+				} else {
 					db.Close()
 					return
 				}
-			} else {
-				db.Close()
-				return	
+				rez_f.Close()
 			}
-			rez_f.Close()
+			db.Close()
+			check_count = 10
 		}
-		db.Close()
-		check_count = 10
-	}
 		//fmt.Println("Wait")
 		<-detectPack
 		//fmt.Println(<-detectPack)
@@ -1053,6 +1053,8 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	quit := make(chan int, 10)
 	//fmt.Println("-> Begin Catch - ", start)
 	c.SetReadDeadline(start.Add(time.Microsecond * 3000))
+	var ErrorPacketNumber, Currentnumber uint32
+	var numberR uint32
 	//ExitLoop:
 	for {
 		select {
@@ -1068,7 +1070,8 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			if err != nil {
 				fmt.Printf("failed to receive message: %v", err)
 				if err.Error() == "resource temporarily unavailable" {
-					(*test).number++
+					ErrorPacketNumber = numberR
+					Currentnumber = test.number
 				}
 				//log.Fatalf("failed to receive message: %v", err)
 				c.SetReadDeadline(start.Add(time.Hour * 24))
@@ -1152,7 +1155,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 					markerSFP12 = tmp
 				}
 
-				var numberR uint32
+				numberR = 0
 				for ind = 0; ind < 4; ind++ {
 					numberR += uint32(f.Payload[49-ind]) << (8 * ind)
 				}
@@ -1184,6 +1187,9 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				//fmt.Println("==>> number_pack - ", numberR)
 				//fmt.Println("==>> number_test - ", test.number)
 				if test_id.test_loss == true {
+					if (test.number-Currentnumber==1) && (numberR - ErrorPacketNumber) > 1 {
+						(*test).number++
+					}
 					loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
 				}
 				//*

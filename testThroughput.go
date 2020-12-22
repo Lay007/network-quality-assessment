@@ -1802,8 +1802,12 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 			case <-ticker.C:
 				//<-ticker.C
 				//fmt.Print(".")
+				shag := int(Ring_col / ColRes)
+				ind_sh := 0
+
 				for ind := 0; ind < int(Ring_col); ind++ {
-					if ind < int(ColRes) {
+					if (ind_sh > shag) || (ind == int(Ring_col-1)) {
+						ind_sh = 0
 						_, ee := zs.WriteTo(packet, addr)
 						if ee != nil {
 							fmt.Println("-Write buff error - ", ee)
@@ -1825,6 +1829,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 						atomic.AddUint64(&counter_rez, uint64(1))
 
 					}
+					ind_sh++
 				}
 			}
 		}
