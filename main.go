@@ -1187,7 +1187,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				//fmt.Println("==>> number_pack - ", numberR)
 				//fmt.Println("==>> number_test - ", test.number)
 				if test_id.test_loss == true {
-					if (test.number-Currentnumber==1) && (numberR - ErrorPacketNumber) > 1 {
+					if (test.number-Currentnumber == 1) && (numberR-ErrorPacketNumber) > 1 {
 						(*test).number++
 					}
 					loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)

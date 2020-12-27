@@ -112,8 +112,9 @@ type testDelay struct {
 	ipdst1 net.IP
 	ipdst2 net.IP
 
-	mac_src []byte
-	mac_dst []byte
+	mac_src  []byte
+	mac_dst  []byte
+	mac_dst2 []byte
 
 	rez_64       float32
 	rez_64_max   float32
@@ -215,8 +216,9 @@ type testY1564 struct {
 	ipdst1 net.IP
 	ipdst2 net.IP
 
-	mac_src []byte
-	mac_dst []byte
+	mac_src  []byte
+	mac_dst  []byte
+	mac_dst2 []byte
 
 	numberTx    uint64
 	numberRx    uint64
@@ -275,8 +277,9 @@ type testLoss struct {
 	ipdst1 net.IP
 	ipdst2 net.IP
 
-	mac_src []byte
-	mac_dst []byte
+	mac_src  []byte
+	mac_dst  []byte
+	mac_dst2 []byte
 
 	numberTx    int64
 	numberRx    uint64

@@ -56,6 +56,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	var ipdst_1sfpsla_str string
 	var ipdst_2sfpsla_str string
 	mac_dst := make([]byte, 6)
+	mac_dst2 := make([]byte, 6)
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
@@ -164,6 +165,41 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
+		row_mac, err = db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp2)
+		if err != nil {
+			db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Close()
+			row.Close()
+			row_mac.Close()
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+		defer row_mac.Close()
+		//var mac_dst_str string
+		test_mac = 0
+		for row_mac.Next() {
+			//err = row_mac.Scan(&mac_dst_str)
+			err = row_mac.Scan(&test_mac)
+			if err != nil {
+
+				db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Close()
+				row.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
+			}
+		}
+		mac_dst2[5] = byte(test_mac & 0xFF)
+		mac_dst2[4] = byte((test_mac >> 8) & 0xFF)
+		mac_dst2[3] = byte((test_mac >> 16) & 0xFF)
+		mac_dst2[2] = byte((test_mac >> 24) & 0xFF)
+		mac_dst2[1] = byte((test_mac >> 32) & 0xFF)
+		mac_dst2[0] = byte((test_mac >> 40) & 0xFF)
+
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
 			db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
@@ -253,7 +289,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 
-	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, test_type, test.test_type, 1024, int64(1024*8*1000/(test.thr_begin)))
+	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, mac_dst2, test_type, test.test_type, 1024, int64(1024*8*1000/(test.thr_begin)))
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
 		return
