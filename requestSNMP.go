@@ -39,7 +39,126 @@ func testPing(ip string) int {
 var mux_SNMP sync.Mutex
 var db_SNMP *sql.DB
 
-func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, mac_dst2 []byte, test_type uint16, testWay int, packet_size int, period_nano_gen_s int64) int {
+func (testWay *testWaySFP) getResult(thr int64, revers bool) (int64, int64, int64, int64) {
+	//var SFP1_com, SFP1_laz, SFP2_com, SFP2_laz int64
+	period_nano_gen := int64(0)
+	count_gen := int64(0)
+	if thr > 0 {
+		period_nano_gen = int64(int64(testWay.packet_size) * 8 * 1000 / thr)
+		count_gen = 10000000000 / period_nano_gen
+	}
+	b := packetForm(testWay.ipsrc, testWay.ipdst1, testWay.ipdst2, testWay.mac_src, testWay.mac_dst, int(testWay.packet_size), 1, 0, testWay.test_type)
+	if revers {
+		b = packetForm(testWay.ipsrc, testWay.ipdst2, testWay.ipdst1, testWay.mac_src, testWay.mac_dst2, int(testWay.packet_size), 1, 0, testWay.test_type)
+	} 
+	if thr > 0 {
+
+		go func() {
+			start := time.Now()
+			cc := count_gen
+			ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
+			for range ticker.C {
+				cc--
+				if cc%10000 == 0 {
+					if time.Since(start) >= (10 * time.Second) {
+						return
+					}
+				}
+				if cc > 0 {
+					(*testWay).conn.WriteTo(b, testWay.addr)
+				} else {
+					return
+				}
+			}
+		}()
+
+	}
+	var SFP1_com_load, SFP1_laz_load, SFP2_com_load, SFP2_laz_load int64
+	var SFP1_com_load_count, SFP1_laz_load_count, SFP2_com_load_count, SFP2_laz_load_count int64
+	//timer_SNMP = time.NewTicker(500 * time.Millisecond)
+	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
+
+	var counter int
+	start := time.Now()
+
+	for {
+
+		if time.Since(start) > (time.Duration(testWay.period_gen_ms) * time.Millisecond) {
+			break
+		}
+		mux_SNMP.Lock()
+		g.Default.Target = testWay.ipdst1.String()
+		err := g.Default.Connect()
+		if err != nil {
+			fmt.Printf("Connect to SFP1 error: %v", err)
+			mux_SNMP.Unlock()
+			continue
+		}
+
+		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+		if err2 != nil {
+			fmt.Printf("Get() err: %v", err2)
+			mux_SNMP.Unlock()
+		}
+		g.Default.Conn.Close()
+		mux_SNMP.Unlock()
+		for _, variable := range result.Variables {
+			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+					fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+				SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
+				SFP1_com_load_count++
+			}
+			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+					fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+				SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
+				SFP1_laz_load_count++
+			}
+		}
+
+		mux_SNMP.Lock()
+		g.Default.Target = testWay.ipdst2.String()
+		err = g.Default.Connect()
+		if err != nil {
+			fmt.Printf("Connect to SFP2 error: %v", err)
+			mux_SNMP.Unlock()
+			continue
+		}
+
+		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+		if err2 != nil {
+			fmt.Printf("Get() err: %v", err2)
+			mux_SNMP.Unlock()
+		}
+		g.Default.Conn.Close()
+		mux_SNMP.Unlock()
+		for _, variable := range result.Variables {
+			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+					fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+				SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
+				SFP2_com_load_count++
+			}
+			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+					fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+				SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
+				SFP2_laz_load_count++
+			}
+		}
+		counter++
+		time.Sleep(500 * time.Millisecond)
+		fmt.Println()
+	}
+	time.Sleep(time.Duration(testWay.pause_ms) * time.Millisecond)
+
+	SFP1_com_load = SFP1_com_load  / SFP1_com_load_count
+	SFP1_laz_load = SFP1_laz_load  / SFP1_laz_load_count
+	SFP2_com_load = SFP2_com_load  / SFP2_com_load_count
+	SFP2_laz_load = SFP2_laz_load  / SFP2_laz_load_count
+	return SFP1_com_load, SFP1_laz_load, SFP2_com_load, SFP2_laz_load
+}
+
+func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, mac_dst2 []byte, test_type uint16, test_Way int, packet_size int, period_nano_gen_s int64) int {
 
 	//  Последовательное соединение: [сервер]--(модуль SFP_SLA 1)--(модуль SFP_SLA 2)
 	//  Паралелельное содинение: (модуль SFP_SLA 1)--[сервер]--(модуль SFP_SLA 2)
@@ -54,715 +173,716 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	step2 := int64(50)  //70
 	step3 := int64(5)   //7
 
-	packet_size_generate := int64(1280)
-
-	period_nano_gen_s = int64(packet_size_generate * 8 * 1000 / step1)
-	//period_nano_gen := (int64)(5*packet_size_generate*period_nano_gen_s) / (int64)(packet_size) // 20% от исходной
-	period_nano_gen := (int64)(packet_size_generate*period_nano_gen_s) / (int64)(packet_size) // 100% от исходной
-	count_gen := 10000000000 / period_nano_gen
-
-	fmt.Println(" ==> TEST SFP way ==")
-
-	var SFP1_com_init, SFP1_laz_init, SFP2_com_init, SFP2_laz_init int64
-
-	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
-
-	counter := 0
-
-	timer_SNMP := time.NewTicker(500 * time.Millisecond)
-	for range timer_SNMP.C {
-		counter++
-		if counter > 20 {
-			timer_SNMP.Stop()
-			break
-		}
-		mux_SNMP.Lock()
-		g.Default.Target = ip_1sfpsla_str
-		err := g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP1 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_com_init = SFP1_com_init + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_laz_init = SFP1_laz_init + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-		g.Default.Conn.Close()
-
-		g.Default.Target = ip_2sfpsla_str
-		err = g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP2 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_com_init = SFP2_com_init + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_laz_init = SFP2_laz_init + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-	}
-
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_init*8)/10000000.0, float32(SFP1_laz_init*8)/10000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v ", float32(SFP2_com_init*8)/10000000.0, float32(SFP2_laz_init*8)/10000000.0)
-
-	fmt.Printf("\n->200 Mb/s<-\n\n")
-	fmt.Printf("\n->Generate normal<-\n\n")
+	period_gen_ms := int64(10000) // период генерации 10 сек
+	pause_ms := int64(2000)       // период генерации 2 сек
 
 	ipsrc := net.ParseIP(ip_server)
 	ipdst1 := net.ParseIP(ip_1sfpsla_str)
 	ipdst2 := net.ParseIP(ip_2sfpsla_str)
 
-	b := packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst, int(packet_size_generate), 1, test_type, testWay)
+	var testWay testWaySFP
 
-	go func() {
-		cc := count_gen
-		ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
-		for range ticker.C {
-			cc--
-			if cc > 0 {
-				c.WriteTo(b, addr)
-			} else {
-				return
+	testWay.test_type = test_Way
+	testWay.ipsrc = ipsrc
+	testWay.ipdst1 = ipdst1
+	testWay.ipdst2 = ipdst2
+	testWay.packet_size = int(1280)
+	testWay.test_type = test_Way
+	testWay.addr = addr
+
+	testWay.period_gen_ms = period_gen_ms
+	testWay.pause_ms = pause_ms
+
+	testWay.mac_src = mac_src
+	testWay.mac_dst = mac_dst
+	testWay.mac_dst2 = mac_dst2
+
+	testWay.conn = c
+
+	revers := false
+
+	fmt.Println(" ==> TEST SFP way ==")
+	SFP1_com_init, SFP1_laz_init, SFP2_com_init, SFP2_laz_init := testWay.getResult(0, revers)
+
+	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_init*8)/1000000.0, float32(SFP1_laz_init*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_init*8)/1000000.0, float32(SFP2_laz_init*8)/1000000.0)
+
+	SFP1_com_s1, SFP1_laz_s1, SFP2_com_s1, SFP2_laz_s1 := testWay.getResult(step1, revers)
+
+	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s1*8)/1000000.0, float32(SFP1_laz_s1*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s1*8)/1000000.0, float32(SFP2_laz_s1*8)/1000000.0)
+
+	revers = true
+	SFP1_com_s1, SFP1_laz_s1, SFP2_com_s1, SFP2_laz_s1 = testWay.getResult(step1, revers)
+
+	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s1*8)/1000000.0, float32(SFP1_laz_s1*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s1*8)/1000000.0, float32(SFP2_laz_s1*8)/1000000.0)
+
+	revers = false
+	SFP1_com_s2, SFP1_laz_s2, SFP2_com_s2, SFP2_laz_s2 := testWay.getResult(step2, revers)
+
+	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s2*8)/1000000.0, float32(SFP2_laz_s2*8)/1000000.0)
+
+	revers = true
+	SFP1_com_s2, SFP1_laz_s2, SFP2_com_s2, SFP2_laz_s2 = testWay.getResult(step2, revers)
+
+	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s2*8)/1000000.0, float32(SFP2_laz_s2*8)/1000000.0)
+
+	revers = false
+	SFP1_com_s3, SFP1_laz_s3, SFP2_com_s3, SFP2_laz_s3 := testWay.getResult(step3, revers)
+
+	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s3*8)/1000000.0, float32(SFP1_laz_s3*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s3*8)/1000000.0, float32(SFP2_laz_s3*8)/1000000.0)
+
+	revers = true
+	SFP1_com_s3, SFP1_laz_s3, SFP2_com_s3, SFP2_laz_s3 = testWay.getResult(step3, revers)
+
+	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s3*8)/1000000.0, float32(SFP1_laz_s3*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s3*8)/1000000.0, float32(SFP2_laz_s3*8)/1000000.0)
+
+	/*
+
+			period_nano_gen_s = int64(packet_size_generate * 8 * 1000 / step1)
+			//period_nano_gen := (int64)(5*packet_size_generate*period_nano_gen_s) / (int64)(packet_size) // 20% от исходной
+			period_nano_gen := (int64)(packet_size_generate*period_nano_gen_s) / (int64)(packet_size) // 100% от исходной
+			count_gen := 10000000000 / period_nano_gen
+
+			fmt.Println(" ==> TEST SFP way ==")
+
+			var SFP1_com_init, SFP1_laz_init, SFP2_com_init, SFP2_laz_init int64
+
+			oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
+
+			counter := 0
+
+			timer_SNMP := time.NewTicker(500 * time.Millisecond)
+			for range timer_SNMP.C {
+				counter++
+				if counter > 20 {
+					timer_SNMP.Stop()
+					break
+				}
+				mux_SNMP.Lock()
+				g.Default.Target = ip_1sfpsla_str
+				err := g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP1 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_com_init = SFP1_com_init + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_laz_init = SFP1_laz_init + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+				g.Default.Conn.Close()
+
+				g.Default.Target = ip_2sfpsla_str
+				err = g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP2 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_com_init = SFP2_com_init + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_laz_init = SFP2_laz_init + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
 			}
-		}
-	}()
 
-	var SFP1_com_load, SFP1_laz_load, SFP2_com_load, SFP2_laz_load int64
+			fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_init*8)/10000000.0, float32(SFP1_laz_init*8)/10000000.0)
+			fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v ", float32(SFP2_com_init*8)/10000000.0, float32(SFP2_laz_init*8)/10000000.0)
 
-	counter = 0
+			fmt.Printf("\n->200 Mb/s<-\n\n")
+			fmt.Printf("\n->Generate normal<-\n\n")
 
-	timer_SNMP = time.NewTicker(500 * time.Millisecond)
-	for range timer_SNMP.C {
-		counter++
-		if counter > 20 {
-			timer_SNMP.Stop()
-			break
-		}
-		mux_SNMP.Lock()
-		g.Default.Target = ip_1sfpsla_str
-		err := g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP1 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
+			ipsrc := net.ParseIP(ip_server)
+			ipdst1 := net.ParseIP(ip_1sfpsla_str)
+			ipdst2 := net.ParseIP(ip_2sfpsla_str)
 
-		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
+
+
+			SFP1_com_load = SFP1_com_load - SFP1_com_init
+			SFP1_laz_load = SFP1_laz_load - SFP1_laz_init
+			SFP2_com_load = SFP2_com_load - SFP2_com_init
+			SFP2_laz_load = SFP2_laz_load - SFP2_laz_init
+
+			fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_load*8)/10000000.0, float32(SFP1_laz_load*8)/10000000.0)
+			fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_load*8)/10000000.0, float32(SFP2_laz_load*8)/10000000.0)
+
+			time.Sleep(2 * time.Second)
+
+			fmt.Printf("\n->Generate revers<-\n\n")
+
+			ipsrc = net.ParseIP(ip_server)
+			ipdst2 = net.ParseIP(ip_1sfpsla_str)
+			ipdst1 = net.ParseIP(ip_2sfpsla_str)
+
+			b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst2, int(packet_size_generate), 1, test_type, testWay)
+
+			go func() {
+				cc := count_gen
+				ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
+				for range ticker.C {
+					cc--
+					if cc > 0 {
+						c.WriteTo(b, addr)
+					} else {
+						return
+					}
+				}
+			}()
+
+			var SFP1_com_load_rev, SFP1_laz_load_rev, SFP2_com_load_rev, SFP2_laz_load_rev int64
+
+			counter = 0
+
+			timer_SNMP = time.NewTicker(500 * time.Millisecond)
+			for range timer_SNMP.C {
+				counter++
+				if counter > 20 {
+					timer_SNMP.Stop()
+					break
+				}
+				mux_SNMP.Lock()
+				g.Default.Target = ip_1sfpsla_str
+				err := g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP1 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_com_load_rev = SFP1_com_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_laz_load_rev = SFP1_laz_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
+				mux_SNMP.Lock()
+				g.Default.Target = ip_2sfpsla_str
+				err = g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP2 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_com_load_rev = SFP2_com_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_laz_load_rev = SFP2_laz_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
 			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
+
+			SFP1_com_load_rev = SFP1_com_load_rev - SFP1_com_init
+			SFP1_laz_load_rev = SFP1_laz_load_rev - SFP1_laz_init
+			SFP2_com_load_rev = SFP2_com_load_rev - SFP2_com_init
+			SFP2_laz_load_rev = SFP2_laz_load_rev - SFP2_laz_init
+
+			fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", float32(SFP1_com_load_rev*8)/10000000.0, float32(SFP1_laz_load_rev*8)/10000000.0)
+			fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v \n", float32(SFP2_com_load_rev*8)/10000000.0, float32(SFP2_laz_load_rev*8)/10000000.0)
+
+			time.Sleep(2 * time.Second)
+
+			fmt.Printf("\n->70 Mb/s<-\n\n")
+			fmt.Printf("\n->Generate normal<-\n\n")
+
+			ipsrc = net.ParseIP(ip_server)
+			ipdst1 = net.ParseIP(ip_1sfpsla_str)
+			ipdst2 = net.ParseIP(ip_2sfpsla_str)
+
+			period_nano_gen_s = int64(packet_size_generate * 8 * 1000 / step2)
+			period_nano_gen = (int64)(packet_size_generate*period_nano_gen_s) / (int64)(packet_size) // 100% от исходной
+			count_gen = 10000000000 / period_nano_gen
+
+			b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst, int(packet_size_generate), 1, test_type, testWay)
+
+			go func() {
+				cc := count_gen
+				ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
+				for range ticker.C {
+					cc--
+					if cc > 0 {
+						c.WriteTo(b, addr)
+					} else {
+						return
+					}
+				}
+			}()
+
+			SFP1_com_load = 0
+			SFP1_laz_load = 0
+			SFP2_com_load = 0
+			SFP2_laz_load = 0
+
+			counter = 0
+
+			timer_SNMP = time.NewTicker(500 * time.Millisecond)
+			for range timer_SNMP.C {
+				counter++
+				if counter > 20 {
+					timer_SNMP.Stop()
+					break
+				}
+				mux_SNMP.Lock()
+				g.Default.Target = ip_1sfpsla_str
+				err := g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP1 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
+				mux_SNMP.Lock()
+				g.Default.Target = ip_2sfpsla_str
+				err = g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP2 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
 			}
-		}
 
-		mux_SNMP.Lock()
-		g.Default.Target = ip_2sfpsla_str
-		err = g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP2 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
+			SFP1_com_load = SFP1_com_load - SFP1_com_init
+			SFP1_laz_load = SFP1_laz_load - SFP1_laz_init
+			SFP2_com_load = SFP2_com_load - SFP2_com_init
+			SFP2_laz_load = SFP2_laz_load - SFP2_laz_init
 
-		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
+			fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_load*8)/10000000.0, float32(SFP1_laz_load*8)/10000000.0)
+			fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_load*8)/10000000.0, float32(SFP2_laz_load*8)/10000000.0)
+
+			time.Sleep(2 * time.Second)
+
+			fmt.Printf("\n->Generate revers<-\n\n")
+
+			ipsrc = net.ParseIP(ip_server)
+			ipdst2 = net.ParseIP(ip_1sfpsla_str)
+			ipdst1 = net.ParseIP(ip_2sfpsla_str)
+
+			b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst2, int(packet_size_generate), 1, test_type, testWay)
+
+			go func() {
+				cc := count_gen
+				ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
+				for range ticker.C {
+					cc--
+					if cc > 0 {
+						c.WriteTo(b, addr)
+					} else {
+						return
+					}
+				}
+			}()
+
+			SFP1_com_load_rev = 0
+			SFP1_laz_load_rev = 0
+			SFP2_com_load_rev = 0
+			SFP2_laz_load_rev = 0
+
+			counter = 0
+
+			timer_SNMP = time.NewTicker(500 * time.Millisecond)
+			for range timer_SNMP.C {
+				counter++
+				if counter > 20 {
+					timer_SNMP.Stop()
+					break
+				}
+				mux_SNMP.Lock()
+				g.Default.Target = ip_1sfpsla_str
+				err := g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP1 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_com_load_rev = SFP1_com_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_laz_load_rev = SFP1_laz_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
+				mux_SNMP.Lock()
+				g.Default.Target = ip_2sfpsla_str
+				err = g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP2 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_com_load_rev = SFP2_com_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_laz_load_rev = SFP2_laz_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
 			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
+
+			SFP1_com_load_rev = SFP1_com_load_rev - SFP1_com_init
+			SFP1_laz_load_rev = SFP1_laz_load_rev - SFP1_laz_init
+			SFP2_com_load_rev = SFP2_com_load_rev - SFP2_com_init
+			SFP2_laz_load_rev = SFP2_laz_load_rev - SFP2_laz_init
+
+			fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", float32(SFP1_com_load_rev*8)/10000000.0, float32(SFP1_laz_load_rev*8)/10000000.0)
+			fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v \n", float32(SFP2_com_load_rev*8)/10000000.0, float32(SFP2_laz_load_rev*8)/10000000.0)
+
+			time.Sleep(2 * time.Second)
+
+			fmt.Printf("\n->7 Mb/s<-\n\n")
+			fmt.Printf("\n->Generate normal<-\n\n")
+
+			ipsrc = net.ParseIP(ip_server)
+			ipdst1 = net.ParseIP(ip_1sfpsla_str)
+			ipdst2 = net.ParseIP(ip_2sfpsla_str)
+
+			period_nano_gen_s = int64(packet_size_generate * 8 * 1000 / step3)
+			period_nano_gen = (int64)(packet_size_generate*period_nano_gen_s) / (int64)(packet_size) // 100% от исходной
+			count_gen = 10000000000 / period_nano_gen
+
+			b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst, int(packet_size_generate), 1, test_type, testWay)
+
+			go func() {
+				cc := count_gen
+				ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
+				for range ticker.C {
+					cc--
+					if cc > 0 {
+						c.WriteTo(b, addr)
+					} else {
+						return
+					}
+				}
+			}()
+
+			SFP1_com_load = 0
+			SFP1_laz_load = 0
+			SFP2_com_load = 0
+			SFP2_laz_load = 0
+
+			counter = 0
+
+			timer_SNMP = time.NewTicker(500 * time.Millisecond)
+
+
+
+			for range timer_SNMP.C {
+				counter++
+				if counter > 20 {
+					timer_SNMP.Stop()
+					break
+				}
+				mux_SNMP.Lock()
+				g.Default.Target = ip_1sfpsla_str
+				err := g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP1 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
+				mux_SNMP.Lock()
+				g.Default.Target = ip_2sfpsla_str
+				err = g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP2 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
 			}
-		}
 
-	}
+			SFP1_com_load = SFP1_com_load - SFP1_com_init
+			SFP1_laz_load = SFP1_laz_load - SFP1_laz_init
+			SFP2_com_load = SFP2_com_load - SFP2_com_init
+			SFP2_laz_load = SFP2_laz_load - SFP2_laz_init
 
-	SFP1_com_load = SFP1_com_load - SFP1_com_init
-	SFP1_laz_load = SFP1_laz_load - SFP1_laz_init
-	SFP2_com_load = SFP2_com_load - SFP2_com_init
-	SFP2_laz_load = SFP2_laz_load - SFP2_laz_init
+			fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_load*8)/10000000.0, float32(SFP1_laz_load*8)/10000000.0)
+			fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_load*8)/10000000.0, float32(SFP2_laz_load*8)/10000000.0)
+			time.Sleep(2 * time.Second)
 
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_load*8)/10000000.0, float32(SFP1_laz_load*8)/10000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_load*8)/10000000.0, float32(SFP2_laz_load*8)/10000000.0)
+			fmt.Printf("\n->Generate revers<-\n\n")
 
-	fmt.Printf("\n->Generate revers<-\n\n")
+			ipsrc = net.ParseIP(ip_server)
+			ipdst2 = net.ParseIP(ip_1sfpsla_str)
+			ipdst1 = net.ParseIP(ip_2sfpsla_str)
 
-	ipsrc = net.ParseIP(ip_server)
-	ipdst2 = net.ParseIP(ip_1sfpsla_str)
-	ipdst1 = net.ParseIP(ip_2sfpsla_str)
+			b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst2, int(packet_size_generate), 1, test_type, testWay)
 
-	b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst2, int(packet_size_generate), 1, test_type, testWay)
+			go func() {
+				cc := count_gen
+				ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
+				for range ticker.C {
+					cc--
+					if cc > 0 {
+						c.WriteTo(b, addr)
+					} else {
+						return
+					}
+				}
+			}()
 
-	go func() {
-		cc := count_gen
-		ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
-		for range ticker.C {
-			cc--
-			if cc > 0 {
-				c.WriteTo(b, addr)
-			} else {
-				return
+			SFP1_com_load_rev = 0
+			SFP1_laz_load_rev = 0
+			SFP2_com_load_rev = 0
+			SFP2_laz_load_rev = 0
+
+			counter = 0
+
+			timer_SNMP = time.NewTicker(500 * time.Millisecond)
+			for range timer_SNMP.C {
+				counter++
+				if counter > 20 {
+					timer_SNMP.Stop()
+					break
+				}
+				mux_SNMP.Lock()
+				g.Default.Target = ip_1sfpsla_str
+				err := g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP1 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_com_load_rev = SFP1_com_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP1_laz_load_rev = SFP1_laz_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
+				mux_SNMP.Lock()
+				g.Default.Target = ip_2sfpsla_str
+				err = g.Default.Connect()
+				if err != nil {
+					fmt.Printf("Connect to SFP2 error: %v", err)
+					mux_SNMP.Unlock()
+					return 0
+				}
+
+				result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+				if err2 != nil {
+					fmt.Printf("Get() err: %v", err2)
+					mux_SNMP.Unlock()
+				}
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_com_load_rev = SFP2_com_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						SFP2_laz_load_rev = SFP2_laz_load_rev + g.ToBigInt(variable.Value).Int64()
+					}
+				}
+
 			}
-		}
-	}()
 
-	var SFP1_com_load_rev, SFP1_laz_load_rev, SFP2_com_load_rev, SFP2_laz_load_rev int64
+			SFP1_com_load_rev = SFP1_com_load_rev - SFP1_com_init
+			SFP1_laz_load_rev = SFP1_laz_load_rev - SFP1_laz_init
+			SFP2_com_load_rev = SFP2_com_load_rev - SFP2_com_init
+			SFP2_laz_load_rev = SFP2_laz_load_rev - SFP2_laz_init
 
-	counter = 0
+		fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", float32(SFP1_com_load_rev*8)/10000000.0, float32(SFP1_laz_load_rev*8)/10000000.0)
+		fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v \n", float32(SFP2_com_load_rev*8)/10000000.0, float32(SFP2_laz_load_rev*8)/10000000.0)
 
-	timer_SNMP = time.NewTicker(500 * time.Millisecond)
-	for range timer_SNMP.C {
-		counter++
-		if counter > 20 {
-			timer_SNMP.Stop()
-			break
-		}
-		mux_SNMP.Lock()
-		g.Default.Target = ip_1sfpsla_str
-		err := g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP1 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
+		min_load := 7 * (1024 * 1000000000 / period_nano_gen)
+		fmt.Printf("\n  Min_load - %v \n", min_load)
 
-		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_com_load_rev = SFP1_com_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_laz_load_rev = SFP1_laz_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-		mux_SNMP.Lock()
-		g.Default.Target = ip_2sfpsla_str
-		err = g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP2 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_com_load_rev = SFP2_com_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_laz_load_rev = SFP2_laz_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-	}
-
-	SFP1_com_load_rev = SFP1_com_load_rev - SFP1_com_init
-	SFP1_laz_load_rev = SFP1_laz_load_rev - SFP1_laz_init
-	SFP2_com_load_rev = SFP2_com_load_rev - SFP2_com_init
-	SFP2_laz_load_rev = SFP2_laz_load_rev - SFP2_laz_init
-
-	fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", float32(SFP1_com_load_rev*8)/10000000.0, float32(SFP1_laz_load_rev*8)/10000000.0)
-	fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v \n", float32(SFP2_com_load_rev*8)/10000000.0, float32(SFP2_laz_load_rev*8)/10000000.0)
-
-	fmt.Printf("\n->70 Mb/s<-\n\n")
-	fmt.Printf("\n->Generate normal<-\n\n")
-
-	ipsrc = net.ParseIP(ip_server)
-	ipdst1 = net.ParseIP(ip_1sfpsla_str)
-	ipdst2 = net.ParseIP(ip_2sfpsla_str)
-
-	period_nano_gen_s = int64(packet_size_generate * 8 * 1000 / step2)
-	period_nano_gen = (int64)(packet_size_generate*period_nano_gen_s) / (int64)(packet_size) // 100% от исходной
-	count_gen = 10000000000 / period_nano_gen
-
-	b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst, int(packet_size_generate), 1, test_type, testWay)
-
-	go func() {
-		cc := count_gen
-		ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
-		for range ticker.C {
-			cc--
-			if cc > 0 {
-				c.WriteTo(b, addr)
-			} else {
-				return
-			}
-		}
-	}()
-
-	SFP1_com_load = 0
-	SFP1_laz_load = 0
-	SFP2_com_load = 0
-	SFP2_laz_load = 0
-
-	counter = 0
-
-	timer_SNMP = time.NewTicker(500 * time.Millisecond)
-	for range timer_SNMP.C {
-		counter++
-		if counter > 20 {
-			timer_SNMP.Stop()
-			break
-		}
-		mux_SNMP.Lock()
-		g.Default.Target = ip_1sfpsla_str
-		err := g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP1 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-		mux_SNMP.Lock()
-		g.Default.Target = ip_2sfpsla_str
-		err = g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP2 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-	}
-
-	SFP1_com_load = SFP1_com_load - SFP1_com_init
-	SFP1_laz_load = SFP1_laz_load - SFP1_laz_init
-	SFP2_com_load = SFP2_com_load - SFP2_com_init
-	SFP2_laz_load = SFP2_laz_load - SFP2_laz_init
-
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_load*8)/10000000.0, float32(SFP1_laz_load*8)/10000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_load*8)/10000000.0, float32(SFP2_laz_load*8)/10000000.0)
-
-	fmt.Printf("\n->Generate revers<-\n\n")
-
-	ipsrc = net.ParseIP(ip_server)
-	ipdst2 = net.ParseIP(ip_1sfpsla_str)
-	ipdst1 = net.ParseIP(ip_2sfpsla_str)
-
-	b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst2, int(packet_size_generate), 1, test_type, testWay)
-
-	go func() {
-		cc := count_gen
-		ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
-		for range ticker.C {
-			cc--
-			if cc > 0 {
-				c.WriteTo(b, addr)
-			} else {
-				return
-			}
-		}
-	}()
-
-	SFP1_com_load_rev = 0
-	SFP1_laz_load_rev = 0
-	SFP2_com_load_rev = 0
-	SFP2_laz_load_rev = 0
-
-	counter = 0
-
-	timer_SNMP = time.NewTicker(500 * time.Millisecond)
-	for range timer_SNMP.C {
-		counter++
-		if counter > 20 {
-			timer_SNMP.Stop()
-			break
-		}
-		mux_SNMP.Lock()
-		g.Default.Target = ip_1sfpsla_str
-		err := g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP1 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_com_load_rev = SFP1_com_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_laz_load_rev = SFP1_laz_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-		mux_SNMP.Lock()
-		g.Default.Target = ip_2sfpsla_str
-		err = g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP2 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_com_load_rev = SFP2_com_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_laz_load_rev = SFP2_laz_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-	}
-
-	SFP1_com_load_rev = SFP1_com_load_rev - SFP1_com_init
-	SFP1_laz_load_rev = SFP1_laz_load_rev - SFP1_laz_init
-	SFP2_com_load_rev = SFP2_com_load_rev - SFP2_com_init
-	SFP2_laz_load_rev = SFP2_laz_load_rev - SFP2_laz_init
-
-	fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", float32(SFP1_com_load_rev*8)/10000000.0, float32(SFP1_laz_load_rev*8)/10000000.0)
-	fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v \n", float32(SFP2_com_load_rev*8)/10000000.0, float32(SFP2_laz_load_rev*8)/10000000.0)
-
-	fmt.Printf("\n->7 Mb/s<-\n\n")
-	fmt.Printf("\n->Generate normal<-\n\n")
-
-	ipsrc = net.ParseIP(ip_server)
-	ipdst1 = net.ParseIP(ip_1sfpsla_str)
-	ipdst2 = net.ParseIP(ip_2sfpsla_str)
-
-	period_nano_gen_s = int64(packet_size_generate * 8 * 1000 / step3)
-	period_nano_gen = (int64)(packet_size_generate*period_nano_gen_s) / (int64)(packet_size) // 100% от исходной
-	count_gen = 10000000000 / period_nano_gen
-
-	b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst, int(packet_size_generate), 1, test_type, testWay)
-
-	go func() {
-		cc := count_gen
-		ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
-		for range ticker.C {
-			cc--
-			if cc > 0 {
-				c.WriteTo(b, addr)
-			} else {
-				return
-			}
-		}
-	}()
-
-	SFP1_com_load = 0
-	SFP1_laz_load = 0
-	SFP2_com_load = 0
-	SFP2_laz_load = 0
-
-	counter = 0
-
-	timer_SNMP = time.NewTicker(500 * time.Millisecond)
-	for range timer_SNMP.C {
-		counter++
-		if counter > 20 {
-			timer_SNMP.Stop()
-			break
-		}
-		mux_SNMP.Lock()
-		g.Default.Target = ip_1sfpsla_str
-		err := g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP1 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-		mux_SNMP.Lock()
-		g.Default.Target = ip_2sfpsla_str
-		err = g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP2 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-	}
-
-	SFP1_com_load = SFP1_com_load - SFP1_com_init
-	SFP1_laz_load = SFP1_laz_load - SFP1_laz_init
-	SFP2_com_load = SFP2_com_load - SFP2_com_init
-	SFP2_laz_load = SFP2_laz_load - SFP2_laz_init
-
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_load*8)/10000000.0, float32(SFP1_laz_load*8)/10000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_load*8)/10000000.0, float32(SFP2_laz_load*8)/10000000.0)
-
-	fmt.Printf("\n->Generate revers<-\n\n")
-
-	ipsrc = net.ParseIP(ip_server)
-	ipdst2 = net.ParseIP(ip_1sfpsla_str)
-	ipdst1 = net.ParseIP(ip_2sfpsla_str)
-
-	b = packetForm(ipsrc, ipdst1, ipdst2, mac_src, mac_dst2, int(packet_size_generate), 1, test_type, testWay)
-
-	go func() {
-		cc := count_gen
-		ticker := time.NewTicker(time.Duration(period_nano_gen) * time.Nanosecond)
-		for range ticker.C {
-			cc--
-			if cc > 0 {
-				c.WriteTo(b, addr)
-			} else {
-				return
-			}
-		}
-	}()
-
-	SFP1_com_load_rev = 0
-	SFP1_laz_load_rev = 0
-	SFP2_com_load_rev = 0
-	SFP2_laz_load_rev = 0
-
-	counter = 0
-
-	timer_SNMP = time.NewTicker(500 * time.Millisecond)
-	for range timer_SNMP.C {
-		counter++
-		if counter > 20 {
-			timer_SNMP.Stop()
-			break
-		}
-		mux_SNMP.Lock()
-		g.Default.Target = ip_1sfpsla_str
-		err := g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP1 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_com_load_rev = SFP1_com_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP1_laz_load_rev = SFP1_laz_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-		mux_SNMP.Lock()
-		g.Default.Target = ip_2sfpsla_str
-		err = g.Default.Connect()
-		if err != nil {
-			fmt.Printf("Connect to SFP2 error: %v", err)
-			mux_SNMP.Unlock()
-			return 0
-		}
-
-		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_com_load_rev = SFP2_com_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				//	fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				SFP2_laz_load_rev = SFP2_laz_load_rev + g.ToBigInt(variable.Value).Int64()
-			}
-		}
-
-	}
-
-	SFP1_com_load_rev = SFP1_com_load_rev - SFP1_com_init
-	SFP1_laz_load_rev = SFP1_laz_load_rev - SFP1_laz_init
-	SFP2_com_load_rev = SFP2_com_load_rev - SFP2_com_init
-	SFP2_laz_load_rev = SFP2_laz_load_rev - SFP2_laz_init
-
-	fmt.Printf("\n  SFP1_com - %v SFP1_laz - %v ", float32(SFP1_com_load_rev*8)/10000000.0, float32(SFP1_laz_load_rev*8)/10000000.0)
-	fmt.Printf("\n  SFP2_com - %v SFP2_laz - %v \n", float32(SFP2_com_load_rev*8)/10000000.0, float32(SFP2_laz_load_rev*8)/10000000.0)
-
-	min_load := 7 * (1024 * 1000000000 / period_nano_gen)
-	fmt.Printf("\n  Min_load - %v \n", min_load)
-
-	if (SFP1_com_load > min_load) && (SFP1_laz_load > min_load) && ((float32(SFP1_laz_load)/float32(SFP1_com_load) > 1.7) || (float32(SFP1_com_load)/float32(SFP1_laz_load) > 1.7)) {
-		fmt.Printf("\n  Modules state change \n")
-		return 2
-	} else {
-		fmt.Printf("\n  SFP2_laz / SFP2_com %f \n", float32(SFP2_laz_load)/float32(SFP2_com_load))
-		fmt.Printf("\n  SFP2_com / SFP2_laz %f \n", float32(SFP2_com_load)/float32(SFP2_laz_load))
-		if (SFP2_com_load > min_load) && (SFP2_laz_load > min_load) && ((float32(SFP2_laz_load)/float32(SFP2_com_load) > 1.7) || (float32(SFP2_com_load)/float32(SFP2_laz_load) > 1.7)) {
+		if (SFP1_com_load > min_load) && (SFP1_laz_load > min_load) && ((float32(SFP1_laz_load)/float32(SFP1_com_load) > 1.7) || (float32(SFP1_com_load)/float32(SFP1_laz_load) > 1.7)) {
 			fmt.Printf("\n  Modules state change \n")
 			return 2
 		} else {
-			fmt.Printf("\n  Modules state OK \n")
-			return 1
+			fmt.Printf("\n  SFP2_laz / SFP2_com %f \n", float32(SFP2_laz_load)/float32(SFP2_com_load))
+			fmt.Printf("\n  SFP2_com / SFP2_laz %f \n", float32(SFP2_com_load)/float32(SFP2_laz_load))
+			if (SFP2_com_load > min_load) && (SFP2_laz_load > min_load) && ((float32(SFP2_laz_load)/float32(SFP2_com_load) > 1.7) || (float32(SFP2_com_load)/float32(SFP2_laz_load) > 1.7)) {
+				fmt.Printf("\n  Modules state change \n")
+				return 2
+			} else {
+				fmt.Printf("\n  Modules state OK \n")
+				return 1
+			}
 		}
-	}
+	*/
+	return 0
 }
 
 func (module *module_sfp) startSNMP(conf global_config) {

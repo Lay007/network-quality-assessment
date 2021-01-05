@@ -305,3 +305,31 @@ type testLossRez struct {
 	rez_4096 float32
 	rez_9000 float32
 }
+
+type testWaySFP struct {
+	test_type     int
+	module_first  int
+	module_second int
+	thr_begin     int
+
+	packet_size int
+
+	net_interface_name string
+	addr               net.Addr
+	conn               net.PacketConn
+
+	ipsrc  net.IP
+	ipdst1 net.IP
+	ipdst2 net.IP
+
+	period_gen_ms int64
+	pause_ms      int64
+
+	mac_src  []byte
+	mac_dst  []byte
+	mac_dst2 []byte
+
+	status int
+
+	id_test_type uint16
+}

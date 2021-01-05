@@ -277,7 +277,6 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		HardwareAddr: ethernet.Broadcast,
 	}
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
-
 	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.mac_dst2, test.id_test_type, test.test_type, 1024, int64(1024*8*1000/test.CIR))
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
