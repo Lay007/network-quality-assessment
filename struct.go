@@ -332,4 +332,10 @@ type testWaySFP struct {
 	status int
 
 	id_test_type uint16
+
+	SFP1_com_min int64
+	SFP1_laz_min int64
+
+	SFP2_com_min int64
+	SFP2_laz_min int64
 }
