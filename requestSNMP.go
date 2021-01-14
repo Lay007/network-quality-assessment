@@ -81,6 +81,8 @@ func (testWay *testWaySFP) getResult(thr int64, revers bool) (int64, int64, int6
 	var counter int
 	start := time.Now()
 
+	time.Sleep(2000 * time.Millisecond)
+
 	g.Default.Timeout = time.Millisecond * 100
 	g.Default.Retries = 1
 
@@ -93,73 +95,72 @@ func (testWay *testWaySFP) getResult(thr int64, revers bool) (int64, int64, int6
 		g.Default.Target = testWay.ipdst1.String()
 		err := g.Default.Connect()
 		if err != nil {
-			fmt.Printf("Connect to SFP1 error: %v", err)
+			//	fmt.Printf("\nConnect to SFP1 error: %v", err)
 			mux_SNMP.Unlock()
-			continue
-		}
+		} else {
 
-		result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				if g.ToBigInt(variable.Value).Int64() > testWay.SFP1_com_min {
-					SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
-					SFP1_com_load_count++
+			result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+			if err2 != nil {
+				//		fmt.Printf("\nGet() err: %v", err2)
+				mux_SNMP.Unlock()
+			} else {
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("\nSFP1 number: %v   Mb/s", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						if g.ToBigInt(variable.Value).Int64() > testWay.SFP1_com_min {
+							SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
+							SFP1_com_load_count++
+						}
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("\nSFP1 number: %v   Mb/s", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						if g.ToBigInt(variable.Value).Int64() > testWay.SFP1_laz_min {
+							SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
+							SFP1_laz_load_count++
+						}
+					}
 				}
 			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				fmt.Printf("SFP1 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-
-				if g.ToBigInt(variable.Value).Int64() > testWay.SFP1_laz_min {
-					SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
-					SFP1_laz_load_count++
-				}
-			}
 		}
-
 		mux_SNMP.Lock()
 		g.Default.Target = testWay.ipdst2.String()
 		err = g.Default.Connect()
 		if err != nil {
-			fmt.Printf("Connect to SFP2 error: %v", err)
+			//	fmt.Printf("\nConnect to SFP2 error: %v", err)
 			mux_SNMP.Unlock()
-			continue
-		}
-
-		result, err2 = g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
-		if err2 != nil {
-			fmt.Printf("Get() err: %v", err2)
-			mux_SNMP.Unlock()
-		}
-		g.Default.Conn.Close()
-		mux_SNMP.Unlock()
-		for _, variable := range result.Variables {
-			//	fmt.Printf("%d: oid: %s ", i, variable.Name)
-			if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-				fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				if g.ToBigInt(variable.Value).Int64() > testWay.SFP2_com_min {
-					SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
-					SFP2_com_load_count++
-				}
-			}
-			if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-				fmt.Printf("SFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-				if g.ToBigInt(variable.Value).Int64() > testWay.SFP2_laz_min {
-					SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
-					SFP2_laz_load_count++
+		} else {
+			result, err2 := g.Default.Get(oids) // Get() accepts up to g.MAX_OIDS
+			if err2 != nil {
+				//		fmt.Printf("\nGet() err: %v", err2)
+				mux_SNMP.Unlock()
+			} else {
+				g.Default.Conn.Close()
+				mux_SNMP.Unlock()
+				for _, variable := range result.Variables {
+					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
+					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
+						//	fmt.Printf("\nSFP2 number: %v   Mb/s", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						if g.ToBigInt(variable.Value).Int64() > testWay.SFP2_com_min {
+							SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
+							SFP2_com_load_count++
+						}
+					}
+					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
+						//	fmt.Printf("\nSFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
+						if g.ToBigInt(variable.Value).Int64() > testWay.SFP2_laz_min {
+							SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
+							SFP2_laz_load_count++
+						}
+					}
 				}
 			}
 		}
 		counter++
 		time.Sleep(500 * time.Millisecond)
-		fmt.Println()
+		//	fmt.Println()
 	}
 	time.Sleep(time.Duration(testWay.pause_ms) * time.Millisecond)
 	if SFP1_com_load_count > 0 {
@@ -234,37 +235,37 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 
 	SFP1_com_s1, SFP1_laz_s1, SFP2_com_s1, SFP2_laz_s1 := testWay.getResult(step1, revers)
 
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s1*8)/1000000.0, float32(SFP1_laz_s1*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s1*8)/1000000.0, float32(SFP1_laz_s1*8)/1000000.0)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s1*8)/1000000.0, float32(SFP2_laz_s1*8)/1000000.0)
 
 	revers = true
 	SFP1_com_s1, SFP1_laz_s1, SFP2_com_s1, SFP2_laz_s1 = testWay.getResult(step1, revers)
 
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s1*8)/1000000.0, float32(SFP1_laz_s1*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s1*8)/1000000.0, float32(SFP1_laz_s1*8)/1000000.0)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s1*8)/1000000.0, float32(SFP2_laz_s1*8)/1000000.0)
 
 	revers = false
 	SFP1_com_s2, SFP1_laz_s2, SFP2_com_s2, SFP2_laz_s2 := testWay.getResult(step2, revers)
 
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s2*8)/1000000.0, float32(SFP2_laz_s2*8)/1000000.0)
 
 	revers = true
 	SFP1_com_s2, SFP1_laz_s2, SFP2_com_s2, SFP2_laz_s2 = testWay.getResult(step2, revers)
 
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s2*8)/1000000.0, float32(SFP2_laz_s2*8)/1000000.0)
 
 	revers = false
 	SFP1_com_s3, SFP1_laz_s3, SFP2_com_s3, SFP2_laz_s3 := testWay.getResult(step3, revers)
 
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s3*8)/1000000.0, float32(SFP1_laz_s3*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s3*8)/1000000.0, float32(SFP1_laz_s3*8)/1000000.0)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s3*8)/1000000.0, float32(SFP2_laz_s3*8)/1000000.0)
 
 	revers = true
 	SFP1_com_s3, SFP1_laz_s3, SFP2_com_s3, SFP2_laz_s3 = testWay.getResult(step3, revers)
 
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s3*8)/1000000.0, float32(SFP1_laz_s3*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s3*8)/1000000.0, float32(SFP1_laz_s3*8)/1000000.0)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s3*8)/1000000.0, float32(SFP2_laz_s3*8)/1000000.0)
 
 	/*
