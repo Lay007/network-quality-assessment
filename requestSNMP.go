@@ -175,7 +175,7 @@ func (testWay *testWaySFP) getResult(thr int64, revers bool) (int64, int64, int6
 	if SFP2_laz_load_count > 0 {
 		SFP2_laz_load = SFP2_laz_load / SFP2_laz_load_count
 	}
-	return SFP1_com_load, SFP1_laz_load, SFP2_com_load, SFP2_laz_load
+	return float32(SFP1_com_load*8) / 1000000.0, float32(SFP1_laz_load*8) / 1000000.0, float32(SFP2_com_load*8) / 1000000.0, float32(SFP2_laz_load*8) / 1000000.0
 }
 
 func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, mac_dst2 []byte, test_type uint16, test_Way int, packet_size int, period_nano_gen_s int64) int {
@@ -224,8 +224,8 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	fmt.Println(" ==> TEST SFP way ==")
 	SFP1_com_init, SFP1_laz_init, SFP2_com_init, SFP2_laz_init := testWay.getResult(0, revers)
 
-	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_init*8)/1000000.0, float32(SFP1_laz_init*8)/1000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_init*8)/1000000.0, float32(SFP2_laz_init*8)/1000000.0)
+	fmt.Printf("\n  SFP1_com - %v   SFP1_laz - %v ", SFP1_com_init, SFP1_laz_init)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", SFP2_com_init, SFP2_laz_init)
 
 	testWay.SFP1_com_min = SFP1_com_init * 12 / 10
 	testWay.SFP1_laz_min = SFP1_laz_init * 12 / 10
@@ -233,28 +233,44 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	testWay.SFP2_com_min = SFP2_com_init * 12 / 10
 	testWay.SFP2_laz_min = SFP2_laz_init * 12 / 10
 
-	SFP1_com_s1, SFP1_laz_s1, SFP2_com_s1, SFP2_laz_s1 := testWay.getResult(step1, revers)
+	SFP1_com, SFP1_laz, SFP2_com, SFP2_laz := testWay.getResult(step1, revers)
 
-	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s1*8)/1000000.0, float32(SFP1_laz_s1*8)/1000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s1*8)/1000000.0, float32(SFP2_laz_s1*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", SFP1_com, SFP1_laz)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", SFP2_com, SFP2_laz)
+
+	SFP1_com -= SFP1_com_init
+	SFP1_laz -= SFP1_laz_init
+	SFP2_com -= SFP2_com_init
+	SFP2_laz -= SFP2_laz_init
 
 	revers = true
-	SFP1_com_s1, SFP1_laz_s1, SFP2_com_s1, SFP2_laz_s1 = testWay.getResult(step1, revers)
+	SFP1_com_rev, SFP1_laz_rev, SFP2_com_rev, SFP2_laz_rev := testWay.getResult(step1, revers)
 
-	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s1*8)/1000000.0, float32(SFP1_laz_s1*8)/1000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s1*8)/1000000.0, float32(SFP2_laz_s1*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", SFP1_com_rev, SFP1_laz_rev)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", SFP2_com_rev, SFP2_laz_rev)
+
+	SFP1_com_rev -= SFP1_com_init
+	SFP1_laz_rev -= SFP1_laz_init
+	SFP2_com_rev -= SFP2_com_init
+	SFP2_laz_rev -= SFP2_laz_init
+
+	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) && ((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) && ((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
+		if (SFP1_com/(SFP1_laz) > 1.7) || (SFP1_com/(SFP1_laz) > 1.7) {
+
+		}
+	}
 
 	revers = false
 	SFP1_com_s2, SFP1_laz_s2, SFP2_com_s2, SFP2_laz_s2 := testWay.getResult(step2, revers)
 
-	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", oat32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s2*8)/1000000.0, float32(SFP2_laz_s2*8)/1000000.0)
 
 	revers = true
-	SFP1_com_s2, SFP1_laz_s2, SFP2_com_s2, SFP2_laz_s2 = testWay.getResult(step2, revers)
+	SFP1_com_s2_rev, SFP1_laz_s2_rev, SFP2_com_s2_rev, SFP2_laz_s2_rev := testWay.getResult(step2, revers)
 
-	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s2*8)/1000000.0, float32(SFP2_laz_s2*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2_rev*8)/1000000.0, float32(SFP1_laz_s2_rev*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s2_rev*8)/1000000.0, float32(SFP2_laz_s2_rev*8)/1000000.0)
 
 	revers = false
 	SFP1_com_s3, SFP1_laz_s3, SFP2_com_s3, SFP2_laz_s3 := testWay.getResult(step3, revers)
@@ -263,10 +279,10 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s3*8)/1000000.0, float32(SFP2_laz_s3*8)/1000000.0)
 
 	revers = true
-	SFP1_com_s3, SFP1_laz_s3, SFP2_com_s3, SFP2_laz_s3 = testWay.getResult(step3, revers)
+	SFP1_com_s3_rev, SFP1_laz_s3_rev, SFP2_com_s3_rev, SFP2_laz_s3_rev := testWay.getResult(step3, revers)
 
-	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s3*8)/1000000.0, float32(SFP1_laz_s3*8)/1000000.0)
-	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s3*8)/1000000.0, float32(SFP2_laz_s3*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s3_rev*8)/1000000.0, float32(SFP1_laz_s3_rev*8)/1000000.0)
+	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s3_rev*8)/1000000.0, float32(SFP2_laz_s3_rev*8)/1000000.0)
 
 	/*
 
@@ -908,7 +924,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 			}
 		}
 	*/
-	return 0
+	return 1
 }
 
 func (module *module_sfp) startSNMP(conf global_config) {
