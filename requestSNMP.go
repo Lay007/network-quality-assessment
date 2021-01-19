@@ -39,7 +39,7 @@ func testPing(ip string) int {
 var mux_SNMP sync.Mutex
 var db_SNMP *sql.DB
 
-func (testWay *testWaySFP) getResult(thr int64, revers bool) (int64, int64, int64, int64) {
+func (testWay *testWaySFP) getResult(thr int64, revers bool) (float32, float32, float32, float32) {
 	//var SFP1_com, SFP1_laz, SFP2_com, SFP2_laz int64
 	period_nano_gen := int64(0)
 	count_gen := int64(0)
@@ -110,14 +110,14 @@ func (testWay *testWaySFP) getResult(thr int64, revers bool) (int64, int64, int6
 					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
 					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
 						//	fmt.Printf("\nSFP1 number: %v   Mb/s", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-						if g.ToBigInt(variable.Value).Int64() > testWay.SFP1_com_min {
+						if g.ToBigInt(variable.Value).Int64() > int64(testWay.SFP1_com_min*1000000)/8 {
 							SFP1_com_load = SFP1_com_load + g.ToBigInt(variable.Value).Int64()
 							SFP1_com_load_count++
 						}
 					}
 					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
 						//	fmt.Printf("\nSFP1 number: %v   Mb/s", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-						if g.ToBigInt(variable.Value).Int64() > testWay.SFP1_laz_min {
+						if g.ToBigInt(variable.Value).Int64() > int64(testWay.SFP1_laz_min*1000000)/8 {
 							SFP1_laz_load = SFP1_laz_load + g.ToBigInt(variable.Value).Int64()
 							SFP1_laz_load_count++
 						}
@@ -143,14 +143,14 @@ func (testWay *testWaySFP) getResult(thr int64, revers bool) (int64, int64, int6
 					//	fmt.Printf("%d: oid: %s ", i, variable.Name)
 					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
 						//	fmt.Printf("\nSFP2 number: %v   Mb/s", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-						if g.ToBigInt(variable.Value).Int64() > testWay.SFP2_com_min {
+						if g.ToBigInt(variable.Value).Int64() > int64(testWay.SFP2_com_min*1000000)/8 {
 							SFP2_com_load = SFP2_com_load + g.ToBigInt(variable.Value).Int64()
 							SFP2_com_load_count++
 						}
 					}
 					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
 						//	fmt.Printf("\nSFP2 number: %v   Mb/s\n", float32(g.ToBigInt(variable.Value).Int64()*8)/1000000.0)
-						if g.ToBigInt(variable.Value).Int64() > testWay.SFP2_laz_min {
+						if g.ToBigInt(variable.Value).Int64() > int64(testWay.SFP2_laz_min*1000000)/8 {
 							SFP2_laz_load = SFP2_laz_load + g.ToBigInt(variable.Value).Int64()
 							SFP2_laz_load_count++
 						}
@@ -263,7 +263,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	revers = false
 	SFP1_com_s2, SFP1_laz_s2, SFP2_com_s2, SFP2_laz_s2 := testWay.getResult(step2, revers)
 
-	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", oat32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
+	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", float32(SFP1_com_s2*8)/1000000.0, float32(SFP1_laz_s2*8)/1000000.0)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", float32(SFP2_com_s2*8)/1000000.0, float32(SFP2_laz_s2*8)/1000000.0)
 
 	revers = true
