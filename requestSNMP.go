@@ -181,13 +181,18 @@ func (testWay *testWaySFP) getResult(thr int64, revers bool) (float32, float32, 
 func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str string, ip_2sfpsla_str string, mac_src []byte, mac_dst []byte, mac_dst2 []byte, test_type uint16, test_Way int, packet_size int, period_nano_gen_s int64) int {
 
 	//  Последовательное соединение: [сервер]--(модуль SFP_SLA 1)--(модуль SFP_SLA 2)
-	//  Паралелельное содинение: (модуль SFP_SLA 1)--[сервер]--(модуль SFP_SLA 2)
-	//  Результат выполнения:
+	//  Соединенеие звездой: (модуль SFP_SLA 1)--[сервер]--(модуль SFP_SLA 2)
+	//  Результат выполнения: XYYY
+	//  X: 
 	//     0 - Последоватльное соединение. Расположение правильное
 	//     1 - Последовательное соенинение. Расположение не правильное. Меняем местами
-	//     2 - Параллельное соединенеие. Нагрузка одиаковая.
-	//     3 - Параллельное соединенеие. Нагрузка неравномерная. Расположение правильное
-	//     4 - Параллельное соединенеие. Нагрузка неравномерная. Расположение не правильное. Меняем местами
+	//     2 - Соединенеие звездой. Нагрузка одинаковая.
+	//     3 - Соединенеие звездой. Нагрузка неравномерная. Расположение правильное
+	//     4 - Соединенеие звездой. Нагрузка неравномерная. Расположение не правильное. Меняем местами
+	//  Y:
+	//	   010 - 10 Мб/с
+	//     100 - 100 Мб/с
+	//     999 - 1 Гб/с
 
 	step1 := int64(200) //200
 	step2 := int64(70)  //70
@@ -254,27 +259,32 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	SFP2_com_rev -= SFP2_com_init
 	SFP2_laz_rev -= SFP2_laz_init
 
-	if ((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) && // throuth OK
-		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1))) &&
-		((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) &&
-		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1))) {
+	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) || // throuth OK
+		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (
+		((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
+		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
 
 		if (((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) ||
 			((SFP2_com > 0.8*float32(step1) && SFP2_com < 1.2*float32(step1)) && (SFP2_laz > 0.8*float32(step1) && SFP2_laz < 1.2*float32(step1)))) &&
 			((((SFP1_laz_rev > 0) && (SFP1_com_rev/(SFP1_laz_rev) > 1.7)) || ((SFP1_com_rev > 0) && (SFP1_laz_rev/(SFP1_com_rev) > 1.7))) ||
-				(((SFP2_laz_rev > 0) && (SFP2_com_rev/(SFP2_laz_rev) > 1.7)) || ((SFP2_com_rev > 0) && (SFP2_laz_rev/(SFP2_com_rev) > 1.7)))) {
-			return 1
+			 (((SFP2_laz_rev > 0) && (SFP2_com_rev/(SFP2_laz_rev) > 1.7)) || ((SFP2_com_rev > 0) && (SFP2_laz_rev/(SFP2_com_rev) > 1.7)))) {
+			return 999
 		} else {
 			if (((SFP1_com_rev > 0.8*float32(step1) && SFP1_com_rev < 1.2*float32(step1)) && (SFP1_laz_rev > 0.8*float32(step1) && SFP1_laz_rev < 1.2*float32(step1))) ||
 				((SFP2_com_rev > 0.8*float32(step1) && SFP2_com_rev < 1.2*float32(step1)) && (SFP2_laz_rev > 0.8*float32(step1) && SFP2_laz_rev < 1.2*float32(step1)))) &&
 				((((SFP1_laz > 0) && (SFP1_com/(SFP1_laz) > 1.7)) || ((SFP1_com > 0) && (SFP1_laz/(SFP1_com) > 1.7))) ||
 			     (((SFP2_laz > 0) && (SFP2_com/(SFP2_laz) > 1.7)) || ((SFP2_com > 0) && (SFP2_laz/(SFP2_com) > 1.7)))) {
-				return 2
+				return 1999
 			}
 		}
-
-
 		
+		if (((SFP1_com > 1.6*float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 1.6*float32(step1) && SFP1_com < 0.3*float32(step1))) &&
+	    	((SFP2_com < 1.1*float32(step1) && SFP2_laz < 1.1*float32(step1))) && 
+			(((SFP2_com_rev > 1.6*float32(step1) && SFP2_laz_rev  < 0.3*float32(step1)) || (SFP2_laz_rev > 1.6*float32(step1) && SFP2_com_rev < 0.3*float32(step1))) &&
+	    	((SFP1_com_rev < 1.1*float32(step1) && SFP1_laz_rev < 1.1*float32(step1))))){
+			return 2999
+		}
+
 	}
 
 	revers = false
