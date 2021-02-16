@@ -312,6 +312,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 
 	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, mac_dst2, test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
+	fmt.Println(" Rez find : ", rez)
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
@@ -360,13 +361,14 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		db.Close()
 
 	}
-
+	fmt.Println(" testPing ")
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
 		return
 	}
 
+	fmt.Println(" check_SNMP ")
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
@@ -374,7 +376,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 
 	db.Close()
-	fmt.Println(" Rez find : ", rez)
+
 	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
 	period_test := test.count // период теста - 10 секунд

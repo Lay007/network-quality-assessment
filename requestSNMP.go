@@ -14,23 +14,48 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/go-ping/ping"
+	"github.com/tatsushid/go-fastping"
 )
 
 func testPing(ip string) int {
+	p := fastping.NewPinger()
+	ra, err := net.ResolveIPAddr("ip4:icmp", ip)
+	if err != nil {
+		fmt.Println(err)
+	}
+	p.AddIPAddr(ra)
+	p.OnRecv = func(addr *net.IPAddr, rtt time.Duration) {
+		fmt.Printf("IP Addr: %s receive, RTT: %v\n", addr.String(), rtt)
+	}
+	p.OnIdle = func() {
+		fmt.Println("finish")
+	}
+	err = p.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return 0
+}
+
+func testPing_old(ip string) int {
+	fmt.Println(" Start Ping")
 	pinger, err := ping.NewPinger(ip)
+	fmt.Println(" Ping: ", pinger)
 	if err != nil {
 		fmt.Println(" Error new ping: ", err)
 		return 1
 	}
 	pinger.Count = 3
+	pinger.Timeout = time.Second * 5
 	er := pinger.Run()
 	if er != nil {
 		fmt.Println(" Error ping run: ", err)
 		return 1
 	}
 	stats := pinger.Statistics()
-	//	fmt.Println(" Ping st: ", stats)
+	fmt.Println(" Ping st: ", stats)
 	if stats.PacketsRecv == 0 {
+		fmt.Println(" Ping error: ")
 		return 1
 	}
 	return 0
@@ -183,7 +208,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	//  Последовательное соединение: [сервер]--(модуль SFP_SLA 1)--(модуль SFP_SLA 2)
 	//  Соединенеие звездой: (модуль SFP_SLA 1)--[сервер]--(модуль SFP_SLA 2)
 	//  Результат выполнения: XYYY
-	//  X: 
+	//  X:
 	//     0 - Последоватльное соединение. Расположение правильное
 	//     1 - Последовательное соенинение. Расположение не правильное. Меняем местами
 	//     2 - Соединенеие звездой. Нагрузка одинаковая.
@@ -260,28 +285,27 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	SFP2_laz_rev -= SFP2_laz_init
 
 	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) || // throuth OK
-		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (
-		((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
+		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
 		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
 
 		if (((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) ||
 			((SFP2_com > 0.8*float32(step1) && SFP2_com < 1.2*float32(step1)) && (SFP2_laz > 0.8*float32(step1) && SFP2_laz < 1.2*float32(step1)))) &&
 			((((SFP1_laz_rev > 0) && (SFP1_com_rev/(SFP1_laz_rev) > 1.7)) || ((SFP1_com_rev > 0) && (SFP1_laz_rev/(SFP1_com_rev) > 1.7))) ||
-			 (((SFP2_laz_rev > 0) && (SFP2_com_rev/(SFP2_laz_rev) > 1.7)) || ((SFP2_com_rev > 0) && (SFP2_laz_rev/(SFP2_com_rev) > 1.7)))) {
+				(((SFP2_laz_rev > 0) && (SFP2_com_rev/(SFP2_laz_rev) > 1.7)) || ((SFP2_com_rev > 0) && (SFP2_laz_rev/(SFP2_com_rev) > 1.7)))) {
 			return 999
 		} else {
 			if (((SFP1_com_rev > 0.8*float32(step1) && SFP1_com_rev < 1.2*float32(step1)) && (SFP1_laz_rev > 0.8*float32(step1) && SFP1_laz_rev < 1.2*float32(step1))) ||
 				((SFP2_com_rev > 0.8*float32(step1) && SFP2_com_rev < 1.2*float32(step1)) && (SFP2_laz_rev > 0.8*float32(step1) && SFP2_laz_rev < 1.2*float32(step1)))) &&
 				((((SFP1_laz > 0) && (SFP1_com/(SFP1_laz) > 1.7)) || ((SFP1_com > 0) && (SFP1_laz/(SFP1_com) > 1.7))) ||
-			     (((SFP2_laz > 0) && (SFP2_com/(SFP2_laz) > 1.7)) || ((SFP2_com > 0) && (SFP2_laz/(SFP2_com) > 1.7)))) {
+					(((SFP2_laz > 0) && (SFP2_com/(SFP2_laz) > 1.7)) || ((SFP2_com > 0) && (SFP2_laz/(SFP2_com) > 1.7)))) {
 				return 1999
 			}
 		}
-		
-		if (((SFP1_com > 1.6*float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 1.6*float32(step1) && SFP1_com < 0.3*float32(step1))) &&
-	    	((SFP2_com < 1.1*float32(step1) && SFP2_laz < 1.1*float32(step1))) && 
-			(((SFP2_com_rev > 1.6*float32(step1) && SFP2_laz_rev  < 0.3*float32(step1)) || (SFP2_laz_rev > 1.6*float32(step1) && SFP2_com_rev < 0.3*float32(step1))) &&
-	    	((SFP1_com_rev < 1.1*float32(step1) && SFP1_laz_rev < 1.1*float32(step1))))){
+
+		if ((SFP1_com > 1.6*float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 1.6*float32(step1) && SFP1_com < 0.3*float32(step1))) &&
+			(SFP2_com < 1.1*float32(step1) && SFP2_laz < 1.1*float32(step1)) &&
+			(((SFP2_com_rev > 1.6*float32(step1) && SFP2_laz_rev < 0.3*float32(step1)) || (SFP2_laz_rev > 1.6*float32(step1) && SFP2_com_rev < 0.3*float32(step1))) &&
+				(SFP1_com_rev < 1.1*float32(step1) && SFP1_laz_rev < 1.1*float32(step1))) {
 			return 2999
 		}
 
