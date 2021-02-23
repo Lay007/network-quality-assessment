@@ -70,7 +70,7 @@ func (testWay *testWaySFP) getResult(thr int64, revers bool) (float32, float32, 
 	count_gen := int64(0)
 	if thr > 0 {
 		period_nano_gen = int64(int64(testWay.packet_size) * 8 * 1000 / thr)
-		count_gen = 10000000000 / period_nano_gen
+		count_gen = (testWay.period_gen_ms*1000000) / period_nano_gen
 	}
 	b := packetForm(testWay.ipsrc, testWay.ipdst1, testWay.ipdst2, testWay.mac_src, testWay.mac_dst, int(testWay.packet_size), 1, 0, testWay.test_type)
 	if revers {
@@ -85,7 +85,7 @@ func (testWay *testWaySFP) getResult(thr int64, revers bool) (float32, float32, 
 			for range ticker.C {
 				cc--
 				if cc%10000 == 0 {
-					if time.Since(start) >= (10 * time.Second) {
+					if time.Since(start) >= (time.Duration(testWay.period_gen_ms) * time.Millisecond) {
 						return
 					}
 				}
@@ -223,7 +223,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	step2 := int64(70)  //70
 	step3 := int64(7)   //7
 
-	period_gen_ms := int64(10000) // период генерации 10 сек
+	period_gen_ms := int64(16000) // период генерации 16 сек
 	pause_ms := int64(2000)       // период генерации 2 сек
 
 	ipsrc := net.ParseIP(ip_server)
@@ -287,28 +287,35 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) || // throuth OK
 		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
 		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
-
-		if (((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) ||
-			((SFP2_com > 0.8*float32(step1) && SFP2_com < 1.2*float32(step1)) && (SFP2_laz > 0.8*float32(step1) && SFP2_laz < 1.2*float32(step1)))) &&
+		if ((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) &&
+			((SFP2_com > 0.8*float32(step1) && SFP2_com < 1.2*float32(step1)) || (SFP2_laz > 0.8*float32(step1) && SFP2_laz < 1.2*float32(step1))) &&
 			((((SFP1_laz_rev > 0) && (SFP1_com_rev/(SFP1_laz_rev) > 1.7)) || ((SFP1_com_rev > 0) && (SFP1_laz_rev/(SFP1_com_rev) > 1.7))) ||
 				(((SFP2_laz_rev > 0) && (SFP2_com_rev/(SFP2_laz_rev) > 1.7)) || ((SFP2_com_rev > 0) && (SFP2_laz_rev/(SFP2_com_rev) > 1.7)))) {
 			return 0x999
 		} else {
-			if (((SFP1_com_rev > 0.8*float32(step1) && SFP1_com_rev < 1.2*float32(step1)) && (SFP1_laz_rev > 0.8*float32(step1) && SFP1_laz_rev < 1.2*float32(step1))) ||
-				((SFP2_com_rev > 0.8*float32(step1) && SFP2_com_rev < 1.2*float32(step1)) && (SFP2_laz_rev > 0.8*float32(step1) && SFP2_laz_rev < 1.2*float32(step1)))) &&
+			if (((SFP1_com_rev > 0.8*float32(step1) && SFP1_com_rev < 1.2*float32(step1)) && (SFP1_laz_rev > 0.8*float32(step1) && SFP1_laz_rev < 1.2*float32(step1))) &&
+				((SFP2_com_rev > 0.8*float32(step1) && SFP2_com_rev < 1.2*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1) && SFP2_laz_rev < 1.2*float32(step1)))) &&
 				((((SFP1_laz > 0) && (SFP1_com/(SFP1_laz) > 1.7)) || ((SFP1_com > 0) && (SFP1_laz/(SFP1_com) > 1.7))) ||
 					(((SFP2_laz > 0) && (SFP2_com/(SFP2_laz) > 1.7)) || ((SFP2_com > 0) && (SFP2_laz/(SFP2_com) > 1.7)))) {
 				return 0x1999
 			}
 		}
-
-		if ((SFP1_com > 1.6*float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 1.6*float32(step1) && SFP1_com < 0.3*float32(step1))) &&
-			(SFP2_com < 1.1*float32(step1) && SFP2_laz < 1.1*float32(step1)) &&
-			(((SFP2_com_rev > 1.6*float32(step1) && SFP2_laz_rev < 0.3*float32(step1)) || (SFP2_laz_rev > 1.6*float32(step1) && SFP2_com_rev < 0.3*float32(step1))) &&
-				(SFP1_com_rev < 1.1*float32(step1) && SFP1_laz_rev < 1.1*float32(step1))) {
+		if ((SFP1_com > 0.7*float32(step1) && SFP1_com < float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 0.7*float32(step1) && SFP1_laz < float32(step1) && SFP1_com < 0.3*float32(step1))) &&
+			(SFP1_com_rev > 0.7*float32(step1) && (SFP1_com_rev < float32(step1)) && (SFP1_laz_rev < 0.3*float32(step1))) || (SFP1_laz_rev > 0.7*float32(step1) && SFP1_laz_rev < float32(step1) && SFP1_com_rev < 0.3*float32(step1)) {
 			return 0x2999
 		}
-
+		if ((SFP1_com > 1.2*float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 1.2*float32(step1) && SFP1_com < 0.3*float32(step1))) &&
+			(SFP2_com < 1.1*float32(step1) && SFP2_laz < 1.1*float32(step1)) &&
+			(((SFP2_com_rev < float32(step1) && SFP2_laz_rev < 0.3*float32(step1)) || (SFP2_laz_rev < float32(step1) && SFP2_com_rev < 0.3*float32(step1))) &&
+				(SFP1_com_rev < 1.1*float32(step1) && SFP1_laz_rev < 1.1*float32(step1))) {
+			return 0x3999
+		}
+		if ((SFP1_com_rev > 1.2*float32(step1) && SFP1_laz_rev < 0.3*float32(step1)) || (SFP1_laz_rev > 1.2*float32(step1) && SFP1_com_rev < 0.3*float32(step1))) &&
+			(SFP2_com_rev < 1.1*float32(step1) && SFP2_laz_rev < 1.1*float32(step1)) &&
+			(((SFP2_com < float32(step1) && SFP2_laz < 0.3*float32(step1)) || (SFP2_laz < float32(step1) && SFP2_com < 0.3*float32(step1))) &&
+				(SFP1_com < 1.1*float32(step1) && SFP1_laz < 1.1*float32(step1))) {
+			return 0x4999
+		}
 	}
 
 	revers = false
@@ -323,18 +330,53 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", SFP1_com_s2_rev, SFP1_laz_s2_rev)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", SFP2_com_s2_rev, SFP2_laz_s2_rev)
 
-	SFP1_com -= SFP1_com_init
-	SFP1_laz -= SFP1_laz_init
-	SFP2_com -= SFP2_com_init
-	SFP2_laz -= SFP2_laz_init
+	SFP1_com = SFP1_com_s2 - SFP1_com_init
+	SFP1_laz = SFP1_laz_s2 - SFP1_laz_init
+	SFP2_com = SFP2_com_s2 - SFP2_com_init
+	SFP2_laz = SFP2_laz_s2 - SFP2_laz_init
 
-	SFP1_com_rev -= SFP1_com_init
-	SFP1_laz_rev = SFP1_laz_s2_rev-SFP1_laz_init
-	SFP2_com_rev -= SFP2_com_init
-	SFP2_laz_rev -= SFP2_laz_init
+	SFP1_com_rev = SFP1_com_s2_rev - SFP1_com_init
+	SFP1_laz_rev = SFP1_laz_s2_rev - SFP1_laz_init
+	SFP2_com_rev = SFP2_com_s2_rev - SFP2_com_init
+	SFP2_laz_rev = SFP2_laz_s2_rev - SFP2_laz_init
 
+	step1 = step2
 
-	
+	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) || // throuth OK
+		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
+		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
+			fmt.Printf("\n  Throuth OK - %d\n",step1) 	
+		if ((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) &&
+			((SFP2_com > 0.8*float32(step1) && SFP2_com < 1.2*float32(step1)) || (SFP2_laz > 0.8*float32(step1) && SFP2_laz < 1.2*float32(step1))) &&
+			((((SFP1_laz_rev > 0) && (SFP1_com_rev/(SFP1_laz_rev) > 1.7)) || ((SFP1_com_rev > 0) && (SFP1_laz_rev/(SFP1_com_rev) > 1.7))) ||
+				(((SFP2_laz_rev > 0) && (SFP2_com_rev/(SFP2_laz_rev) > 1.7)) || ((SFP2_com_rev > 0) && (SFP2_laz_rev/(SFP2_com_rev) > 1.7)))) {
+			return 0x100
+		} else {
+			if (((SFP1_com_rev > 0.8*float32(step1) && SFP1_com_rev < 1.2*float32(step1)) && (SFP1_laz_rev > 0.8*float32(step1) && SFP1_laz_rev < 1.2*float32(step1))) &&
+				((SFP2_com_rev > 0.8*float32(step1) && SFP2_com_rev < 1.2*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1) && SFP2_laz_rev < 1.2*float32(step1)))) &&
+				((((SFP1_laz > 0) && (SFP1_com/(SFP1_laz) > 1.7)) || ((SFP1_com > 0) && (SFP1_laz/(SFP1_com) > 1.7))) ||
+					(((SFP2_laz > 0) && (SFP2_com/(SFP2_laz) > 1.7)) || ((SFP2_com > 0) && (SFP2_laz/(SFP2_com) > 1.7)))) {
+				return 0x1100
+			}
+		}
+		if ((SFP1_com > 0.7*float32(step1) && SFP1_com < float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 0.7*float32(step1) && SFP1_laz < float32(step1) && SFP1_com < 0.3*float32(step1))) &&
+			(SFP1_com_rev > 0.7*float32(step1) && (SFP1_com_rev < float32(step1)) && (SFP1_laz_rev < 0.3*float32(step1))) || (SFP1_laz_rev > 0.7*float32(step1) && SFP1_laz_rev < float32(step1) && SFP1_com_rev < 0.3*float32(step1)) {
+			return 0x2100
+		}
+		if ((SFP1_com > 1.2*float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 1.2*float32(step1) && SFP1_com < 0.3*float32(step1))) &&
+			(SFP2_com < 1.1*float32(step1) && SFP2_laz < 1.1*float32(step1)) &&
+			(((SFP2_com_rev < float32(step1) && SFP2_laz_rev < 0.3*float32(step1)) || (SFP2_laz_rev < float32(step1) && SFP2_com_rev < 0.3*float32(step1))) &&
+				(SFP1_com_rev < 1.1*float32(step1) && SFP1_laz_rev < 1.1*float32(step1))) {
+			return 0x3100
+		}
+		if ((SFP1_com_rev > 1.2*float32(step1) && SFP1_laz_rev < 0.3*float32(step1)) || (SFP1_laz_rev > 1.2*float32(step1) && SFP1_com_rev < 0.3*float32(step1))) &&
+			(SFP2_com_rev < 1.1*float32(step1) && SFP2_laz_rev < 1.1*float32(step1)) &&
+			(((SFP2_com < float32(step1) && SFP2_laz < 0.3*float32(step1)) || (SFP2_laz < float32(step1) && SFP2_com < 0.3*float32(step1))) &&
+				(SFP1_com < 1.1*float32(step1) && SFP1_laz < 1.1*float32(step1))) {
+			return 0x4100
+		}
+	}
+
 	revers = false
 	SFP1_com_s3, SFP1_laz_s3, SFP2_com_s3, SFP2_laz_s3 := testWay.getResult(step3, revers)
 
@@ -346,6 +388,52 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 
 	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", SFP1_com_s3_rev, SFP1_laz_s3_rev)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", SFP2_com_s3_rev, SFP2_laz_s3_rev)
+
+	SFP1_com = SFP1_com_s3 - SFP1_com_init
+	SFP1_laz = SFP1_laz_s3 - SFP1_laz_init
+	SFP2_com = SFP2_com_s3 - SFP2_com_init
+	SFP2_laz = SFP2_laz_s3 - SFP2_laz_init
+
+	SFP1_com_rev = SFP1_com_s3_rev - SFP1_com_init
+	SFP1_laz_rev = SFP1_laz_s3_rev - SFP1_laz_init
+	SFP2_com_rev = SFP2_com_s3_rev - SFP2_com_init
+	SFP2_laz_rev = SFP2_laz_s3_rev - SFP2_laz_init
+
+	step1 = step3
+
+	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) || // throuth OK
+		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
+		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
+		if ((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) &&
+			((SFP2_com > 0.8*float32(step1) && SFP2_com < 1.2*float32(step1)) || (SFP2_laz > 0.8*float32(step1) && SFP2_laz < 1.2*float32(step1))) &&
+			((((SFP1_laz_rev > 0) && (SFP1_com_rev/(SFP1_laz_rev) > 1.7)) || ((SFP1_com_rev > 0) && (SFP1_laz_rev/(SFP1_com_rev) > 1.7))) ||
+				(((SFP2_laz_rev > 0) && (SFP2_com_rev/(SFP2_laz_rev) > 1.7)) || ((SFP2_com_rev > 0) && (SFP2_laz_rev/(SFP2_com_rev) > 1.7)))) {
+			return 0x10
+		} else {
+			if (((SFP1_com_rev > 0.8*float32(step1) && SFP1_com_rev < 1.2*float32(step1)) && (SFP1_laz_rev > 0.8*float32(step1) && SFP1_laz_rev < 1.2*float32(step1))) &&
+				((SFP2_com_rev > 0.8*float32(step1) && SFP2_com_rev < 1.2*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1) && SFP2_laz_rev < 1.2*float32(step1)))) &&
+				((((SFP1_laz > 0) && (SFP1_com/(SFP1_laz) > 1.7)) || ((SFP1_com > 0) && (SFP1_laz/(SFP1_com) > 1.7))) ||
+					(((SFP2_laz > 0) && (SFP2_com/(SFP2_laz) > 1.7)) || ((SFP2_com > 0) && (SFP2_laz/(SFP2_com) > 1.7)))) {
+				return 0x1010
+			}
+		}
+		if ((SFP1_com > 0.7*float32(step1) && SFP1_com < float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 0.7*float32(step1) && SFP1_laz < float32(step1) && SFP1_com < 0.3*float32(step1))) &&
+			(SFP1_com_rev > 0.7*float32(step1) && (SFP1_com_rev < float32(step1)) && (SFP1_laz_rev < 0.3*float32(step1))) || (SFP1_laz_rev > 0.7*float32(step1) && SFP1_laz_rev < float32(step1) && SFP1_com_rev < 0.3*float32(step1)) {
+			return 0x2010
+		}
+		if ((SFP1_com > 1.2*float32(step1) && SFP1_laz < 0.3*float32(step1)) || (SFP1_laz > 1.2*float32(step1) && SFP1_com < 0.3*float32(step1))) &&
+			(SFP2_com < 1.1*float32(step1) && SFP2_laz < 1.1*float32(step1)) &&
+			(((SFP2_com_rev < float32(step1) && SFP2_laz_rev < 0.3*float32(step1)) || (SFP2_laz_rev < float32(step1) && SFP2_com_rev < 0.3*float32(step1))) &&
+				(SFP1_com_rev < 1.1*float32(step1) && SFP1_laz_rev < 1.1*float32(step1))) {
+			return 0x3010
+		}
+		if ((SFP1_com_rev > 1.2*float32(step1) && SFP1_laz_rev < 0.3*float32(step1)) || (SFP1_laz_rev > 1.2*float32(step1) && SFP1_com_rev < 0.3*float32(step1))) &&
+			(SFP2_com_rev < 1.1*float32(step1) && SFP2_laz_rev < 1.1*float32(step1)) &&
+			(((SFP2_com < float32(step1) && SFP2_laz < 0.3*float32(step1)) || (SFP2_laz < float32(step1) && SFP2_com < 0.3*float32(step1))) &&
+				(SFP1_com < 1.1*float32(step1) && SFP1_laz < 1.1*float32(step1))) {
+			return 0x4010
+		}
+	}
 
 	/*
 
@@ -1170,7 +1258,7 @@ func check_SNMP(ip string) int {
 	}()
 
 	<-done
-	fmt.Println("\nModule : %s, rez = %d", ip, rez)
+	fmt.Printf("\nTest SFP - module : %s, rez = %d / 5", ip, rez)
 	if rez > 3 {
 		return 0
 	} else {

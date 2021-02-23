@@ -312,7 +312,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 
 	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, mac_dst2, test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
-	fmt.Println(" Rez find : ", rez)
+	fmt.Printf("\n Rez find : %X \n", rez)
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
