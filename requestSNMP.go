@@ -207,7 +207,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 
 	//  Последовательное соединение: [сервер]--(модуль SFP_SLA 1)--(модуль SFP_SLA 2)
 	//  Соединенеие звездой: (модуль SFP_SLA 1)--[сервер]--(модуль SFP_SLA 2)
-	//  Результат выполнения: XYYY
+	//  Результат выполнения: 0xXYYY
 	//  X:
 	//     0 - Последоватльное соединение. Расположение правильное
 	//     1 - Последовательное соенинение. Расположение не правильное. Меняем местами
@@ -292,13 +292,13 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 			((SFP2_com > 0.8*float32(step1) && SFP2_com < 1.2*float32(step1)) && (SFP2_laz > 0.8*float32(step1) && SFP2_laz < 1.2*float32(step1)))) &&
 			((((SFP1_laz_rev > 0) && (SFP1_com_rev/(SFP1_laz_rev) > 1.7)) || ((SFP1_com_rev > 0) && (SFP1_laz_rev/(SFP1_com_rev) > 1.7))) ||
 				(((SFP2_laz_rev > 0) && (SFP2_com_rev/(SFP2_laz_rev) > 1.7)) || ((SFP2_com_rev > 0) && (SFP2_laz_rev/(SFP2_com_rev) > 1.7)))) {
-			return 999
+			return 0x999
 		} else {
 			if (((SFP1_com_rev > 0.8*float32(step1) && SFP1_com_rev < 1.2*float32(step1)) && (SFP1_laz_rev > 0.8*float32(step1) && SFP1_laz_rev < 1.2*float32(step1))) ||
 				((SFP2_com_rev > 0.8*float32(step1) && SFP2_com_rev < 1.2*float32(step1)) && (SFP2_laz_rev > 0.8*float32(step1) && SFP2_laz_rev < 1.2*float32(step1)))) &&
 				((((SFP1_laz > 0) && (SFP1_com/(SFP1_laz) > 1.7)) || ((SFP1_com > 0) && (SFP1_laz/(SFP1_com) > 1.7))) ||
 					(((SFP2_laz > 0) && (SFP2_com/(SFP2_laz) > 1.7)) || ((SFP2_com > 0) && (SFP2_laz/(SFP2_com) > 1.7)))) {
-				return 1999
+				return 0x1999
 			}
 		}
 
@@ -306,7 +306,7 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 			(SFP2_com < 1.1*float32(step1) && SFP2_laz < 1.1*float32(step1)) &&
 			(((SFP2_com_rev > 1.6*float32(step1) && SFP2_laz_rev < 0.3*float32(step1)) || (SFP2_laz_rev > 1.6*float32(step1) && SFP2_com_rev < 0.3*float32(step1))) &&
 				(SFP1_com_rev < 1.1*float32(step1) && SFP1_laz_rev < 1.1*float32(step1))) {
-			return 2999
+			return 0x2999
 		}
 
 	}
@@ -323,6 +323,18 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	fmt.Printf("\n\n  SFP1_com - %v   SFP1_laz - %v ", SFP1_com_s2_rev, SFP1_laz_s2_rev)
 	fmt.Printf("\n  SFP2_com - %v   SFP2_laz - %v \n", SFP2_com_s2_rev, SFP2_laz_s2_rev)
 
+	SFP1_com -= SFP1_com_init
+	SFP1_laz -= SFP1_laz_init
+	SFP2_com -= SFP2_com_init
+	SFP2_laz -= SFP2_laz_init
+
+	SFP1_com_rev -= SFP1_com_init
+	SFP1_laz_rev = SFP1_laz_s2_rev-SFP1_laz_init
+	SFP2_com_rev -= SFP2_com_init
+	SFP2_laz_rev -= SFP2_laz_init
+
+
+	
 	revers = false
 	SFP1_com_s3, SFP1_laz_s3, SFP2_com_s3, SFP2_laz_s3 := testWay.getResult(step3, revers)
 
