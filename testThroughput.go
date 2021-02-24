@@ -310,15 +310,48 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	})
 
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
-
+	db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Начался тест расположения модулей")
 	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, mac_dst2, test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
 	fmt.Printf("\n Rez find : %X \n", rez)
+	if (rez & 0xFFF) == 0x999 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 1 Гбит/с")
+		if test.thr_begin > 1500 {
+			test.thr_begin = 1500
+		}
+	}
+	if (rez & 0xFFF) == 0x100 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 100 Мбит/с")
+		if test.thr_begin > 150 {
+			test.thr_begin = 150
+		}
+	}
+	if (rez & 0xFFF) == 0x10 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 10 Мбит/с")
+		if test.thr_begin > 15 {
+			test.thr_begin = 15
+		}
+	}
+	if (rez & 0xF000) == 0x0 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Последовательное расположение модулей. Порядок модулей правильный")
+	}
+	if (rez & 0xF000) == 0x1000 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Последовательное расположение модулей. Порядок модулей неправильный. Изменяем при тестироваинии")
+	}
+	if (rez & 0xF000) == 0x2000 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Соединенеие звездой. Нагрузка одинаковая")
+	}
+	if (rez & 0xF000) == 0x3000 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение правильное")
+	}
+	if (rez & 0xF000) == 0x4000 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
+	}
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
 		return
 	}
-	if rez == 2 {
+	if ((rez & 0xF000) == 0x1000) || ((rez & 0xF000) == 0x4000) {
 
 		tmp := ipdst_1sfpsla_str
 		ipdst_1sfpsla_str = ipdst_2sfpsla_str
@@ -328,7 +361,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 		ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		//db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
