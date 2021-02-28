@@ -50,7 +50,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 
-	row, err := db.Query("select id, test_type, module_first, module_second, thr_begin, count, ch_type, max_loss, status from test_throughput where id=?", id)
+	row, err := db.Query("select id, miss_init_test, test_type, module_first, module_second, thr_begin, count, ch_type, max_loss, status from test_throughput where id=?", id)
 	if err != nil {
 		db.Close()
 		row.Close()
@@ -63,7 +63,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	defer row.Close()
 	row.Next()
 	test := new(testThroughput)
-	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.ch_type, &test.max_loss, &test.status)
+	err = row.Scan(&test.id, &test.miss_init_test, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.ch_type, &test.max_loss, &test.status)
 	if err != nil {
 		db.Close()
 		fmt.Println(" -!! Error !!-")
@@ -308,46 +308,48 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		// Verdict is "ignore packet."
 		bpf.RetConstant{Val: 0},
 	})
-
+	rez := 1
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
-	db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Начался тест расположения модулей")
-	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, mac_dst2, test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
-	fmt.Printf("\n Rez find : %X \n", rez)
-	if (rez & 0xFFF) == 0x999 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 1 Гбит/с")
-		if test.thr_begin > 1500 {
-			test.thr_begin = 1500
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 1.5 Гбит/с")
+	if test.miss_init_test == 0 {
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Начался тест расположения модулей")
+		rez = findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, mac_dst2, test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
+		fmt.Printf("\n Rez find : %X \n", rez)
+		if (rez & 0xFFF) == 0x999 {
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 1 Гбит/с")
+			if test.thr_begin > 1000 {
+				test.thr_begin = 1000
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 1 Гбит/с")
+			}
 		}
-	}
-	if (rez & 0xFFF) == 0x100 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 100 Мбит/с")
-		if test.thr_begin > 150 {
-			test.thr_begin = 150
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 150 Мбит/с")
+		if (rez & 0xFFF) == 0x100 {
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 100 Мбит/с")
+			if test.thr_begin > 100 {
+				test.thr_begin = 100
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 100 Мбит/с")
+			}
 		}
-	}
-	if (rez & 0xFFF) == 0x10 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 10 Мбит/с")
-		if test.thr_begin > 15 {
-			test.thr_begin = 15
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 15 Мбит/с")
+		if (rez & 0xFFF) == 0x10 {
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 10 Мбит/с")
+			if test.thr_begin > 10 {
+				test.thr_begin = 10
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 10 Мбит/с")
+			}
 		}
-	}
-	if (rez & 0xF000) == 0x0 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Последовательное расположение модулей. Порядок модулей правильный")
-	}
-	if (rez & 0xF000) == 0x1000 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Последовательное расположение модулей. Порядок модулей неправильный. Изменяем при тестироваинии")
-	}
-	if (rez & 0xF000) == 0x2000 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Соединенеие звездой. Нагрузка одинаковая")
-	}
-	if (rez & 0xF000) == 0x3000 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение правильное")
-	}
-	if (rez & 0xF000) == 0x4000 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
+		if (rez & 0xF000) == 0x0 {
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Последовательное расположение модулей. Порядок модулей правильный")
+		}
+		if (rez & 0xF000) == 0x1000 {
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Последовательное расположение модулей. Порядок модулей неправильный. Изменяем при тестироваинии")
+		}
+		if (rez & 0xF000) == 0x2000 {
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Соединенеие звездой. Нагрузка одинаковая")
+		}
+		if (rez & 0xF000) == 0x3000 {
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение правильное")
+		}
+		if (rez & 0xF000) == 0x4000 {
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
+		}
 	}
 	connectTestSFP.Close()
 	if rez == 0 {

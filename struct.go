@@ -1,6 +1,8 @@
 package main
 
-import "net"
+import (
+	"net"
+)
 
 type testSLA struct {
 	delay_solve    []int64
@@ -77,34 +79,36 @@ type module_sfp struct {
 }
 
 type testThroughput struct {
-	id            int
-	test_type     int
-	module_first  int
-	module_second int
-	thr_begin     int
-	count         int
-	ch_type       int
-	max_loss      int
-	rez_64        float32
-	rez_128       float32
-	rez_256       float32
-	rez_512       float32
-	rez_1024      float32
-	rez_1280      float32
-	rez_1518      float32
-	rez_4096      float32
-	rez_9000      float32
-	status        int
+	id             int
+	test_type      int
+	miss_init_test int
+	module_first   int
+	module_second  int
+	thr_begin      int
+	count          int
+	ch_type        int
+	max_loss       int
+	rez_64         float32
+	rez_128        float32
+	rez_256        float32
+	rez_512        float32
+	rez_1024       float32
+	rez_1280       float32
+	rez_1518       float32
+	rez_4096       float32
+	rez_9000       float32
+	status         int
 }
 
 type testDelay struct {
-	id            int
-	test_type     int
-	module_first  int
-	module_second int
-	thr_begin     int
-	count_packs   int
-	count_tests   int
+	id             int
+	test_type      int
+	miss_init_test int
+	module_first   int
+	module_second  int
+	thr_begin      int
+	count_packs    int
+	count_tests    int
 
 	net_interface_name string
 
@@ -173,6 +177,7 @@ type testRealMax struct {
 type testBert struct {
 	id               int
 	test_type        int
+	miss_init_test   int
 	module_first     int
 	module_second    int
 	thr_begin        int
@@ -261,12 +266,13 @@ type testY1564 struct {
 }
 
 type testLoss struct {
-	id            int
-	test_type     int
-	module_first  int
-	module_second int
-	thr_begin     int
-	step          int
+	id             int
+	test_type      int
+	miss_init_test int
+	module_first   int
+	module_second  int
+	thr_begin      int
+	step           int
 
 	count_frames int
 	count_steps  int
