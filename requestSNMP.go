@@ -284,8 +284,8 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	SFP2_com_rev -= SFP2_com_init
 	SFP2_laz_rev -= SFP2_laz_init
 
-	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) || // throuth OK
-		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
+	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) && // throuth OK
+		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) || (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) &&
 		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
 		fmt.Printf("\n  Throuth OK - %d\n", step1)
 		if ((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) &&
@@ -345,8 +345,8 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 
 	step1 = step2
 
-	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) || // throuth OK
-		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
+	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) && // throuth OK
+		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) || (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) &&
 		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
 		fmt.Printf("\n  Throuth OK - %d\n", step1)
 		if ((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) &&
@@ -406,8 +406,8 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 
 	step1 = step3
 
-	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) || // throuth OK
-		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) && (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) ||
+	if (((SFP1_com > 0.8*float32(step1)) || (SFP1_laz > 0.8*float32(step1))) && // throuth OK
+		((SFP2_com > 0.8*float32(step1)) || (SFP2_laz > 0.8*float32(step1)))) || (((SFP1_com_rev > 0.8*float32(step1)) || (SFP1_laz_rev > 0.8*float32(step1))) &&
 		((SFP2_com_rev > 0.8*float32(step1)) || (SFP2_laz_rev > 0.8*float32(step1)))) {
 		fmt.Printf("\n  Throuth OK - %d\n", step1)
 		if ((SFP1_com > 0.8*float32(step1) && SFP1_com < 1.2*float32(step1)) && (SFP1_laz > 0.8*float32(step1) && SFP1_laz < 1.2*float32(step1))) &&

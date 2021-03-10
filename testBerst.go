@@ -226,7 +226,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	}
 
 	db.Exec("UPDATE test_bert SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
-	db.Close()
+
 
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
@@ -327,6 +327,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 4, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
 		}
 	}
+	db.Close()
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
