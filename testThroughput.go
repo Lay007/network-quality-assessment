@@ -264,7 +264,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		}
 	}
 
-	db.Exec("UPDATE test_throughput SET status=?, datetime_start=?, datetime_end=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), (time.Now().Add(time.Duration(100)*time.Second*100)).Format("2006-01-02 15:04:05"), id) // Тест выполняется
+	db.Exec("UPDATE test_throughput SET status=?, datetime_start=?, datetime_end_solve=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), (time.Now().Add(time.Duration(120+7*7*(test.count+10))*time.Second)).Format("2006-01-02 15:04:05"), id) // Тест выполняется
 
 
 
