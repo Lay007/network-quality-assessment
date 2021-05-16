@@ -79,7 +79,7 @@ func (h *iphdr) checksum() {
 func clearDB(){
 	t := time.NewTicker(25 * time.Hour) //проверка один раз в 15 секунд
 	for range t.C {
-		clrdb, __ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		clrdb, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		clrdb.Exec("DELETE FROM modules_sfp_sla_load_rez WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)")
 		clrdb.Exec("DELETE FROM test_sla_real_rez WHERE datetime <= date_sub(now(), INTERVAL 24 HOUR)")
 		clrdb.Exec("DELETE FROM test_sla_real_alarm WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)")
