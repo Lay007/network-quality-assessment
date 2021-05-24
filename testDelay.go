@@ -241,8 +241,6 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 
-
-
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
 	fmt.Println(ipdst_2sfpsla_str)

@@ -227,7 +227,6 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 	db.Exec("UPDATE test_bert SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
 
-
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
 	fmt.Println(ipdst_2sfpsla_str)

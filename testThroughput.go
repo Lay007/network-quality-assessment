@@ -41,6 +41,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		fmt.Println(" ----=====----")
 		return
 	}
+
 	db.Exec("UPDATE test_throughput SET status=?, datatime=NOW() WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
@@ -101,7 +102,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка разбора запроса к базе данных")
-	
+
 			db.Close()
 			row.Close()
 			fmt.Println(" -!! Error !!-")
@@ -264,9 +265,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		}
 	}
 
-	db.Exec("UPDATE test_throughput SET status=?, datetime_start=?, datetime_end_solve=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), (time.Now().Add(time.Duration(120+7*7*(test.count+10))*time.Second)).Format("2006-01-02 15:04:05"), id) // Тест выполняется
-
-
+	db.Exec("UPDATE test_throughput SET status=?, datetime_start=?, datetime_end_solve=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), (time.Now().Add(time.Duration(120+7*7*(test.count+10)) * time.Second)).Format("2006-01-02 15:04:05"), id) // Тест выполняется
 
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
@@ -434,7 +433,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 
-	db.Close()
+//	db.Close()
 
 	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
@@ -445,6 +444,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	step := test.thr_begin
 	thr_current := test.thr_begin
 	size := 64
+	test.status = 2
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
@@ -566,6 +566,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 
 	fmt.Printf("End 64 goroutine num: %d\n", runtime.NumGoroutine())
+
+	db.Exec("UPDATE test_throughput SET rez_64=? WHERE id=?", test.rez_64, id)
 
 	size = 128
 	step = test.thr_begin
@@ -691,7 +693,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 	fmt.Printf("End 128 goroutine num: %d\n", runtime.NumGoroutine())
 
-	//*
+	db.Exec("UPDATE test_throughput SET rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
+
 	size = 256
 	step = test.thr_begin
 	thr_current = test.thr_begin
@@ -814,6 +817,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 		}
 	}
+
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
 
 	size = 512
 	step = test.thr_begin
@@ -938,6 +943,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		}
 	}
 
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
+
 	size = 1024
 	step = test.thr_begin
 	thr_current = test.thr_begin
@@ -1061,6 +1068,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		}
 	}
 
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
+
 	size = 1280
 	step = test.thr_begin
 	thr_current = test.thr_begin
@@ -1183,6 +1192,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 		}
 	}
+
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
 
 	size = 1500
 	step = test.thr_begin

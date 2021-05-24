@@ -244,8 +244,6 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		return
 	}
 
-	
-
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
 	fmt.Println(ipdst_2sfpsla_str)
@@ -333,7 +331,6 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 3, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
 		}
 	}
-
 
 	db.Close()
 	connectTestSFP.Close()

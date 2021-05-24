@@ -26,6 +26,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// Параметры доступа к базе данных
 const (
 	db_user      = `sfp_user`
 	db_user_pass = `rootsfp`
@@ -33,16 +34,10 @@ const (
 
 	debugV = true
 
-	//	defaultHost = `localhost`
-	//defaultHost = `remote.fibertrade.ru`
-	//	defaultPort = 10051
 	etherType = 0x0800
-
-//	ipsrcstr          = "10.0.10.115"
-//	ipdst_1sfpsla_str = "10.0.10.172"
-//	ipdst_2sfpsla_str = "10.0.10.175"
 )
 
+// Функция вычисления контольной суммы пакета IP
 func checksum(buf []byte) uint16 {
 	sum := uint32(0)
 
@@ -76,8 +71,9 @@ func (h *iphdr) checksum() {
 	(*h).csum = checksum(b.Bytes())
 }
 
-func clearDB(){
-	t := time.NewTicker(25 * time.Hour) //проверка один раз в 15 секунд
+// Функция перидической очистки базы данных
+func clearDB() {
+	t := time.NewTicker(25 * time.Hour) //проверка один раз за 25 часа
 	for range t.C {
 		clrdb, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		clrdb.Exec("DELETE FROM modules_sfp_sla_load_rez WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)")
@@ -90,8 +86,6 @@ func clearDB(){
 func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	//time.Sleep(100 * time.Second)
 
 	modules := []module_sfp{}
 
@@ -1100,9 +1094,6 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			}
 
 			//t_time := int64(float64(time.Now().UnixNano() - delta_nano )*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
-			delta_nano := int64((2208988800) * 1000000000)
-			t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
-			t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 
 			//n, addr, err := c.ReadFrom(b)
 			// Unpack Ethernet II frame into Go representation.
@@ -1129,6 +1120,10 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 
 			// Display source of message and message itself.
 			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
+
+				delta_nano := int64((2208988800) * 1000000000)
+				t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
+				t_time = t_time & int64(0xFFFFFFFFFFFFFF)
 
 				(*test).number++
 				/*
