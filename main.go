@@ -73,7 +73,7 @@ func (h *iphdr) checksum() {
 
 // Функция перидической очистки базы данных
 func clearDB() {
-	t := time.NewTicker(25 * time.Hour) //проверка один раз за 25 часа
+	t := time.NewTicker(1 * time.Hour) //проверка один раз за 25 часа
 	for range t.C {
 		clrdb, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		clrdb.Exec("DELETE FROM modules_sfp_sla_load_rez WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)")
@@ -88,6 +88,10 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	modules := []module_sfp{}
+
+	// запуск периодичной очистки БД
+
+	go clearDB()
 
 	// подключение к БД и обновление списка сетевых интерфейсов
 	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)

@@ -433,7 +433,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 
-//	db.Close()
+	//	db.Close()
 
 	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
