@@ -437,7 +437,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
-	period_test := test.count // период теста - 10 секунд
+	period_test := test.count // период теста 
 	var error_koef float32
 	error_koef = 0.9995
 
