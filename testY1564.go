@@ -246,7 +246,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		}
 	}
 	db.Exec("UPDATE test_y1564 SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
-
+	test.status = 2
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
 	fmt.Println(ipdst_2sfpsla_str)
@@ -388,7 +388,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 		return
 	}
-	db.Close()
+	//db.Close()
 
 	test.id_test_type = 0xE000 + (uint16(id) & 0x1FFF)
 	test.id_test_type_temp = 0x2000 + (uint16(id) & 0x1FFF)
@@ -439,6 +439,9 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_FVD_s1 = jitter
 	test.rez_FLR_s1 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
+	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
+
+
 	PacketsRx = 0
 	test.numberRx = 0
 
@@ -454,6 +457,8 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.rez_FTD_s2 = delay
 		test.rez_FVD_s2 = jitter
 		test.rez_FLR_s2 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
+
+		db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 
 		PacketsRx = 0
 		test.numberRx = 0
@@ -473,6 +478,9 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.rez_FVD_s3 = jitter
 		test.rez_FLR_s3 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
+		db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
+
+
 		PacketsRx = 0
 		test.numberRx = 0
 
@@ -490,6 +498,8 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.rez_FTD_s4 = delay
 		test.rez_FVD_s4 = jitter
 		test.rez_FLR_s4 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
+
+		db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 
 		PacketsRx = 0
 		test.numberRx = 0
@@ -509,6 +519,9 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_FVD_eir = jitter
 	test.rez_FLR_eir = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
+	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
+
+
 	PacketsRx = 0
 	test.numberRx = 0
 
@@ -524,23 +537,25 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_FTD_tp = delay
 	test.rez_FVD_tp = jitter
 	test.rez_FLR_tp = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
+	test.status = 3
+
+	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 
 	PacketsRx = 0
 	test.numberRx = 0
 
-	test.status = 3
+	
+//	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+//	if err != nil {
+//		db.Close()
 
-	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-	if err != nil {
-		db.Close()
-
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
-		return
-	}
+//		fmt.Println(" -!! Error !!-")
+//		fmt.Println(err)
+//		fmt.Println(" ----=====----")
+//		return
+//	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
+//	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 
 	db.Close()
 }
