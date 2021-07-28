@@ -45,20 +45,21 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	db.Exec("UPDATE test_throughput SET status=?, datatime=NOW() WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
-		db.Close()
+		
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка доступа к сетевому интерфейсу "+net_interface_name)
+		db.Close()
 		return
 	}
 
 	row, err := db.Query("select id, miss_init_test, test_type, module_first, module_second, thr_begin, count, ch_type, max_loss, status from test_throughput where id=?", id)
 	if err != nil {
+		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
 		db.Close()
 		row.Close()
 		fmt.Println(" -!! Error !!-")
-		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
 		fmt.Println(err)
 		fmt.Println(" ----=====----")
 		return
@@ -374,6 +375,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка при экспрес-тесте")
+		
 		return
 	}
 	if ((rez & 0xF000) == 0x1000) || ((rez & 0xF000) == 0x4000) {
@@ -422,6 +425,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println(" testPing ")
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка ping-теста")
+	
 		db.Close()
 		return
 	}
@@ -429,6 +434,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Println(" check_SNMP ")
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка SNMP-теста")
+	
 		db.Close()
 		return
 	}
