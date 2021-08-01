@@ -419,7 +419,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
-		db.Close()
+		
 
 	}
 	fmt.Println(" testPing ")
@@ -573,8 +573,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	}
 
 	fmt.Printf("End 64 goroutine num: %d\n", runtime.NumGoroutine())
-
 	db.Exec("UPDATE test_throughput SET rez_64=? WHERE id=?", test.rez_64, id)
+
+    
 
 	size = 128
 	step = test.thr_begin
