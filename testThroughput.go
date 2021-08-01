@@ -42,10 +42,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		return
 	}
 
+	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+	fmt.Println(yest)
+
 	db.Exec("UPDATE test_throughput SET status=?, datatime=NOW() WHERE id=?", 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
-		
+
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка доступа к сетевому интерфейсу "+net_interface_name)
@@ -376,9 +379,20 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка при экспрес-тесте")
-		
+
 		return
 	}
+
+	fmt.Println("Test ====")
+
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+	yest.Next()
+	t_y := 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	if ((rez & 0xF000) == 0x1000) || ((rez & 0xF000) == 0x4000) {
 
 		tmp := ipdst_1sfpsla_str
@@ -419,14 +433,12 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
-		
-
 	}
 	fmt.Println(" testPing ")
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка ping-теста")
-	
+
 		db.Close()
 		return
 	}
@@ -435,7 +447,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_throughput SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка SNMP-теста")
-	
+
 		db.Close()
 		return
 	}
@@ -444,7 +456,7 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
 
-	period_test := test.count // период теста 
+	period_test := test.count // период теста
 	var error_koef float32
 	error_koef = 0.9995
 
@@ -455,6 +467,14 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
+
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 
 			step = step / 2
 			test_c.numberCounter = 0
@@ -486,6 +506,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
 
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -516,6 +543,14 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
 
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
+
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -545,6 +580,14 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
+
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 
 			test_c.numberCounter = 0
 
@@ -575,14 +618,20 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	fmt.Printf("End 64 goroutine num: %d\n", runtime.NumGoroutine())
 	db.Exec("UPDATE test_throughput SET rez_64=? WHERE id=?", test.rez_64, id)
 
-    
-
 	size = 128
 	step = test.thr_begin
 	thr_current = test.thr_begin
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
+
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 
 			step = step / 2
 			test_c.numberCounter = 0
@@ -614,6 +663,14 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
 
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
+
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -644,6 +701,14 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
 
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
+
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -673,6 +738,14 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
+
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 
 			test_c.numberCounter = 0
 
@@ -709,7 +782,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			step = step / 2
 			test_c.numberCounter = 0
 
@@ -739,7 +818,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -769,7 +854,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -799,7 +890,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -834,7 +931,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			step = step / 2
 			test_c.numberCounter = 0
 
@@ -864,7 +967,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -894,7 +1003,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -924,7 +1039,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -959,7 +1080,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			step = step / 2
 			test_c.numberCounter = 0
 
@@ -989,7 +1116,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1019,7 +1152,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1049,7 +1188,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1084,7 +1229,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			step = step / 2
 			test_c.numberCounter = 0
 
@@ -1114,7 +1265,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1144,7 +1301,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1174,7 +1337,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1209,7 +1378,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			step = step / 2
 			test_c.numberCounter = 0
 
@@ -1239,7 +1414,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1269,7 +1450,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1299,7 +1486,13 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-
+			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
+			yest.Next()
+			t_y = 0
+			yest.Scan(&t_y)
+			if t_y != 1 {
+				return
+			}
 			test_c.numberCounter = 0
 
 			fmt.Println("->> test.thr_current = ", thr_current)
@@ -1349,17 +1542,17 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		test.rez_1518 = (float32)(1518.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 	*/
 	test.status = 3
+	/*
+		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		if err != nil {
+			db.Close()
 
-	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-	if err != nil {
-		db.Close()
-
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
-		return
-	}
-	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+	*/ //db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 	_, err = db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 	//	fmt.Println("Result test = ", res)
 	fmt.Println("Error SQL result test = ", err)

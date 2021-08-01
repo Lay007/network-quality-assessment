@@ -326,7 +326,16 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 4, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
 		}
 	}
-	db.Close()
+	//db.Close()
+
+	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
+	yest.Next()
+	t_y := 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
@@ -342,7 +351,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 		ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		//	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
@@ -372,7 +381,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
-		db.Close()
+		//db.Close()
 
 	}
 
@@ -389,7 +398,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 
-	db.Close()
+	//db.Close()
 	fmt.Println(" Rez find : ", rez)
 
 	period_test := test.count_prob_packs // период теста - 10 секунд
@@ -441,6 +450,14 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_64 = float32(packet_count_OK) / float32(test.count_probs)
 	fmt.Println("->> rez_64 = ", test.rez_64)
 
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	size = 128
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
 	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
@@ -484,6 +501,14 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	}
 	test.rez_128 = float32(packet_count_OK) / float32(test.count_probs)
 	fmt.Println("->> rez_128 = ", test.rez_128)
+
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 
 	size = 256
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
@@ -529,6 +554,14 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_256 = float32(packet_count_OK) / float32(test.count_probs)
 	fmt.Println("->> rez_256 = ", test.rez_256)
 
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	size = 512
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
 	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
@@ -572,6 +605,14 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	}
 	test.rez_512 = float32(packet_count_OK) / float32(test.count_probs)
 	fmt.Println("->> rez_512 = ", test.rez_512)
+
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 
 	size = 1024
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
@@ -617,6 +658,14 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_1024 = float32(packet_count_OK) / float32(test.count_probs)
 	fmt.Println("->> rez_1024 = ", test.rez_1024)
 
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	size = 1280
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
 	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
@@ -660,6 +709,14 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	}
 	test.rez_1280 = float32(packet_count_OK) / float32(test.count_probs)
 	fmt.Println("->> rez_1280 = ", test.rez_1280)
+
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 
 	size = 1500
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
@@ -827,16 +884,17 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			test.rez_1518 = (float32)(1518.0 * 8.0 * (float32)(count_rez) * 1000 / (float32)(per))
 	*/
 	test.status = 3
+	/*
+		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		if err != nil {
+			db.Close()
 
-	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-	if err != nil {
-		db.Close()
-
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
-		return
-	}
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+	*/
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 

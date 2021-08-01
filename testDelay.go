@@ -286,6 +286,15 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	}
 	rez := 1
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
+
+	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
+	yest.Next()
+	t_y := 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	if test.miss_init_test == 0 {
 		rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.mac_dst2, test.id_test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
 
@@ -327,7 +336,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
 		}
 	}
-	db.Close()
+	//db.Close()
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
@@ -343,7 +352,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		test.ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 		test.ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		//db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
@@ -373,7 +382,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		test.mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		test.mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
-		db.Close()
+		//	db.Close()
 
 	}
 	fmt.Println(" Rez find : ", rez)
@@ -397,6 +406,14 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	time.Sleep(time.Second * 2)
 	<-quit
 
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	size_p = 128
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
@@ -405,6 +422,14 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
+
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 
 	size_p = 256
 
@@ -415,6 +440,14 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	time.Sleep(time.Second * 2)
 	<-quit
 
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	size_p = 512
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
@@ -423,6 +456,14 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
+
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 
 	size_p = 1024
 
@@ -433,6 +474,14 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	time.Sleep(time.Second * 2)
 	<-quit
 
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
+
 	size_p = 1280
 
 	b = packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size_p, 0, test.id_test_type, test.test_type)
@@ -441,6 +490,14 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	test.getMonDelay(quit, size_p)
 	time.Sleep(time.Second * 2)
 	<-quit
+
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 
 	size_p = 1518
 
@@ -452,16 +509,17 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	<-quit
 
 	test.status = 3
+	/*
+		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		if err != nil {
+			db.Close()
 
-	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-	if err != nil {
-		db.Close()
-
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
-		return
-	}
+			fmt.Println(" -!! Error !!-")
+			fmt.Println(err)
+			fmt.Println(" ----=====----")
+			return
+		}
+	*/
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 

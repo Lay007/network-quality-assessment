@@ -332,7 +332,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		}
 	}
 
-	db.Close()
+	//	db.Close()
 	connectTestSFP.Close()
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
@@ -378,7 +378,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		test.mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		test.mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
-		db.Close()
+		//	db.Close()
 
 	}
 	fmt.Println(" Rez find : ", rez)
@@ -388,6 +388,14 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 	test.net_interface_name = net_interface_name
 	test.mac_src = ifi.HardwareAddr
 	for step := 0; step < test.count_steps; step++ {
+
+		yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
+		yest.Next()
+		t_y := 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
 
 		testRez := new(testLossRez)
 		testRez.id_test = id
@@ -422,6 +430,14 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
+
 		size_p = 128
 		test.numberRx = 0
 		test.numberRxRes = 0
@@ -441,6 +457,14 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
+
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
 
 		size_p = 256
 		test.numberRx = 0
@@ -462,6 +486,14 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
+
 		size_p = 512
 		test.numberRx = 0
 		test.numberRxRes = 0
@@ -480,6 +512,14 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
+
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
 
 		size_p = 1024
 		test.numberRx = 0
@@ -500,6 +540,14 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
+
 		size_p = 1280
 		test.numberRx = 0
 		test.numberRxRes = 0
@@ -519,6 +567,14 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
 
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
+
 		size_p = 1518
 		test.numberRx = 0
 		test.numberRxRes = 0
@@ -537,7 +593,22 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 		fmt.Println(" Send Packets - ", PacketsTx)
 		fmt.Println(" Send PacketsRes - ", PacketsTxRes)
 		fmt.Println(" Receive Packets - ", test.numberRx)
+		/*
+			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+			if err != nil {
+				db.Close()
+				fmt.Println(" -!! Error !!-")
+				fmt.Println(err)
+				fmt.Println(" ----=====----")
+				return
+			}
+		*/
+		db.Exec("INSERT INTO test_frame_loss_rez (id_test, step_number, rez_64, rez_128, rez_256, rez_512, rez_1024, rez_1280, rez_1518, rez_4096, rez_9000) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", testRez.id_test, testRez.step_number, testRez.rez_64, testRez.rez_128, testRez.rez_256, testRez.rez_512, testRez.rez_1024, testRez.rez_1280, testRez.rez_1518, testRez.rez_4096, testRez.rez_9000)
+		//db.Close()
+	}
+	test.status = 3
 
+	/*
 		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		if err != nil {
 			db.Close()
@@ -546,19 +617,7 @@ func TestLoss(id int, net_interface_name string) { //Нагрузочное те
 			fmt.Println(" ----=====----")
 			return
 		}
-		db.Exec("INSERT INTO test_frame_loss_rez (id_test, step_number, rez_64, rez_128, rez_256, rez_512, rez_1024, rez_1280, rez_1518, rez_4096, rez_9000) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", testRez.id_test, testRez.step_number, testRez.rez_64, testRez.rez_128, testRez.rez_256, testRez.rez_512, testRez.rez_1024, testRez.rez_1280, testRez.rez_1518, testRez.rez_4096, testRez.rez_9000)
-		db.Close()
-	}
-	test.status = 3
-
-	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-	if err != nil {
-		db.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
-		return
-	}
+	*/
 	db.Exec("UPDATE test_frame_loss SET datetime_end=?, status=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 	db.Close()
 

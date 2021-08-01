@@ -31,7 +31,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	db.Exec("UPDATE test_y1564 SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id) // Тест выполняется
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
-		
+
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
 		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка доступа к сетевому интерфейсу "+net_interface_name)
@@ -44,7 +44,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
 		db.Close()
-	    row.Close()
+		row.Close()
 		fmt.Println(" -!! Error !!-")
 		fmt.Println(err)
 		fmt.Println(" ----=====----")
@@ -245,7 +245,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 			}
 		}
 	}
-//	db.Exec("UPDATE test_y1564 SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
+	//	db.Exec("UPDATE test_y1564 SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
 	test.status = 2
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
@@ -296,7 +296,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	fmt.Printf("\n Rez find : %X \n", rez)
 	if (rez & 0xFFF) == 0x999 {
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Максимальная пропускная способность - 1 Гбит/с")
-		
+
 	}
 	if (rez & 0xFFF) == 0x100 {
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Максимальная пропускная способность - 100 Мбит/с")
@@ -325,7 +325,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	if rez == 0 {
 		fmt.Println("Error test SFP connect")
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка при экспрес-тесте")
-	
+
 		return
 	}
 	if ((rez & 0xF000) == 0x1000) || ((rez & 0xF000) == 0x4000) {
@@ -338,7 +338,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 		test.ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-	//	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		//	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
@@ -368,10 +368,18 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		test.mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
-	   //	db.Close()
+		//	db.Close()
 
 	}
 	fmt.Println(" Rez find : ", rez)
+
+	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
+	yest.Next()
+	t_y := 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
@@ -440,7 +448,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.rez_FLR_s1 = float32(PacketsRxRes-uint64(test.numberRx)) / float32(PacketsRxRes)
 
 	fmt.Println(" ==== >>")
-	re,err:=db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
+	re, err := db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 	fmt.Println(re)
 	fmt.Println(err)
 	fmt.Println(" << ====")
@@ -449,6 +457,14 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test.numberRx = 0
 
 	if test.step_count > 1 {
+
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
 
 		go test.genFramesY1564(thr_s[1], counter, counterRes)
 		delay, jitter := test.getMetricsY1564(quit)
@@ -469,6 +485,13 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	}
 
 	if test.step_count > 2 {
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
 
 		go test.genFramesY1564(thr_s[2], counter, counterRes)
 		delay, jitter := test.getMetricsY1564(quit)
@@ -483,14 +506,19 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 		db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 
-
 		PacketsRx = 0
 		test.numberRx = 0
 
 	}
 
 	if test.step_count > 3 {
-
+		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
+		yest.Next()
+		t_y = 0
+		yest.Scan(&t_y)
+		if t_y != 1 {
+			return
+		}
 		go test.genFramesY1564(thr_s[3], counter, counterRes)
 		delay, jitter := test.getMetricsY1564(quit)
 		time.Sleep(time.Second * 2)
@@ -510,7 +538,13 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	}
 
 	runtime.Gosched()
-
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 	go test.genFramesY1564(test.CIR+test.EIR, counter, counterRes)
 	delay, jitter = test.getMetricsY1564(quit)
 	time.Sleep(time.Second * 2)
@@ -524,12 +558,17 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 
-
 	PacketsRx = 0
 	test.numberRx = 0
 
 	runtime.Gosched()
-
+	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
+	yest.Next()
+	t_y = 0
+	yest.Scan(&t_y)
+	if t_y != 1 {
+		return
+	}
 	go test.genFramesY1564(test.CIR+test.TP, counter, counterRes)
 	delay, jitter = test.getMetricsY1564(quit)
 	time.Sleep(time.Second * 2)
@@ -547,18 +586,17 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	PacketsRx = 0
 	test.numberRx = 0
 
-	
-//	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
-//	if err != nil {
-//		db.Close()
+	//	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	//	if err != nil {
+	//		db.Close()
 
-//		fmt.Println(" -!! Error !!-")
-//		fmt.Println(err)
-//		fmt.Println(" ----=====----")
-//		return
-//	}
+	//		fmt.Println(" -!! Error !!-")
+	//		fmt.Println(err)
+	//		fmt.Println(" ----=====----")
+	//		return
+	//	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
-//	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
+	//	db.Exec("UPDATE test_y1564 SET rez_IR_s1=?, rez_FTD_s1=?,rez_FVD_s1=?,rez_FLR_s1=?,rez_IR_s2=?, rez_FTD_s2=?,rez_FVD_s2=?,rez_FLR_s2=?, rez_IR_s3=?, rez_FTD_s3=?,rez_FVD_s3=?,rez_FLR_s3=?,rez_IR_s4=?, rez_FTD_s4=?,rez_FVD_s4=?,rez_FLR_s4=?, rez_IR_eir=?, rez_FTD_eir=?,rez_FVD_eir=?,rez_FLR_eir=?, rez_IR_tp=?, rez_FTD_tp=?,rez_FVD_tp=?,rez_FLR_tp=?, datetime_end=?, status=? WHERE id=?", test.rez_IR_s1, test.rez_FTD_s1, test.rez_FVD_s1, test.rez_FLR_s1, test.rez_IR_s2, test.rez_FTD_s2, test.rez_FVD_s2, test.rez_FLR_s2, test.rez_IR_s3, test.rez_FTD_s3, test.rez_FVD_s3, test.rez_FLR_s3, test.rez_IR_s4, test.rez_FTD_s4, test.rez_FVD_s4, test.rez_FLR_s4, test.rez_IR_eir, test.rez_FTD_eir, test.rez_FVD_eir, test.rez_FLR_eir, test.rez_IR_tp, test.rez_FTD_tp, test.rez_FVD_tp, test.rez_FLR_tp, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
 
 	db.Close()
 }
