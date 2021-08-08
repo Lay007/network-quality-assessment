@@ -24,6 +24,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id) // Тест выполняется
+
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
@@ -226,7 +227,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		}
 	}
 	db.Exec("UPDATE test_latency SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
-
+	test.status = 2
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 		db.Exec("UPDATE test_latency SET status=? WHERE id=?", 4, id) // Ошибка выполнения
 		db.Close()
@@ -413,6 +414,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
 
 	size_p = 128
 
@@ -430,6 +432,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
 
 	size_p = 256
 
@@ -447,6 +450,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
 
 	size_p = 512
 
@@ -464,6 +468,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
 
 	size_p = 1024
 
@@ -481,6 +486,7 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
 
 	size_p = 1280
 
@@ -498,6 +504,8 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+
+	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
 
 	size_p = 1518
 
@@ -740,25 +748,26 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 					markerSFP12 = markerSFP12 + int64(f.Payload[45-ind])<<(8*ind)
 				}
 
-				floatDelay := (float32(markerSFP12 - markerSFP11)) * 1000000.0 / float32(math.Pow(2, 32))
+				//floatDelay := (float32(markerSFP12 - markerSFP11)) * 1000000.0 / float32(math.Pow(2, 32))
 
-				if floatDelay < 25 {
+				/*
+					if floatDelay < 25 {
 
-					fmt.Printf("size     %x \n", b[2:4])
-					fmt.Printf("Packet: %x ", f.Payload)
-					fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-					fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+						fmt.Printf("size     %x \n", b[2:4])
+						fmt.Printf("Packet: %x ", f.Payload)
+						fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+						fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 
-					fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+						fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-					fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-					fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-					fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-					fmt.Println(" delay = ", floatDelay)
-					//fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-					fmt.Println(" --== End Packet ==--")
-				}
-
+						fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+						fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+						fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+						fmt.Println(" delay = ", floatDelay)
+						//fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+						fmt.Println(" --== End Packet ==--")
+					}
+				*/
 				if (test.test_type == 2) && (markerSFP2 == 0) {
 					continue
 				}

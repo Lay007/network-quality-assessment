@@ -226,7 +226,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	}
 
 	db.Exec("UPDATE test_bert SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
-
+	test.status = 2
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
 	fmt.Println(ipdst_2sfpsla_str)
@@ -458,6 +458,8 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		return
 	}
 
+	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
+
 	size = 128
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
 	period_nano = int64(size*8*1000000000) / (int64(test.thr_begin * 1000 * 1000))
@@ -509,6 +511,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
 
 	size = 256
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
@@ -561,6 +564,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
 
 	size = 512
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
@@ -613,6 +617,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
 
 	size = 1024
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
@@ -665,6 +670,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
 
 	size = 1280
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
@@ -717,6 +723,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	if t_y != 1 {
 		return
 	}
+	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
 
 	size = 1500
 	fmt.Println("->> test.thr_begin = ", test.thr_begin)
