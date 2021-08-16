@@ -332,6 +332,25 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		// Verdict is "ignore packet."
 		bpf.RetConstant{Val: 0},
 	})
+
+	fmt.Println(" testPing ")
+	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка ping-теста")
+
+		db.Close()
+		return
+	}
+
+	fmt.Println(" check_SNMP ")
+	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка SNMP-теста")
+
+		db.Close()
+		return
+	}
+
 	rez := 1
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 	if test.miss_init_test == 0 {
@@ -433,23 +452,6 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		mac_dst[1] = byte((test_mac >> 32) & 0xFF)
 		mac_dst[0] = byte((test_mac >> 40) & 0xFF)
 
-	}
-	fmt.Println(" testPing ")
-	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка ping-теста")
-
-		db.Close()
-		return
-	}
-
-	fmt.Println(" check_SNMP ")
-	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка SNMP-теста")
-
-		db.Close()
-		return
 	}
 
 	//	db.Close()

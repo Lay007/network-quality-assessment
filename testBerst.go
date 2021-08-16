@@ -226,6 +226,22 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	}
 
 	db.Exec("UPDATE test_bert SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
+
+	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 4, id, "Ошибка ping-теста")
+		db.Close()
+		return
+	}
+
+	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
+		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 4, id, "Ошибка SNMP-теста")
+		db.Close()
+
+		return
+	}
+
 	test.status = 2
 	fmt.Println(ipsrcstr)
 	fmt.Println(ipdst_1sfpsla_str)
@@ -383,21 +399,6 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 		//db.Close()
 
-	}
-
-	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 4, id, "Ошибка ping-теста")
-		db.Close()
-		return
-	}
-
-	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 4, id, "Ошибка SNMP-теста")
-		db.Close()
-
-		return
 	}
 
 	//db.Close()
