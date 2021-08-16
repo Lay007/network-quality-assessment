@@ -33,7 +33,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	if err != nil {
 
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка доступа к сетевому интерфейсу "+net_interface_name)
 		db.Close()
 		return
@@ -41,7 +41,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	row, err := db.Query("select id, test_type, module_first, module_second, block_size, ToS, VLAN_priority, CIR, EIR, TP, period, step_count, max_FTD, max_FVD, max_FLR, status from test_y1564 where id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
 		db.Close()
 		row.Close()
@@ -56,7 +56,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	test := new(testY1564)
 	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.ToS, &test.VLAN_priority, &test.CIR, &test.EIR, &test.TP, &test.period, &test.step_count, &test.max_FTD, &test.max_FVD, &test.max_FLR, &test.status)
 	if err != nil {
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
 		db.Close()
 		fmt.Println(" -!! Error !!-")
@@ -73,7 +73,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
 		db.Close()
 		row.Close()
@@ -86,7 +86,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		err = row.Scan(&ipsrcstr)
 		if err != nil {
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
-			db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			fmt.Println(" -!! Error !!-")
@@ -98,7 +98,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	var id_sfp1, id_sfp2 int
 	row, err = db.Query("SELECT module_first, module_second FROM test_y1564 WHERE id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
 		db.Close()
 		row.Close()
@@ -110,7 +110,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	for row.Next() {
 		err = row.Scan(&id_sfp1, &id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
 			db.Close()
 			row.Close()
@@ -121,7 +121,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		}
 		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
 			db.Close()
 			row.Close()
@@ -135,7 +135,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
-				db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
 				db.Close()
 				row.Close()
@@ -148,7 +148,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
 			db.Close()
 			row.Close()
@@ -165,7 +165,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 			//err = row_mac.Scan(&mac_dst_str)
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
-				db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
 				db.Close()
 				row.Close()
@@ -184,7 +184,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_mac, err = db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
 			db.Close()
 			row.Close()
@@ -202,7 +202,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
 				db.Close()
 				row.Close()
@@ -221,7 +221,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
 			db.Close()
 			row.Close()
@@ -234,7 +234,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 			err = row_ip.Scan(&ipdst_2sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
 				db.Close()
 				row.Close()
@@ -383,7 +383,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	}
 
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка ping-теста")
 		db.Close()
 
@@ -391,7 +391,7 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	}
 
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_y1564 SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка SNMP-теста")
 		db.Close()
 

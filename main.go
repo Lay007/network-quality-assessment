@@ -126,11 +126,11 @@ func main() {
 
 	// Оценка выполнения тестов
 	db.Exec("UPDATE test_sla_real SET status=1 WHERE status=2")
-	db.Exec("UPDATE test_throughput SET status=4 WHERE status=2")
-	db.Exec("UPDATE test_bert SET status=4 WHERE status=2")
-	db.Exec("UPDATE test_latency SET status=4 WHERE status=2")
-	db.Exec("UPDATE test_frame_loss SET status=4 WHERE status=2")
-	db.Exec("UPDATE test_y1564 SET status=4 WHERE status=2")
+	db.Exec("UPDATE test_throughput SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
+	db.Exec("UPDATE test_bert SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
+	db.Exec("UPDATE test_latency SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
+	db.Exec("UPDATE test_frame_loss SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
+	db.Exec("UPDATE test_y1564 SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
 	db.Close()
 
 	db_SNMP, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)

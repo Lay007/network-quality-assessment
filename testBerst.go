@@ -26,7 +26,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	if err != nil {
 		db.Close()
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
-		db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		return
 	}
 
@@ -60,7 +60,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
-		db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Close()
 		row.Close()
 		fmt.Println(" -!! Error !!-")
@@ -72,7 +72,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		err = row.Scan(&ipsrcstr)
 		if err != nil {
 
-			db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			fmt.Println(" -!! Error !!-")
@@ -84,7 +84,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	var id_sfp1, id_sfp2 int
 	row, err = db.Query("SELECT module_first, module_second FROM test_bert WHERE id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 		db.Close()
 		row.Close()
 		fmt.Println(" -!! Error !!-")
@@ -96,7 +96,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		err = row.Scan(&id_sfp1, &id_sfp2)
 		if err != nil {
 
-			db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			fmt.Println(" -!! Error !!-")
@@ -106,7 +106,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 		}
 		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			row_ip.Close()
@@ -120,7 +120,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 				db.Close()
 				row.Close()
 				fmt.Println(" -!! Error !!-")
@@ -132,7 +132,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			row_mac.Close()
@@ -149,7 +149,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 				db.Close()
 				row.Close()
 				fmt.Println(" -!! Error !!-")
@@ -167,7 +167,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_mac, err = db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			row_mac.Close()
@@ -184,7 +184,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 				db.Close()
 				row.Close()
 				fmt.Println(" -!! Error !!-")
@@ -202,7 +202,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 			db.Close()
 			row.Close()
 			fmt.Println(" -!! Error !!-")
@@ -214,7 +214,7 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 			err = row_ip.Scan(&ipdst_2sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
 				db.Close()
 				row.Close()
 				fmt.Println(" -!! Error !!-")
@@ -386,13 +386,15 @@ func TestBerst(id int, net_interface_name string) { //Нагрузочное т�
 	}
 
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 4, id, "Ошибка ping-теста")
 		db.Close()
 		return
 	}
 
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_bert SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 4, id, "Ошибка SNMP-теста")
 		db.Close()
 
 		return
