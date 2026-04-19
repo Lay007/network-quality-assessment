@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
@@ -13,23 +12,31 @@ import (
 	"time"
 )
 
-func TestDelay(id int, net_interface_name string) { //Нагрузочное тестирование задержки
-	fmt.Println("Тест задержки начался")
-	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+func TestDelay(id int, net_interface_name string) {
+	if verboseLogs {
+		fmt.Println("Latency test started")
+	}
+	db, err := openDB()
 	if err != nil {
 		db.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
-	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id) // Тест выполняется
+	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id)
 
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
-		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		return
 	}
 
@@ -37,21 +44,35 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	if err != nil {
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
-	fmt.Println(row)
+	if verboseLogs {
+		fmt.Println(row)
+	}
 	defer row.Close()
 	row.Next()
 	test := new(testDelay)
 	err = row.Scan(&test.id, &test.miss_init_test, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count_packs, &test.count_tests, &test.status)
 	if err != nil {
 		db.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 
@@ -63,59 +84,89 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
-		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 	for row.Next() {
 		err = row.Scan(&ipsrcstr)
 		if err != nil {
 
-			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 	}
 	var id_sfp1, id_sfp2 int
 	row, err = db.Query("SELECT module_first, module_second FROM test_latency WHERE id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 	for row.Next() {
 		err = row.Scan(&id_sfp1, &id_sfp2)
 		if err != nil {
 
-			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
 			row_ip.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_ip.Close()
@@ -123,41 +174,58 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+				db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
 
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
-		//var mac_dst_str string
 		var test_mac int64
 		for row_mac.Next() {
 			//err = row_mac.Scan(&mac_dst_str)
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+				db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -170,28 +238,39 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_mac, err = db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
-		//var mac_dst_str string
 		for row_mac.Next() {
 			//err = row_mac.Scan(&mac_dst_str)
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+				db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -204,59 +283,75 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_2sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+				db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
 	}
-	db.Exec("UPDATE test_latency SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
+	db.Exec("UPDATE test_latency SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id)
 	test.status = 2
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, "Ошибка ping-теста")
+		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, "Ping test failed")
 		db.Close()
 
 		return
 	}
 
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, "Ошибка SNMP-теста")
+		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, "SNMP test failed")
 		db.Close()
 
 		return
 	}
 
-	fmt.Println(ipsrcstr)
-	fmt.Println(ipdst_1sfpsla_str)
-	fmt.Println(ipdst_2sfpsla_str)
+	if verboseLogs {
+		fmt.Println(ipsrcstr)
+	}
+	if verboseLogs {
+		fmt.Println(ipdst_1sfpsla_str)
+	}
+	if verboseLogs {
+		fmt.Println(ipdst_2sfpsla_str)
+	}
 
 	//counter := test.count
-	//var numberTX uint32
 	//	numberTX = 0
 
 	test.ipsrc = net.ParseIP(ipsrcstr)
 	test.ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 	test.ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-	//period_min := time.Duration(time.Duration(int(period_nano)) * time.Nanosecond)
 	//period_gen := time.Duration(10 * time.Second)
 
 	/*
@@ -272,10 +367,11 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 				}
 			}
 			min_ticker:=time.Since(start_test_ticker)
-		fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
+		if verboseLogs {
+			fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
+		}
 	*/
 
-	//fmt.Println("period_min= ", period_min)
 	//	numberTX++
 	/*
 		addr := &raw.Addr{
@@ -301,48 +397,52 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 	if test.miss_init_test == 0 {
 		rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.mac_dst2, test.id_test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
 
-		fmt.Printf("\n Rez find : %X \n", rez)
+		if verboseLogs {
+			fmt.Printf("\n Rez find : %X \n", rez)
+		}
 		if (rez & 0xFFF) == 0x999 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Максимальная пропускная способность - 1 Гбит/с")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Maximum throughput - 1 Gbit/s")
 			if test.thr_begin > 1000 {
 				test.thr_begin = 1000
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Изменяем максимальную пропускную способность на 1 Гбит/с")
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Changing maximum throughput to 1 Gbit/s")
 			}
 		}
 		if (rez & 0xFFF) == 0x100 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Максимальная пропускная способность - 100 Мбит/с")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Maximum throughput - 100 Mbit/s")
 			if test.thr_begin > 100 {
 				test.thr_begin = 100
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Изменяем максимальную пропускную способность на 100 Мбит/с")
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Changing maximum throughput to 100 Mbit/s")
 			}
 		}
 		if (rez & 0xFFF) == 0x10 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Максимальная пропускная способность - 10 Мбит/с")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Maximum throughput - 10 Mbit/s")
 			if test.thr_begin > 10 {
 				test.thr_begin = 10
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Изменяем максимальную пропускную способность на 10 Мбит/с")
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Changing maximum throughput to 10 Mbit/s")
 			}
 		}
 		if (rez & 0xF000) == 0x0 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Последовательное расположение модулей. Порядок модулей правильный")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Serial module topology. Module order is correct")
 		}
 		if (rez & 0xF000) == 0x1000 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Последовательное расположение модулей. Порядок модулей неправильный. Изменяем при тестироваинии")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Serial module topology. Module order is incorrect; swapping during the test")
 		}
 		if (rez & 0xF000) == 0x2000 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Соединенеие звездой. Нагрузка одинаковая")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Star topology. Load is balanced")
 		}
 		if (rez & 0xF000) == 0x3000 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение правильное")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Star topology. Load is unbalanced; module order is correct")
 		}
 		if (rez & 0xF000) == 0x4000 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 2, id, " Star topology. Load is unbalanced; module order is incorrect; swapping during the test")
 		}
 	}
 	//db.Close()
 	connectTestSFP.Close()
 	if rez == 0 {
-		fmt.Println("Error test SFP connect")
+		if verboseLogs {
+			fmt.Println("Error test SFP connect")
+		}
 		return
 	}
 	if ((rez & 0xF000) == 0x1000) || ((rez & 0xF000) == 0x4000) {
@@ -355,14 +455,20 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		test.ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 		test.ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-		//db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		//db, err = openDB()
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
@@ -372,9 +478,15 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 			if err != nil {
 				db.Close()
 				row_mac.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -388,7 +500,9 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 		//	db.Close()
 
 	}
-	fmt.Println(" Rez find : ", rez)
+	if verboseLogs {
+		fmt.Println(" Rez find : ", rez)
+	}
 
 	test.id_test_type = 0x6000 + (uint16(id) & 0x1FFF)
 	testTypeTemp := 0x2000 + (uint16(id) & 0x1FFF)
@@ -520,13 +634,19 @@ func TestDelay(id int, net_interface_name string) { //Нагрузочное т�
 
 	test.status = 3
 	/*
-		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		db, err = openDB()
 		if err != nil {
 			db.Close()
 
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 	*/
@@ -548,7 +668,9 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 
 	ifi, err := net.InterfaceByName(test.net_interface_name)
 	if err != nil {
-		fmt.Println("failed to find interface %q: %v", test.net_interface_name, err)
+		if verboseLogs {
+			fmt.Printf("failed to find interface %q: %v\n", test.net_interface_name, err)
+		}
 		quit <- 1
 		return
 	}
@@ -556,13 +678,10 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 	var netConf *raw.Config = new(raw.Config)
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 		bpf.LoadAbsolute{Off: 34, Size: 1},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
-		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test.id_test_type), SkipTrue: 3},
-		// Выбор одного из 1000
 		bpf.LoadExtension{Num: bpf.ExtRand},
 		//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
 		//bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x0FFFFFFF, SkipTrue: 1},
@@ -583,7 +702,6 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 		go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, len(b))
 
 		select {
-		//fmt.Println("Wait")
 		case detect := <-detectPackDelay:
 
 			if detect > 0 {
@@ -604,24 +722,40 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 			}
 		default:
 			if time.Since(timeStart) > time.Duration(test.count_packs)*time.Second {
-				fmt.Println(" --> Number = ", number)
-				fmt.Println(" --> Size = ", size)
+				if verboseLogs {
+					fmt.Println(" --> Number = ", number)
+				}
+				if verboseLogs {
+					fmt.Println(" --> Size = ", size)
+				}
 
 				floatDelay = (float32(delay) / float32(number)) * 1000000.0 / float32(math.Pow(2, 32))
 				floatDelayMax = float32(delayMax) * 1000000.0 / float32(math.Pow(2, 32))
 				floatDelayMin = float32(delayMin) * 1000000.0 / float32(math.Pow(2, 32))
 				/*
-					fmt.Println(" --> Delay = ", floatDelay)
-					fmt.Println(" --> DelayMax = ", floatDelayMax)
-					fmt.Println(" --> DelayMin = ", floatDelayMin)
+					if verboseLogs {
+						fmt.Println(" --> Delay = ", floatDelay)
+					}
+					if verboseLogs {
+						fmt.Println(" --> DelayMax = ", floatDelayMax)
+					}
+					if verboseLogs {
+						fmt.Println(" --> DelayMin = ", floatDelayMin)
+					}
 
 					floatDelay = (float32(delay) / float32(number))
 					floatDelayMax = float32(delayMax)
 					floatDelayMin = float32(delayMin)
 				*/
-				fmt.Println(" --> Delay = ", floatDelay)
-				fmt.Println(" --> DelayMax = ", floatDelayMax)
-				fmt.Println(" --> DelayMin = ", floatDelayMin)
+				if verboseLogs {
+					fmt.Println(" --> Delay = ", floatDelay)
+				}
+				if verboseLogs {
+					fmt.Println(" --> DelayMax = ", floatDelayMax)
+				}
+				if verboseLogs {
+					fmt.Println(" --> DelayMin = ", floatDelayMin)
+				}
 				switch size {
 				case 64:
 					test.rez_64 = floatDelay
@@ -670,14 +804,12 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 	t_ips[0] = byte((test_type >> 8) & 0xFF)
 	start := time.Now()
 	quit := make(chan int64, 10)
-	//fmt.Println("-> Begin Catch - ", start)
 	c.SetReadDeadline(start.Add(time.Microsecond * 3000))
 	//ExitLoop:
 	for {
 		select {
 		case key := <-quit:
 			catchDetect <- key
-			//	fmt.Println("Chanel go")
 			return
 			//break ExitLoop
 		default:
@@ -685,7 +817,6 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 			n, _, err := c.ReadFrom(b)
 			cc++
 			if err != nil {
-				//fmt.Printf("failed to receive message: %v", err)
 				if err.Error() == "resource temporarily unavailable" {
 
 				}
@@ -705,7 +836,6 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 				continue
 			}
 
-			//t_time := int64(float64(time.Now().UnixNano() - delta_nano )*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
 			delta_nano := int64((2208988800) * 1000000000)
 			t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
 			t_time = t_time & int64(0xFFFFFFFFFFFFFF)
@@ -713,7 +843,9 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 			//n, addr, err := c.ReadFrom(b)
 			// Unpack Ethernet II frame into Go representation.
 			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
-				fmt.Printf("failed to unmarshal ethernet frame: %v", err)
+				if verboseLogs {
+					fmt.Printf("failed to unmarshal ethernet frame: %v", err)
+				}
 				continue
 			}
 
@@ -723,23 +855,34 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 
 				/*	fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
-					//	fmt.Println(time.Now())
-						//fmt.Printf("\n\n--=Test %x - \n -== %x\n", f.Payload[12:15], net.ParseIP(ipdst_1sfpsla_str))
-						//fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-						//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
 
-						fmt.Printf("size     %x \n", b[2:4])
+						if verboseLogs {
+							fmt.Printf("size     %x \n", b[2:4])
+						}
 
-						fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-						fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+						if verboseLogs {
+							fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+						}
+						if verboseLogs {
+							fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+						}
 
-						fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+						if verboseLogs {
+							fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+						}
 
-						fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-						fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-						fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-					//fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-						fmt.Println(" --== End Packet ==--")
+						if verboseLogs {
+							fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+						}
+						if verboseLogs {
+							fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+						}
+						if verboseLogs {
+							fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+						}
+						if verboseLogs {
+							fmt.Println(" --== End Packet ==--")
+						}
 						//*/
 				var markerSFP11, markerSFP12, markerSFP2 int64
 				var ind uint
@@ -755,19 +898,38 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 				/*
 					if floatDelay < 25 {
 
-						fmt.Printf("size     %x \n", b[2:4])
-						fmt.Printf("Packet: %x ", f.Payload)
-						fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-						fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+						if verboseLogs {
+							fmt.Printf("size     %x \n", b[2:4])
+						}
+						if verboseLogs {
+							fmt.Printf("Packet: %x ", f.Payload)
+						}
+						if verboseLogs {
+							fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+						}
+						if verboseLogs {
+							fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+						}
 
-						fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+						if verboseLogs {
+							fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+						}
 
-						fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-						fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-						fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-						fmt.Println(" delay = ", floatDelay)
-						//fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-						fmt.Println(" --== End Packet ==--")
+						if verboseLogs {
+							fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+						}
+						if verboseLogs {
+							fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+						}
+						if verboseLogs {
+							fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+						}
+						if verboseLogs {
+							fmt.Println(" delay = ", floatDelay)
+						}
+						if verboseLogs {
+							fmt.Println(" --== End Packet ==--")
+						}
 					}
 				*/
 				if (test.test_type == 2) && (markerSFP2 == 0) {

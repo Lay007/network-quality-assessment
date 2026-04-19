@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"net"
 	"os"
@@ -22,63 +21,89 @@ import (
 	//	"github.com/intel-go/nff-go/flow"
 	//	"github.com/intel-go/nff-go/packet"
 
-	. "./zsocket"
 	"github.com/newtools/zsocket/nettypes"
+	. "server_sfp_sla/internal/zsocket"
 )
 
 var muxConn sync.Mutex
 
-func TestThroughput(id int, net_interface_name string) { //Нагрузочное тестирование пропускной способности
-	fmt.Println("Тест пропускной способности начался")
+func TestThroughput(id int, net_interface_name string) {
+	if verboseLogs {
+		fmt.Println("Throughput test started")
+	}
 	defer func() {
-		fmt.Println("Тест пропускной способности завершился")
+		if verboseLogs {
+			fmt.Println("Throughput test completed")
+		}
 	}()
-	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	db, err := openDB()
 	if err != nil {
 		db.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 
 	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-	fmt.Println(yest)
+	if verboseLogs {
+		fmt.Println(yest)
+	}
 
-	db.Exec("UPDATE test_throughput SET status=?, datatime=NOW() WHERE id=?", 2, id) // Тест выполняется
+	db.Exec("UPDATE test_throughput SET status=?, datatime=NOW() WHERE id=?", 2, id)
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка доступа к сетевому интерфейсу "+net_interface_name)
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Network interface access failed: "+net_interface_name)
 		db.Close()
 		return
 	}
 
 	row, err := db.Query("select id, miss_init_test, test_type, module_first, module_second, thr_begin, count, ch_type, max_loss, status from test_throughput where id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
-	fmt.Println(row)
+	if verboseLogs {
+		fmt.Println(row)
+	}
 	defer row.Close()
 	row.Next()
 	test := new(testThroughput)
 	err = row.Scan(&test.id, &test.miss_init_test, &test.test_type, &test.module_first, &test.module_second, &test.thr_begin, &test.count, &test.ch_type, &test.max_loss, &test.status)
 	if err != nil {
 		db.Close()
-		fmt.Println(" -!! Error !!-")
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка разбора запроса к базе данных")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database result parsing failed")
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 
@@ -90,66 +115,98 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
-		fmt.Println(err)
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
+		if verboseLogs {
+			fmt.Println(err)
+		}
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 	for row.Next() {
 		err = row.Scan(&ipsrcstr)
 		if err != nil {
 
-			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка разбора запроса к базе данных")
+			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database result parsing failed")
 
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 	}
 	var id_sfp1, id_sfp2 int
 	row, err = db.Query("SELECT module_first, module_second FROM test_throughput WHERE id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 	for row.Next() {
 		err = row.Scan(&id_sfp1, &id_sfp2)
 		if err != nil {
 
-			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка разбора запроса к базе данных")
+			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database result parsing failed")
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
+			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 			db.Close()
 			row.Close()
 			row_ip.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_ip.Close()
@@ -157,44 +214,61 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка разбора запроса к базе данных")
+				db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database result parsing failed")
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
 
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
+			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 			db.Close()
 			row.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
-		//var mac_dst_str string
 		var test_mac int64
 		for row_mac.Next() {
 			//err = row_mac.Scan(&mac_dst_str)
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка разбора запроса к базе данных")
+				db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database result parsing failed")
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -207,31 +281,42 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 		row_mac, err = db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
+			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 			db.Close()
 			row.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
-		//var mac_dst_str string
 		test_mac = 0
 		for row_mac.Next() {
 			//err = row_mac.Scan(&mac_dst_str)
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка разбора запроса к базе данных")
+				db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database result parsing failed")
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -244,46 +329,62 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка запроса к базе данных")
+			db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_2sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка разбора запроса к базе данных")
+				db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database result parsing failed")
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
 	}
 
-	db.Exec("UPDATE test_throughput SET status=?, datetime_start=?, datetime_end_solve=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), (time.Now().Add(time.Duration(120+7*7*(test.count+10)) * time.Second)).Format("2006-01-02 15:04:05"), id) // Тест выполняется
+	db.Exec("UPDATE test_throughput SET status=?, datetime_start=?, datetime_end_solve=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), (time.Now().Add(time.Duration(120+7*7*(test.count+10)) * time.Second)).Format("2006-01-02 15:04:05"), id)
 
-	fmt.Println(ipsrcstr)
-	fmt.Println(ipdst_1sfpsla_str)
-	fmt.Println(ipdst_2sfpsla_str)
+	if verboseLogs {
+		fmt.Println(ipsrcstr)
+	}
+	if verboseLogs {
+		fmt.Println(ipdst_1sfpsla_str)
+	}
+	if verboseLogs {
+		fmt.Println(ipdst_2sfpsla_str)
+	}
 
 	//counter := test.count
-	//var numberTX uint32
 	//	numberTX = 0
 
 	ipsrc := net.ParseIP(ipsrcstr)
 	ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
 	ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
-	//period_min := time.Duration(time.Duration(int(period_nano)) * time.Nanosecond)
 	//period_gen := time.Duration(10 * time.Second)
 
 	/*
@@ -299,10 +400,11 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 				}
 			}
 			min_ticker:=time.Since(start_test_ticker)
-		fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
+		if verboseLogs {
+			fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
+		}
 	*/
 
-	//fmt.Println("period_min= ", period_min)
 	//	numberTX++
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
@@ -321,10 +423,8 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	var netConf *raw.Config = new(raw.Config)
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 		bpf.LoadAbsolute{Off: 34, Size: 1},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
-		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
@@ -333,19 +433,23 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		bpf.RetConstant{Val: 0},
 	})
 
-	fmt.Println(" testPing ")
+	if verboseLogs {
+		fmt.Println(" testPing ")
+	}
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка ping-теста")
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ping test failed")
 
 		db.Close()
 		return
 	}
 
-	fmt.Println(" check_SNMP ")
+	if verboseLogs {
+		fmt.Println(" check_SNMP ")
+	}
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка SNMP-теста")
+		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "SNMP test failed")
 
 		db.Close()
 		return
@@ -354,55 +458,61 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	rez := 1
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 	if test.miss_init_test == 0 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Начался тест расположения модулей")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Module path test started")
 		rez = findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, ifi.HardwareAddr, mac_dst, mac_dst2, test_type, test.test_type, 1024, int64(1024*8*1000/test.thr_begin))
-		fmt.Printf("\n Rez find : %X \n", rez)
+		if verboseLogs {
+			fmt.Printf("\n Rez find : %X \n", rez)
+		}
 		if (rez & 0xFFF) == 0x999 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 1 Гбит/с")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Maximum throughput - 1 Gbit/s")
 			if test.thr_begin > 1000 {
 				test.thr_begin = 1000
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 1 Гбит/с")
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Changing maximum throughput to 1 Gbit/s")
 			}
 		}
 		if (rez & 0xFFF) == 0x100 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 100 Мбит/с")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Maximum throughput - 100 Mbit/s")
 			if test.thr_begin > 100 {
 				test.thr_begin = 100
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 100 Мбит/с")
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Changing maximum throughput to 100 Mbit/s")
 			}
 		}
 		if (rez & 0xFFF) == 0x10 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Максимальная пропускная способность - 10 Мбит/с")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Maximum throughput - 10 Mbit/s")
 			if test.thr_begin > 10 {
 				test.thr_begin = 10
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Изменяем максимальную пропускную способность на 10 Мбит/с")
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Changing maximum throughput to 10 Mbit/s")
 			}
 		}
 		if (rez & 0xF000) == 0x0 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Последовательное расположение модулей. Порядок модулей правильный")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Serial module topology. Module order is correct")
 		}
 		if (rez & 0xF000) == 0x1000 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Последовательное расположение модулей. Порядок модулей неправильный. Изменяем при тестироваинии")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Serial module topology. Module order is incorrect; swapping during the test")
 		}
 		if (rez & 0xF000) == 0x2000 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Соединенеие звездой. Нагрузка одинаковая")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Star topology. Load is balanced")
 		}
 		if (rez & 0xF000) == 0x3000 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение правильное")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Star topology. Load is unbalanced; module order is correct")
 		}
 		if (rez & 0xF000) == 0x4000 {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, " Star topology. Load is unbalanced; module order is incorrect; swapping during the test")
 		}
 	}
 	connectTestSFP.Close()
 	if rez == 0 {
-		fmt.Println("Error test SFP connect")
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Ошибка при экспрес-тесте")
+		if verboseLogs {
+			fmt.Println("Error test SFP connect")
+		}
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Express path test failed")
 
 		return
 	}
 
-	fmt.Println("Test ====")
+	if verboseLogs {
+		fmt.Println("Test ====")
+	}
 
 	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
 	yest.Next()
@@ -422,14 +532,20 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 		ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-		//db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		//db, err = openDB()
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
@@ -439,9 +555,15 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			if err != nil {
 				db.Close()
 				row_mac.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -456,9 +578,11 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 	//	db.Close()
 
-	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
+	if verboseLogs {
+		fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
+	}
 
-	period_test := test.count // период теста
+	period_test := test.count
 	var error_koef float32
 	error_koef = 0.9995
 
@@ -481,19 +605,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			step = step / 2
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_64 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
@@ -517,19 +651,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_64 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -555,19 +699,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_64 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -593,19 +747,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_64 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_64 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -617,7 +781,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 		}
 	}
 
-	fmt.Printf("End 64 goroutine num: %d\n", runtime.NumGoroutine())
+	if verboseLogs {
+		fmt.Printf("End 64 goroutine num: %d\n", runtime.NumGoroutine())
+	}
 	db.Exec("UPDATE test_throughput SET rez_64=? WHERE id=?", test.rez_64, id)
 
 	size = 128
@@ -638,19 +804,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			step = step / 2
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_128 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
@@ -675,19 +851,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_128 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -713,19 +899,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_128 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -751,19 +947,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_128 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_128 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -774,7 +980,9 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 
 		}
 	}
-	fmt.Printf("End 128 goroutine num: %d\n", runtime.NumGoroutine())
+	if verboseLogs {
+		fmt.Printf("End 128 goroutine num: %d\n", runtime.NumGoroutine())
+	}
 
 	db.Exec("UPDATE test_throughput SET rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
 
@@ -794,19 +1002,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			step = step / 2
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_256 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
@@ -829,19 +1047,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_256 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -865,19 +1093,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_256 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -901,19 +1139,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_256 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_256 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -943,19 +1191,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			step = step / 2
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_512 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
@@ -978,19 +1236,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_512 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1014,19 +1282,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_512 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1050,19 +1328,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_512 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_512 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1092,19 +1380,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			step = step / 2
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
@@ -1127,19 +1425,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1163,19 +1471,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1199,19 +1517,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1024 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1024 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1241,19 +1569,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			step = step / 2
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
@@ -1276,19 +1614,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1312,19 +1660,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1348,19 +1706,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1280 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1280 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1390,19 +1758,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			step = step / 2
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			if (test_c.numberCounter >= uint64(count_rez_R)) || ((float32)(test_c.numberCounter)/(float32)(count_rez_R) >= error_koef) {
@@ -1425,19 +1803,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1461,19 +1849,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1497,19 +1895,29 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 			}
 			test_c.numberCounter = 0
 
-			fmt.Println("->> test.thr_current = ", thr_current)
+			if verboseLogs {
+				fmt.Println("->> test.thr_current = ", thr_current)
+			}
 			period_nano := int64(size*8*1000000000) / (int64(float32(thr_current) * 1000 * 1000))
 			packet_count := (int64(period_test * 1000000000)) / period_nano
 
-			fmt.Println("->> period_nano  = ", period_nano)
-			fmt.Println("->> packet_count = ", packet_count)
+			if verboseLogs {
+				fmt.Println("->> period_nano  = ", period_nano)
+			}
+			if verboseLogs {
+				fmt.Println("->> packet_count = ", packet_count)
+			}
 			b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type, test.test_type)
 			b_temp := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, size, number, test_type_temp, test.test_type)
 
 			count_rez, count_rez_R, per := test_c.testThrGen(net_interface_name, b, b_temp, addr, ifi.MTU, ipdst_1sfpsla_str, packet_count, period_nano, thr_current, test_type)
 			test.rez_1518 = (float32)(float32(size) * 8.0 * (float32)(count_rez) * 1000000 / (float32)(per))
-			fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
-			fmt.Println("->> Counter = ", test_c.numberCounter)
+			if verboseLogs {
+				fmt.Println("->> rez_1518 = ", count_rez, " period = ", per, " !!!  rez=", test.rez_64)
+			}
+			if verboseLogs {
+				fmt.Println("->> Counter = ", test_c.numberCounter)
+			}
 			time.Sleep(time.Second * 3)
 
 			thr_current -= step
@@ -1545,19 +1953,26 @@ func TestThroughput(id int, net_interface_name string) { //Нагрузочно�
 	*/
 	test.status = 3
 	/*
-		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		db, err = openDB()
 		if err != nil {
 			db.Close()
 
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 	*/ //db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
 	_, err = db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,datetime_end=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, time.Now().Format("2006-01-02 15:04:05"), test.status, id)
-	//	fmt.Println("Result test = ", res)
-	fmt.Println("Error SQL result test = ", err)
+	if verboseLogs {
+		fmt.Println("Error SQL result test = ", err)
+	}
 	db.Close()
 }
 
@@ -1586,20 +2001,38 @@ func (c *mutexCounter) Set(val int64) {
 }
 
 func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []byte, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int64, period_nano int64, thr int, t_type uint16) (int, int, int64) {
-	fmt.Println("Start testThrGen")
+	if verboseLogs {
+		fmt.Println("Start testThrGen")
+	}
 	defer func() {
-		fmt.Println("End testThrGen")
+		if verboseLogs {
+			fmt.Println("End testThrGen")
+		}
 	}()
 
 	time_to_gen := ((cnt * period_nano) * 150) / 100
 	time_gen := time.Duration(cnt * period_nano)
-	fmt.Println("		-- time_to_generate [ms] = ", (cnt*period_nano)/1000000)
-	fmt.Println("		-- period_nano [ns] = ", period_nano)
-	fmt.Println("		-- all_time_to_gen [ms]        = ", time_to_gen/1000000)
-	fmt.Println("		-- time gen ", time_gen)
-	fmt.Println("		-- cnt start= ", cnt)
-	fmt.Println("		-- pps = ", 1000000000/period_nano)
-	fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
+	if verboseLogs {
+		fmt.Println("		-- time_to_generate [ms] = ", (cnt*period_nano)/1000000)
+	}
+	if verboseLogs {
+		fmt.Println("		-- period_nano [ns] = ", period_nano)
+	}
+	if verboseLogs {
+		fmt.Println("		-- all_time_to_gen [ms]        = ", time_to_gen/1000000)
+	}
+	if verboseLogs {
+		fmt.Println("		-- time gen ", time_gen)
+	}
+	if verboseLogs {
+		fmt.Println("		-- cnt start= ", cnt)
+	}
+	if verboseLogs {
+		fmt.Println("		-- pps = ", 1000000000/period_nano)
+	}
+	if verboseLogs {
+		fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
+	}
 
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
@@ -1612,13 +2045,10 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 	var netConfRecive *raw.Config = new(raw.Config)
 
 	(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 		bpf.LoadAbsolute{Off: 34, Size: 1},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
-		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
-		// Выбор одного из 1000
 		bpf.LoadExtension{Num: bpf.ExtRand},
 		//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
 		//bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
@@ -1641,7 +2071,9 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 	counterRes := make(chan uint64, 1)
 
 	time_gen_nano := genSocket(ifi.Index, b, b_temp, int((cnt*period_nano)/1000000000), thr, counter, counterRes)
-	fmt.Println("End gen thr")
+	if verboseLogs {
+		fmt.Println("End gen thr")
+	}
 	time.Sleep(time.Millisecond * 1000)
 	quitRcv <- 1
 	runtime.Gosched()
@@ -1651,9 +2083,15 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 	rez := <-counter
 	rezR := <-counterRes
 	rez = rez + rezR
-	fmt.Println("		 --->> rez_counterRezR= ", rezR)
-	fmt.Println("		 --->> rez_counterRez= ", rez)
-	fmt.Println("		 --->> time_gen_nano= ", time_gen_nano)
+	if verboseLogs {
+		fmt.Println("		 --->> rez_counterRezR= ", rezR)
+	}
+	if verboseLogs {
+		fmt.Println("		 --->> rez_counterRez= ", rez)
+	}
+	if verboseLogs {
+		fmt.Println("		 --->> time_gen_nano= ", time_gen_nano)
+	}
 	return int(rez), int(rezR), time_gen_nano
 
 	//ifi.Index
@@ -1669,9 +2107,13 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 			}
 		}
 		pps_rez := 100000 * 1000000000 / int(time.Since(gen_test_pps_start))
-		fmt.Println("		 -*- max pps = ", pps_rez)
+		if verboseLogs {
+			fmt.Println("		 -*- max pps = ", pps_rez)
+		}
 		time_to_write_pack_nano := 1000000000 / pps_rez
-		fmt.Println("		 -*- time write [ns] = ", time_to_write_pack_nano)
+		if verboseLogs {
+			fmt.Println("		 -*- time write [ns] = ", time_to_write_pack_nano)
+		}
 
 		var counter_test_ticket int
 
@@ -1692,19 +2134,29 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 		time.Sleep(3000 * time.Millisecond)
 		ticker_test.Stop()
 		done_tiker_test <- true
-		fmt.Println("Ticker test [3s] : ", counter_test_ticket)
+		if verboseLogs {
+			fmt.Println("Ticker test [3s] : ", counter_test_ticket)
+		}
 		min_period_ticket_nano := int64(3500000000 / counter_test_ticket)
-		fmt.Println("Ticker min [ns] : ", min_period_ticket_nano)
+		if verboseLogs {
+			fmt.Println("Ticker min [ns] : ", min_period_ticket_nano)
+		}
 
 		var addDelay bool
 		addDelay = false
 
 		//if ((cnt*period_nano)/1000000000)*int64(pps_rez) > cnt {
-		fmt.Println("   Max pps- ", int64(1000000000/period_nano))
-		fmt.Println("   Rez pps- ", int64(pps_rez))
+		if verboseLogs {
+			fmt.Println("   Max pps- ", int64(1000000000/period_nano))
+		}
+		if verboseLogs {
+			fmt.Println("   Rez pps- ", int64(pps_rez))
+		}
 		if (int64(1000000000 / period_nano)) < (int64(pps_rez)) {
 			addDelay = true
-			fmt.Println("		 -*- Delay - true ")
+			if verboseLogs {
+				fmt.Println("		 -*- Delay - true ")
+			}
 		}
 
 		var timerReal TimerR
@@ -1714,13 +2166,13 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 
 		//genSocket(ifi.Index, b)
 		//genSocket(ifi.Index, b, 1000)
-		//time.Sleep(time.Millisecond * 3000)
 
 		//min_per_rez := int64(time.Since(gen_test_min_period_start)) / (1000 * 1000)
-		//fmt.Println("		 -*- min period [mks] = ", min_per_rez)
 
 		g_start := time.Now()
-		fmt.Println(" == gStart ", g_start)
+		if verboseLogs {
+			fmt.Println(" == gStart ", g_start)
+		}
 		rez_time := make(chan int64)
 		test.numberCounter = 0
 
@@ -1739,13 +2191,10 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 			var netConfRecive *raw.Config = new(raw.Config)
 
 			(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
-				// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 				bpf.LoadAbsolute{Off: 34, Size: 1},
 				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
-				// Проверка идентификатора теста
 				bpf.LoadAbsolute{Off: 64, Size: 2},
 				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
-				// Выбор одного из 1000
 				bpf.LoadExtension{Num: bpf.ExtRand},
 				//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
 				bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
@@ -1761,9 +2210,7 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 
 			go func() {
 				ticker := time.NewTicker(time.Duration(period_nano))
-				//timer := time.NewTimer(time.Microsecond * 10)
 				//period := time.Duration(period_nano)
-				//fmt.Println("Start")
 				//for range ticker.C {
 			ExitLoop:
 				for {
@@ -1771,7 +2218,6 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 					case <-quit:
 						break ExitLoop
 					case <-ticker.C:
-						//time.Sleep(period)
 						counter.Dec()
 						c.WriteTo(b, addr)
 						if counter.Value() <= 0 {
@@ -1789,7 +2235,6 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 				}
 				rez_time <- (int64)(time.Since(time.Time(g_start)))
 				ticker.Stop()
-				//fmt.Println("		 -*- rez_time = ", rez_t)
 			}()
 			//}
 		} else {
@@ -1802,13 +2247,10 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 			var netConfRecive *raw.Config = new(raw.Config)
 
 			(*netConfRecive).Filter, _ = bpf.Assemble([]bpf.Instruction{
-				// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 				bpf.LoadAbsolute{Off: 34, Size: 1},
 				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 5},
-				// Проверка идентификатора теста
 				bpf.LoadAbsolute{Off: 64, Size: 2},
 				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 3},
-				// Выбор одного из 1000
 				bpf.LoadExtension{Num: bpf.ExtRand},
 				//	bpf.JumpIf{Cond: bpf.JumpLessThan, Val: 0xFF, SkipFalse: 1},
 				bpf.JumpIf{Cond: bpf.JumpGreaterThan, Val: 0x03FFFFFF, SkipTrue: 1},
@@ -1825,10 +2267,8 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 			var netConf *raw.Config = new(raw.Config)
 
 			(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-				// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 				bpf.LoadAbsolute{Off: 34, Size: 1},
 				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
-				// Проверка идентификатора теста
 				bpf.LoadAbsolute{Off: 64, Size: 2},
 				bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
 				// Verdict is "send up to 4k of the packet to userspace."
@@ -1848,9 +2288,15 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 
 					if err != nil {
 
-						fmt.Println(" -!! Error !!-")
-						fmt.Println(err)
-						fmt.Println(" ----=====----")
+						if verboseLogs {
+							fmt.Println(" -!! Error !!-")
+						}
+						if verboseLogs {
+							fmt.Println(err)
+						}
+						if verboseLogs {
+							fmt.Println(" ----=====----")
+						}
 						return
 					}
 
@@ -1858,7 +2304,9 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 					for {
 						select {
 						case <-quit:
-							fmt.Println(" == Quit ", (int64)(time.Since(g_start)))
+							if verboseLogs {
+								fmt.Println(" == Quit ", (int64)(time.Since(g_start)))
+							}
 							rez_time <- (int64)(time.Since(g_start))
 							break ExitLoop
 						default:
@@ -1868,22 +2316,30 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 								timerReal.timerDelayNano(period_nano - int64(time_to_write_pack_nano))
 							}
 							if err != nil {
-								fmt.Printf("%v", err)
+								if verboseLogs {
+									fmt.Printf("%v", err)
+								}
 								continue
 							}
 							if n < blen {
-								fmt.Printf("Partial write: %d", n)
+								if verboseLogs {
+									fmt.Printf("Partial write: %d", n)
+								}
 								continue
 							}
 							counter.Decc()
 							if counter.Value() <= 0 {
-								fmt.Println(" == cnt<0 ", (int64)(time.Since(g_start)))
+								if verboseLogs {
+									fmt.Println(" == cnt<0 ", (int64)(time.Since(g_start)))
+								}
 								rez_time <- (int64)(time.Since(time.Time(g_start)))
 								break ExitLoop
 							}
 							if counter.Value()%1000 == 0 {
 								if time.Since(g_start) >= time_gen {
-									fmt.Println(" == time out ", (int64)(time.Since(g_start)))
+									if verboseLogs {
+										fmt.Println(" == time out ", (int64)(time.Since(g_start)))
+									}
 									rez_time <- (int64)(time.Since(time.Time(g_start)))
 									break ExitLoop
 								}
@@ -1898,13 +2354,17 @@ func (test *testThr) testThrGen(net_interface_name string, b []byte, b_temp []by
 
 		time.Sleep(time.Duration(time_to_gen))
 		rez_count := test.numberCounter
-		fmt.Println("		 --->> rez_count= ", rez_count*64)
+		if verboseLogs {
+			fmt.Println("		 --->> rez_count= ", rez_count*64)
+		}
 		for i := 0; i < K; i++ {
 			quit <- 1
 		}
 		time.Sleep(time.Millisecond * 10)
 		rez := <-rez_time
-		fmt.Println("		 --->> rez_counterRez= ", cnt-counter.Value())
+		if verboseLogs {
+			fmt.Println("		 --->> rez_counterRez= ", cnt-counter.Value())
+		}
 		return int(cnt - counter.Value()), rez
 	*/
 }
@@ -1915,10 +2375,8 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 	var netConf *raw.Config = new(raw.Config)
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 		bpf.LoadAbsolute{Off: 34, Size: 1},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
-		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(t_type), SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
@@ -1927,7 +2385,6 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 		bpf.RetConstant{Val: 0},
 	})
 
-	//	var f ethernet.Frame
 	b := make([]byte, mtu)
 	var ips [4]byte
 	copy(ips[:], ipdst_1sfpsla_str)
@@ -1937,18 +2394,26 @@ func (test *testThr) receivePackets(c net.PacketConn, mtu int, ipdst_1sfpsla_str
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 	start := time.Now()
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(1+test.period)))
-	fmt.Println("Start receive: ", time.Now())
+	if verboseLogs {
+		fmt.Println("Start receive: ", time.Now())
+	}
 	for {
 		select {
 		case <-quit:
-			fmt.Println("End receive: ", time.Now())
-			fmt.Println("Packets receive = ", test.numberCounter)
+			if verboseLogs {
+				fmt.Println("End receive: ", time.Now())
+			}
+			if verboseLogs {
+				fmt.Println("Packets receive = ", test.numberCounter)
+			}
 			return
 		default:
 		}
 		_, _, err := c.ReadFrom(b)
 		if err != nil {
-			fmt.Println("failed to receive message: ", err)
+			if verboseLogs {
+				fmt.Println("failed to receive message: ", err)
+			}
 			if err.Error() == "i/o timeout" {
 
 				c.SetReadDeadline(start.Add(time.Hour * 24))
@@ -1966,18 +2431,23 @@ func (test *testThr) receivePackets_old(c net.PacketConn, mtu int, ipdst_1sfpsla
 	b := make([]byte, mtu)
 
 	start := time.Now()
-	fmt.Println("Begin receive - ", time.Now())
+	if verboseLogs {
+		fmt.Println("Begin receive - ", time.Now())
+	}
 	defer func() {
-		fmt.Println("Exit receive - ", time.Now())
+		if verboseLogs {
+			fmt.Println("Exit receive - ", time.Now())
+		}
 	}()
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(test.period+5)))
 	//	oob :=make([]byte, mtu)
-	//var count int
 	// Keep receiving messages forever.
 	for {
 		select {
 		case <-quitRcv:
-			fmt.Println("End receive - counter = ", (*test).numberCounter)
+			if verboseLogs {
+				fmt.Println("End receive - counter = ", (*test).numberCounter)
+			}
 			c.SetReadDeadline(start.Add(time.Hour * 24))
 			return
 		default:
@@ -1985,20 +2455,36 @@ func (test *testThr) receivePackets_old(c net.PacketConn, mtu int, ipdst_1sfpsla
 			/*
 				n, oobn, flags ,_, err :=c.ReadMsgIP(b,oob)
 				if err != nil {
-					fmt.Println(" -****- ")
-					fmt.Println(" n= ",n)
-					fmt.Println(" oobn= ",oobn)
-					fmt.Println(" oob= ",oob)
-					fmt.Println(" flags= ",flags)
-					fmt.Println(" -****- ")
+					if verboseLogs {
+						fmt.Println(" -****- ")
+					}
+					if verboseLogs {
+						fmt.Println(" n= ",n)
+					}
+					if verboseLogs {
+						fmt.Println(" oobn= ",oobn)
+					}
+					if verboseLogs {
+						fmt.Println(" oob= ",oob)
+					}
+					if verboseLogs {
+						fmt.Println(" flags= ",flags)
+					}
+					if verboseLogs {
+						fmt.Println(" -****- ")
+					}
 					continue
 				}
 			*/
 			//*
 			n, _, err := c.ReadFrom(b)
 			if err != nil {
-				fmt.Println("failed to receive message: ", err)
-				fmt.Println("Error time - ", time.Now())
+				if verboseLogs {
+					fmt.Println("failed to receive message: ", err)
+				}
+				if verboseLogs {
+					fmt.Println("Error time - ", time.Now())
+				}
 				if err.Error() == "i/o timeout" {
 					//	(*test).number++
 
@@ -2013,19 +2499,16 @@ func (test *testThr) receivePackets_old(c net.PacketConn, mtu int, ipdst_1sfpsla
 			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
 				//log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 			}
-			//fmt.Printf("\n\n--=Test %x - \n", f.Payload[12:16])
 			var ips [4]byte
 			copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
 
 			var t_ips [2]byte
 			t_ips[1] = byte(t_type & 0xFF)
 			t_ips[0] = byte((t_type >> 8) & 0xFF)
-			//fmt.Printf("\n\n--=T_so %x - \n", ips)
 
 			// Display source of message and message itself.
 			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
 				//count++
-				//	fmt.Printf("-->>Detect")
 				//	counter <-count
 				//(*test).numberCounter = uint32(count)
 				atomic.AddUint64(&test.numberCounter, uint64(1))
@@ -2041,11 +2524,16 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 	//os.page
 	period_nano := int64(size_p * 8 * 1000 / thr)
 	defer func() {
-		fmt.Println("Exit genSocket")
+		if verboseLogs {
+			fmt.Println("Exit genSocket")
+		}
 	}()
-	fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
-	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
-	//packet_count := (int64(period_nano * 1000000000)) / period_nano
+	if verboseLogs {
+		fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
+	}
+	if verboseLogs {
+		fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
+	}
 	var Ring_col uint //128
 	Ring_col = 16
 
@@ -2072,28 +2560,44 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 
 	var counter_rez uint64
 	var counter_rez_r uint64
-	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
-	fmt.Printf("\n   period_nano = %d \n", period_nano)
+	if verboseLogs {
+		fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
+	}
+	if verboseLogs {
+		fmt.Printf("\n   period_nano = %d \n", period_nano)
+	}
 
 	star_gen := time.Now()
 	var rez_time int64
 
 	done := make(chan int, 1)
 	gen_end := make(chan int, 1)
-	fmt.Println("Start generate: ", time.Now())
+	if verboseLogs {
+		fmt.Println("Start generate: ", time.Now())
+	}
 	go func(done <-chan int, gen_end chan<- int) {
 		defer func() {
-			fmt.Println("Exit funcgenSocket")
+			if verboseLogs {
+				fmt.Println("Exit funcgenSocket")
+			}
 		}()
 
 		ifi, _ := net.InterfaceByIndex(ifiIndex)
 		zs, err := raw.ListenPacket(ifi, etherType, nil)
 		if err != nil {
-			fmt.Println("failed to listen: %v", err)
+			if verboseLogs {
+				fmt.Printf("failed to listen: %v\n", err)
+			}
 
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 
@@ -2103,7 +2607,9 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 		for {
 			select {
 			case <-done:
-				fmt.Println("End generate: ", time.Now())
+				if verboseLogs {
+					fmt.Println("End generate: ", time.Now())
+				}
 				rez_time = (int64)(time.Since(star_gen))
 				runtime.Gosched()
 				zs.Close()
@@ -2112,7 +2618,6 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 			//default:
 			case <-ticker.C:
 				//<-ticker.C
-				//fmt.Print(".")
 				shag := int(Ring_col / ColRes)
 				ind_sh := 0
 
@@ -2121,7 +2626,9 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 						ind_sh = 0
 						_, ee := zs.WriteTo(packet, addr)
 						if ee != nil {
-							fmt.Println("-Write buff error - ", ee)
+							if verboseLogs {
+								fmt.Println("-Write buff error - ", ee)
+							}
 
 							//	rez_time = (int64)(time.Since(star_gen))
 							//	runtime.Gosched()
@@ -2131,10 +2638,11 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 						atomic.AddUint64(&counter_rez_r, uint64(1))
 
 					} else {
-						//	fmt.Print("w")
 						_, ee := zs.WriteTo(packetTemp, addr)
 						if ee != nil {
-							fmt.Println("-Write buff error - ", ee)
+							if verboseLogs {
+								fmt.Println("-Write buff error - ", ee)
+							}
 							break
 						}
 						atomic.AddUint64(&counter_rez, uint64(1))
@@ -2145,25 +2653,35 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 			}
 		}
 	}(done, gen_end)
-	fmt.Println("G")
+	if verboseLogs {
+		fmt.Println("G")
+	}
 	time.Sleep(time.Duration(period_sec) * time.Second)
 
-	fmt.Println("GG")
+	if verboseLogs {
+		fmt.Println("GG")
+	}
 	done <- 1
 	//	zs.Close()
 	runtime.Gosched()
 	<-gen_end
 
-	fmt.Println("GGG")
+	if verboseLogs {
+		fmt.Println("GGG")
+	}
 	time.Sleep(500 * time.Millisecond)
-	fmt.Println("Packed send - ", counter_rez)
+	if verboseLogs {
+		fmt.Println("Packed send - ", counter_rez)
+	}
 	counter <- counter_rez
 	counterRes <- counter_rez_r
 	time.Sleep(500 * time.Millisecond)
 	runtime.Gosched()
 
 	//ticker.Stop()
-	fmt.Println("GGGG")
+	if verboseLogs {
+		fmt.Println("GGGG")
+	}
 	return rez_time
 }
 
@@ -2173,11 +2691,16 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 	//os.page
 	period_nano := int64(size_p * 8 * 1000 / thr)
 	defer func() {
-		fmt.Println("Exit genSocket")
+		if verboseLogs {
+			fmt.Println("Exit genSocket")
+		}
 	}()
-	fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
-	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
-	//packet_count := (int64(period_nano * 1000000000)) / period_nano
+	if verboseLogs {
+		fmt.Printf("\n -== gen Socket ==-\n   period_sec = %d\n", period_sec)
+	}
+	if verboseLogs {
+		fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
+	}
 	var Ring_col uint //128
 	Ring_col = 16
 
@@ -2193,9 +2716,15 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 
 	var counter_rez uint64
 	var counter_rez_r uint64
-	fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
-	fmt.Printf("\n   period_nano = %d \n", period_nano)
-	fmt.Printf("\n   pagesize = %d \n", os.Getpagesize())
+	if verboseLogs {
+		fmt.Printf("\n ifi_index = %d, ring = %d \n", ifiIndex, Ring_col)
+	}
+	if verboseLogs {
+		fmt.Printf("\n   period_nano = %d \n", period_nano)
+	}
+	if verboseLogs {
+		fmt.Printf("\n   pagesize = %d \n", os.Getpagesize())
+	}
 
 	// the above will result in a ring buffer of 64 frames at
 	// 	(2048 - zsocket.PacketOffset()) *writeable* bytes each (2048 - min)
@@ -2203,11 +2732,18 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 
 	/*
 		zs.Listen(func(f *nettypes.Frame, frameLen, capturedLen uint16) {
-			fmt.Println(" -- Socket_Read --")
-			//fmt.Println(" -- >> Packet = ", packet)
-			fmt.Println(len(*f))
-			fmt.Println()
-			fmt.Printf(f.String(capturedLen, 0))
+			if verboseLogs {
+				fmt.Println(" -- Socket_Read --")
+			}
+			if verboseLogs {
+				fmt.Println(len(*f))
+			}
+			if verboseLogs {
+				fmt.Println()
+			}
+			if verboseLogs {
+				fmt.Printf(f.String(capturedLen, 0))
+			}
 		})
 	*/
 	//*
@@ -2216,10 +2752,14 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 
 	done := make(chan int, 1)
 	gen_end := make(chan int, 1)
-	fmt.Println("Start generate: ", time.Now())
+	if verboseLogs {
+		fmt.Println("Start generate: ", time.Now())
+	}
 	go func(done <-chan int, gen_end chan<- int) {
 		defer func() {
-			fmt.Println("Exit funcgenSocket")
+			if verboseLogs {
+				fmt.Println("Exit funcgenSocket")
+			}
 		}()
 		//zs, err := NewZSocket(22, ENABLE_RX|ENABLE_TX, 256, MAX_ORDER, 4, nettypes.All)
 		zs, err := NewZSocket(ifiIndex, ENABLE_TX|DISABLE_TX_LOSS, 32768, Ring_col, nettypes.All)
@@ -2227,7 +2767,9 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 		//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
 		//err = unix.SetsockoptInt(int(zs.socket), unix.SOL_SOCKET, unix.SO_REUSEADDR, 1)
 		if err != nil {
-			fmt.Println(" Error zsocket", err)
+			if verboseLogs {
+				fmt.Println(" Error zsocket", err)
+			}
 			counter <- 0
 			gen_end <- 1
 			return
@@ -2239,7 +2781,9 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 		for {
 			select {
 			case <-done:
-				fmt.Println("End generate: ", time.Now())
+				if verboseLogs {
+					fmt.Println("End generate: ", time.Now())
+				}
 				rez_time = (int64)(time.Since(star_gen))
 				runtime.Gosched()
 				zs.Close()
@@ -2248,14 +2792,13 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 			//default:
 			case <-ticker.C:
 				//<-ticker.C
-				//fmt.Print(".")
 				for ind := 0; ind < int(Ring_col); ind++ {
 					if ind == 0 {
-						//	fmt.Print("w1")
 						cc, ee := zs.WriteToBuffer(packet, uint16(size_p))
-						//	fmt.Print("e1")
 						if (ee != nil) || (cc != int32(ind)) {
-							fmt.Println("-Write buff error - ", ee)
+							if verboseLogs {
+								fmt.Println("-Write buff error - ", ee)
+							}
 
 							//	rez_time = (int64)(time.Since(star_gen))
 							//	runtime.Gosched()
@@ -2264,12 +2807,11 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 						}
 
 					} else {
-						//	fmt.Print("w")
 						cc, ee := zs.WriteToBuffer(packetTemp, uint16(size_p))
-						//	fmt.Print("e")
 						if (ee != nil) || (cc != int32(ind)) {
-							fmt.Println("-Write buff error - ", ee)
-							//fmt.Println(" count - ", cc)
+							if verboseLogs {
+								fmt.Println("-Write buff error - ", ee)
+							}
 							//	rez_time = (int64)(time.Since(star_gen))
 							//	runtime.Gosched()
 							//	return
@@ -2278,15 +2820,16 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 
 					}
 				}
-				//fmt.Print(",")
 				cc, err, e := zs.FlushFrames()
-				//fmt.Print(".")
 				if (err != nil) || (cc < 1) {
-					fmt.Println("- Flush error - ", err)
-					fmt.Println("- Errors - ", e)
+					if verboseLogs {
+						fmt.Println("- Flush error - ", err)
+					}
+					if verboseLogs {
+						fmt.Println("- Errors - ", e)
+					}
 					//	rez_time = (int64)(time.Since(star_gen))
 					//	runtime.Gosched()
-					//fmt.Println("End generate: ", time.Now())
 					//rez_time = (int64)(time.Since(star_gen))
 					//runtime.Gosched()
 					//gen_end <- 1
@@ -2301,113 +2844,30 @@ func genSocket_old(ifiIndex int, packet []byte, packetTemp []byte, period_sec in
 			}
 		}
 	}(done, gen_end)
-	fmt.Println("G")
+	if verboseLogs {
+		fmt.Println("G")
+	}
 	time.Sleep(time.Duration(period_sec) * time.Second)
 
-	fmt.Println("GG")
+	if verboseLogs {
+		fmt.Println("GG")
+	}
 	done <- 1
 	//	zs.Close()
 	runtime.Gosched()
 	<-gen_end
 
-	fmt.Println("GGG")
+	if verboseLogs {
+		fmt.Println("GGG")
+	}
 	time.Sleep(500 * time.Millisecond)
-	fmt.Println("Packed send - ", counter_rez)
+	if verboseLogs {
+		fmt.Println("Packed send - ", counter_rez)
+	}
 	counter <- counter_rez
 	counterRes <- counter_rez_r
 	time.Sleep(500 * time.Millisecond)
 	runtime.Gosched()
 
-	//ticker.Stop()
-	fmt.Println("GGGG")
 	return rez_time
 }
-
-//for count_cir := 0; count_cir < 10000; count_cir++ {
-//	for ind := 0; ind < 128; ind++ {
-//		zs.WriteToBuffer(packet, uint16(size_p))
-//	tx, err := zs.WriteToBuffer(packet, uint16(size_p))
-//	fmt.Println(" -- Socket_Generator --")
-//	fmt.Println(" -- >> Packet = ", packet)
-//	fmt.Println(" -- >> Tx = ", tx)
-//	fmt.Println(" -- >> Error = ", err)
-
-//	}
-//	zs.FlushFrames()
-//fl_l, err, err_sl := zs.FlushFrames()
-//fl_l, _, _ := zs.FlushFrames()
-//fmt.Println(" -- >> Flash Tx = ", fl_l)
-//fmt.Println(" -- >> Error = ", err)
-//fmt.Println(" -- >> Error slice = ", err_sl)
-//
-//*/
-//var conn poll.FD
-// MyCon := syscall.Socket()
-//var	 socket net.Conn
-//MyConn, _:= rawsocketcall()
-
-/*
-   fd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_IP)
-   if err != nil {
-   	fmt.Println(err)
-   }
-
-   file := os.NewFile(uintptr(fd), "")
-
-   for {
-   	buffer := make([]byte, 1024)
-   	num, _ := file.Write(buffer)
-
-   	fmt.Printf("% X\n", buffer[:num])
-   }
-
-   // Called in init() in package raw
-   /*
-   net.RegisterSocket(
-   	syscall.AF_PACKET,
-   	&syscall.SockaddrLinklayer{},
-   	&Addr{},
-   	// internal conversion functions for syscall.SockaddrLinklayer <-> raw.Addr
-   	convertSockaddr,
-   	convertNetAddr,
-   	)
-   	sock, _ := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_RAW, proto)
-   	_ = syscall.Bind(sock, &syscall.SockaddrLinklayer{
-   	Protocol: pbe,
-   	Ifindex: ifi.Index,
-   	})
-   	f := os.NewFile(uintptr(sock), "linklayer")// c is type net.SocketConn, backed by raw socket (uses raw.Addr for addressing)c := net.FilePacketConn(f)
-*/
-//}
-
-/*
-func genDPDK(){
-	func main() {
-		output := flag.Int("port", 1, "output port")
-		flag.Parse()
-		outputPort := uint16(*output)
-
-		flow.SystemInit(nil)
-
-			firstFlow, genChannel, _ := flow.SetFastGenerator(generatePacket, 3500, nil)
-			flow.CheckFatal(flow.SetSender(firstFlow, outputPort))
-			go updateSpeed(genChannel)
-			flow.SystemStart()
-		}
-
-	func generatePacket(pkt *packet.Packet, context flow.UserContext) {
-		packet.InitEmptyIPv4Packet(pkt, 1300)
-		pkt.Ether.DAddr = [6]uint8{0x00, 0x11, 0x22, 0x33, 0x44, 0x55}
-	}
-
-	func updateSpeed(genChannel chan uint64) {
-		var load int
-		for {
-			// Can be file or any other source
-			if _, err := fmt.Scanf("%d", &load); err == nil {
-				genChannel <- uint64(load)
-			}
-		}
-	}
-}
-//*/

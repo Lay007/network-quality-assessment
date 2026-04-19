@@ -1,47 +1,64 @@
 #!/bin/bash
-echo " =>> MySQL config"
+set -euo pipefail
 
-# Проверка на запуск от имени администратора
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit
+echo "=>> Configuring MySQL"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit 1
 fi
 
-# Добавление функции mysql_native_password для обратной совместимости
-if egrep  ^[^#].*mysql_native_password /etc/mysql/mysql.conf.d/mysqld.cnf
- then echo "native password found"
- else
-   echo "not found"
-   echo "add native password to auth"
-   echo "default-authentication-plugin=mysql_native_password" >> /etc/mysql/mysql.conf.d/mysqld.cnf
-   systemctl restart mysql
-   sleep 1
+: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD before running this script}"
+SFP_SLA_DB_USER="${SFP_SLA_DB_USER:-sfp_user}"
+: "${SFP_SLA_DB_PASSWORD:?Set SFP_SLA_DB_PASSWORD before running this script}"
+SFP_SLA_DB_NAME="${SFP_SLA_DB_NAME:-server_sfp_sla}"
+
+validate_sql_name() {
+  local name="$1"
+  local value="$2"
+  if [[ ! "$value" =~ ^[A-Za-z0-9_]+$ ]]; then
+    echo "$name must contain only letters, digits, and underscores"
+    exit 1
+  fi
+}
+
+sql_escape() {
+  printf "%s" "$1" | sed "s/'/''/g"
+}
+
+validate_sql_name "SFP_SLA_DB_USER" "$SFP_SLA_DB_USER"
+validate_sql_name "SFP_SLA_DB_NAME" "$SFP_SLA_DB_NAME"
+SFP_SLA_DB_PASSWORD_SQL="$(sql_escape "$SFP_SLA_DB_PASSWORD")"
+
+# Keep compatibility with MySQL installations that still require native password authentication.
+if [ -f /etc/mysql/mysql.conf.d/mysqld.cnf ] && ! grep -Eq '^[^#].*mysql_native_password' /etc/mysql/mysql.conf.d/mysqld.cnf; then
+  echo "default-authentication-plugin=mysql_native_password" >> /etc/mysql/mysql.conf.d/mysqld.cnf
+  systemctl restart mysql
+  sleep 1
 fi
-# Начальная настройка базы данных
-mysql -u root -psecret <<MY_QUERY
 
-CREATE DATABASE server_sfp_sla;
-USE server_sfp_sla;
-SOURCE ./server_sfp_sla.sql;
-
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" <<MY_QUERY
+CREATE DATABASE IF NOT EXISTS \`$SFP_SLA_DB_NAME\`;
 USE mysql;
-flush privileges;
-create user 'sfp_user'@'localhost' identified by 'rootsfp';
-
-grant all privileges on server_sfp_sla . * to 'sfp_user'@'localhost';
-
+FLUSH PRIVILEGES;
+CREATE USER IF NOT EXISTS '$SFP_SLA_DB_USER'@'localhost' IDENTIFIED BY '$SFP_SLA_DB_PASSWORD_SQL';
+GRANT ALL PRIVILEGES ON \`$SFP_SLA_DB_NAME\`.* TO '$SFP_SLA_DB_USER'@'localhost';
 MY_QUERY
 
-echo " =>> MySQL config success"
-# Запуск скрипта
-./deploy.sh
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" --database="$SFP_SLA_DB_NAME" < "$PROJECT_ROOT/db/server_sfp_sla.sql"
 
-echo " =>> Deploy web-config"
-# Размещение Web-конфигуратора
+echo "=>> MySQL configured"
+"$SCRIPT_DIR/deploy.sh"
+
+echo "=>> Publishing web console"
 rm -rf /var/www/html/*
-tar -C / -xvf httpServerSLA.tar.gz
-# Включение и перезапуск Web-сервера Apache
+cp -a "$PROJECT_ROOT/web/htdocs/." /var/www/html/
+chown -R www-data:www-data /var/www/html
 systemctl enable apache2
 systemctl restart apache2
 
-echo " =>> Deploy web-config success"
+echo "=>> Web console published"
+echo "=>> Create a web administrator with: sudo -E $SCRIPT_DIR/add_user.sh"

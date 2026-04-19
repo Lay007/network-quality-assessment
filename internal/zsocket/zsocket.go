@@ -2,12 +2,12 @@ package zsocket
 
 import (
 	"fmt"
+	"golang.org/x/sys/unix"
 	"os"
 	"runtime"
 	"sync/atomic"
 	"syscall"
 	"unsafe"
-	"golang.org/x/sys/unix"
 
 	"github.com/newtools/zsocket/inet"
 	"github.com/newtools/zsocket/nettypes"
@@ -69,15 +69,16 @@ var (
 )
 
 // the top of every frame in the ring buffer looks like this:
-//struct tpacket_hdr {
-//         unsigned long   tp_status;
-//         unsigned int    tp_len;
-//         unsigned int    tp_snaplen;
-//         unsigned short  tp_mac;
-//         unsigned short  tp_net;
-//         unsigned int    tp_sec;
-//         unsigned int    tp_usec;
-//};
+//
+//	struct tpacket_hdr {
+//	        unsigned long   tp_status;
+//	        unsigned int    tp_len;
+//	        unsigned int    tp_snaplen;
+//	        unsigned short  tp_mac;
+//	        unsigned short  tp_net;
+//	        unsigned int    tp_sec;
+//	        unsigned int    tp_usec;
+//	};
 func init() {
 	_TP_LEN_START = inet.HOST_LONG_SIZE
 	_TP_LEN_STOP = _TP_LEN_START + inet.HOST_INT_SIZE
@@ -274,7 +275,7 @@ func (zs *ZSocket) MaxPackets() int32 {
 	return zs.frameNum
 }
 
-func (zs *ZSocket) SetMAX()  {	
+func (zs *ZSocket) SetMAX() {
 
 	if errReusePort := syscall.SetsockoptInt(zs.socket, unix.SOL_SOCKET, unix.SO_REUSEPORT, 1); errReusePort != nil {
 		fmt.Printf("reuse port error: %v\n", errReusePort)
@@ -284,20 +285,19 @@ func (zs *ZSocket) SetMAX()  {
 		fmt.Printf("reuse port error: %v\n", errReusePort)
 		return
 	}
-	if err := syscall.SetsockoptInt(zs.socket, unix.SOL_SOCKET,  syscall.SO_RCVBUF, 0); err != nil {
+	if err := syscall.SetsockoptInt(zs.socket, unix.SOL_SOCKET, syscall.SO_RCVBUF, 0); err != nil {
 		fmt.Printf("reuse port error: %v\n", err)
 		return
 	}
 
-
 }
 
-func (zs *ZSocket) AddTimeStamping()  {	
+func (zs *ZSocket) AddTimeStamping() {
 
 	if errReusePort := syscall.SetsockoptInt(zs.socket, unix.SOL_SOCKET, unix.SO_REUSEPORT, 1); errReusePort != nil {
 		fmt.Printf("reuse port error: %v\n", errReusePort)
 		return
-	}	
+	}
 }
 
 // Returns the frame size in bytes

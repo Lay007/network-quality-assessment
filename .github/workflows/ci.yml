@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap0.8-dev php-cli php-mysql php-snmp
+
+      - name: Download Go modules
+        run: go mod download
+
+      - name: Test Go packages
+        run: go test ./...
+
+      - name: Build service
+        run: go build -o /tmp/Server_SFP_SLA_check ./cmd/server-sfp-sla
+
+      - name: Lint shell scripts
+        run: bash -n scripts/*.sh
+
+      - name: Lint PHP files
+        run: find web/htdocs -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Check web asset links
+        run: python scripts/check_web_links.py

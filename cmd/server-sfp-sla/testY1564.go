@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/binary"
 	"fmt"
 	"github.com/mdlayher/ethernet"
@@ -14,54 +13,75 @@ import (
 
 	"sync/atomic"
 	//	"runtime"
-	//"runtime/debug"
 	"time"
 )
 
-func TestY1564(id int, net_interface_name string) { //Нагрузочное тестирование задержки
-	fmt.Println("Тест Y-1564 начался")
-	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+func TestY1564(id int, net_interface_name string) {
+	if verboseLogs {
+		fmt.Println("Y.1564 test started")
+	}
+	db, err := openDB()
 	if err != nil {
 		db.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
-	db.Exec("UPDATE test_y1564 SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id) // Тест выполняется
+	db.Exec("UPDATE test_y1564 SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id)
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 
 		//	log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
-		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка доступа к сетевому интерфейсу "+net_interface_name)
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Network interface access failed: "+net_interface_name)
 		db.Close()
 		return
 	}
 
 	row, err := db.Query("select id, test_type, module_first, module_second, block_size, ToS, VLAN_priority, CIR, EIR, TP, period, step_count, max_FTD, max_FVD, max_FLR, status from test_y1564 where id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
-	fmt.Println(row)
+	if verboseLogs {
+		fmt.Println(row)
+	}
 	defer row.Close()
 	row.Next()
 	test := new(testY1564)
 	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.ToS, &test.VLAN_priority, &test.CIR, &test.EIR, &test.TP, &test.period, &test.step_count, &test.max_FTD, &test.max_FVD, &test.max_FLR, &test.status)
 	if err != nil {
-		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
 		db.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 
@@ -73,105 +93,152 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
-		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 	for row.Next() {
 		err = row.Scan(&ipsrcstr)
 		if err != nil {
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
-			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 	}
 	var id_sfp1, id_sfp2 int
 	row, err = db.Query("SELECT module_first, module_second FROM test_y1564 WHERE id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 	for row.Next() {
 		err = row.Scan(&id_sfp1, &id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 			db.Close()
 			row.Close()
 			row_ip.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_ip.Close()
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
-				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
+				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
 
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 			db.Close()
 			row.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
-		//var mac_dst_str string
 		var test_mac int64
 		for row_mac.Next() {
 			//err = row_mac.Scan(&mac_dst_str)
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
-				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
+				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -184,31 +251,42 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_mac, err = db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
 			db.Close()
 			row.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
-		//var mac_dst_str string
 		test_mac = 0
 		for row_mac.Next() {
 			//err = row_mac.Scan(&mac_dst_str)
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
+				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -221,45 +299,60 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка запроса к базе данных")
+			db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_2sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка разбора запроса к базе данных")
+				db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+				db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
 	}
-	//	db.Exec("UPDATE test_y1564 SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
 	test.status = 2
-	fmt.Println(ipsrcstr)
-	fmt.Println(ipdst_1sfpsla_str)
-	fmt.Println(ipdst_2sfpsla_str)
+	if verboseLogs {
+		fmt.Println(ipsrcstr)
+	}
+	if verboseLogs {
+		fmt.Println(ipdst_1sfpsla_str)
+	}
+	if verboseLogs {
+		fmt.Println(ipdst_2sfpsla_str)
+	}
 
 	//counter := test.count
-	//var numberTX uint32
 	//	numberTX = 0
 
 	test.ipsrc = net.ParseIP(ipsrcstr)
 	test.ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 	test.ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-	//period_min := time.Duration(time.Duration(int(period_nano)) * time.Nanosecond)
 	//period_gen := time.Duration(10 * time.Second)
 
 	/*
@@ -275,10 +368,11 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 				}
 			}
 			min_ticker:=time.Since(start_test_ticker)
-		fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
+		if verboseLogs {
+			fmt.Println(" -- Test ticker= ", time.Since(start_test_ticker))
+		}
 	*/
 
-	//fmt.Println("period_min= ", period_min)
 	//	numberTX++
 	/*
 		addr := &raw.Addr{
@@ -286,19 +380,19 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		}
 		var number uint32
 	*/
-	db.Exec("UPDATE test_y1564 SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id) // Тест выполняется
+	db.Exec("UPDATE test_y1564 SET status=?, datetime_start=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id)
 
 	if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка ping-теста")
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ping test failed")
 		db.Close()
 
 		return
 	}
 
 	if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
-		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id) // Ошибка выполнения
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка SNMP-теста")
+		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "SNMP test failed")
 		db.Close()
 
 		return
@@ -310,38 +404,42 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 	rez := findSFP(connectTestSFP, addr, ipsrcstr, ipdst_1sfpsla_str, ipdst_2sfpsla_str, test.mac_src, test.mac_dst, test.mac_dst2, test.id_test_type, test.test_type, 1024, int64(1024*8*1000/test.CIR))
 
-	fmt.Printf("\n Rez find : %X \n", rez)
+	if verboseLogs {
+		fmt.Printf("\n Rez find : %X \n", rez)
+	}
 	if (rez & 0xFFF) == 0x999 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Максимальная пропускная способность - 1 Гбит/с")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Maximum throughput - 1 Gbit/s")
 
 	}
 	if (rez & 0xFFF) == 0x100 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Максимальная пропускная способность - 100 Мбит/с")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Maximum throughput - 100 Mbit/s")
 
 	}
 	if (rez & 0xFFF) == 0x10 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Максимальная пропускная способность - 10 Мбит/с")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Maximum throughput - 10 Mbit/s")
 
 	}
 	if (rez & 0xF000) == 0x0 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Последовательное расположение модулей. Порядок модулей правильный")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Serial module topology. Module order is correct")
 	}
 	if (rez & 0xF000) == 0x1000 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Последовательное расположение модулей. Порядок модулей неправильный. Изменяем при тестироваинии")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Serial module topology. Module order is incorrect; swapping during the test")
 	}
 	if (rez & 0xF000) == 0x2000 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Соединенеие звездой. Нагрузка одинаковая")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Star topology. Load is balanced")
 	}
 	if (rez & 0xF000) == 0x3000 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение правильное")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Star topology. Load is unbalanced; module order is correct")
 	}
 	if (rez & 0xF000) == 0x4000 {
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "  Соединенеие звездой. Нагрузка неравномерная. Расположение неправильное. Изменяем при тестироваинии")
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, " Star topology. Load is unbalanced; module order is incorrect; swapping during the test")
 	}
 	connectTestSFP.Close()
 	if rez == 0 {
-		fmt.Println("Error test SFP connect")
-		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Ошибка при экспрес-тесте")
+		if verboseLogs {
+			fmt.Println("Error test SFP connect")
+		}
+		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Express path test failed")
 
 		return
 	}
@@ -355,14 +453,20 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		test.ipdst1 = net.ParseIP(ipdst_1sfpsla_str)
 		test.ipdst2 = net.ParseIP(ipdst_2sfpsla_str)
 
-		//	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		//	db, err = openDB()
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
@@ -372,9 +476,15 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 			if err != nil {
 				db.Close()
 				row_mac.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -388,7 +498,9 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 		//	db.Close()
 
 	}
-	fmt.Println(" Rez find : ", rez)
+	if verboseLogs {
+		fmt.Println(" Rez find : ", rez)
+	}
 
 	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
 	yest.Next()
@@ -590,13 +702,10 @@ func TestY1564(id int, net_interface_name string) { //Нагрузочное т�
 	PacketsRx = 0
 	test.numberRx = 0
 
-	//	db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	//	db, err = openDB()
 	//	if err != nil {
 	//		db.Close()
 
-	//		fmt.Println(" -!! Error !!-")
-	//		fmt.Println(err)
-	//		fmt.Println(" ----=====----")
 	//		return
 	//	}
 	//db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?,rez_4096=?,rez_9000=?,status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.rez_4096, test.rez_9000, test.status, id)
@@ -626,10 +735,6 @@ func packetFormY1546(ToS uint8, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_
 	var ind uint
 	//ip.iplen = uint16(20 + 26 + 4)
 	if testWay == 2 {
-		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) + 0xAABA4000000000
-		//t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
-		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000))
-		//t_time = t_time << (4*8)
 		delta_nano := int64((2208988800) * 1e9)
 		t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/float64(1e9)))
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
@@ -675,76 +780,89 @@ func packetFormY1546(ToS uint8, ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_
 	if err != nil {
 		//log.Fatalf("failed to marshal ethernet frame: %v", err)
 
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return []byte{}
 	}
-	//	fmt.Print(" ==> Packet Form - ")
-	//	fmt.Println(time.Now())
 	return b
 }
 
 /*
-func (test *testY1564) genFramesY1564(thr int, counter chan int64) int64 {
-	time.Sleep(1*time.Millisecond)
-	number := uint32(0)
-	period_nano := int64(test.block_size * 8 * 1000 / thr)
+	func (test *testY1564) genFramesY1564(thr int, counter chan int64) int64 {
+		time.Sleep(1*time.Millisecond)
+		number := uint32(0)
+		period_nano := int64(test.block_size * 8 * 1000 / thr)
 
-	fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
-
-	var counter_rez int64
-	ifi, err := net.InterfaceByName(test.net_interface_name)
-	c, err := raw.ListenPacket(ifi, etherType, nil)
-	if err != nil {
-		fmt.Println("failed to listen: %v", err)
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
-		return 0
-	}
-	//c.SetReadDeadline(time.Now().Add(time.Millisecond * 3000))
-	addr := &raw.Addr{
-		HardwareAddr: ethernet.Broadcast,
-	}
-
-	star_gen := time.Now()
-	var rez_time int64
-	ticker := time.NewTicker(time.Duration(period_nano))
-	done := make(chan bool)
-	b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, number, test.id_test_type, test.test_type)
-
-	go func() {
-		for {
-			select {
-			case <-done:
-				rez_time = (int64)(time.Since(star_gen))
-				return
-			case <-ticker.C:
-				number++
-			//	b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, number, test.id_test_type, test.test_type)
-
-			//	for { //	time.Sleep(time.Millisecond * 1)
-				//	n, err := c.WriteTo(b, addr)
-					c.WriteTo(b, addr)
-			//		if n == len(b) && err == nil {
-			//			break
-			//		}
-			//		fmt.Println("failed to listen: %v", err)
-			//		time.Sleep(time.Millisecond * 1)
-			//	}
-				counter_rez = counter_rez + 1
-			}
+		if verboseLogs {
+			fmt.Printf("\n   period_nano = %d \n   thr = %d\n", period_nano, thr)
 		}
-	}()
-	time.Sleep(time.Duration(test.period) * time.Second)
-	ticker.Stop()
-	done <- true
-	time.Sleep(1 * time.Second)
-	fmt.Println("Packed send - ", counter_rez)
-	counter <- counter_rez
-	return rez_time
-}
+
+		var counter_rez int64
+		ifi, err := net.InterfaceByName(test.net_interface_name)
+		c, err := raw.ListenPacket(ifi, etherType, nil)
+		if err != nil {
+			if verboseLogs {
+				fmt.Println("failed to listen: %v", err)
+			}
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
+			return 0
+		}
+		addr := &raw.Addr{
+			HardwareAddr: ethernet.Broadcast,
+		}
+
+		star_gen := time.Now()
+		var rez_time int64
+		ticker := time.NewTicker(time.Duration(period_nano))
+		done := make(chan bool)
+		b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, number, test.id_test_type, test.test_type)
+
+		go func() {
+			for {
+				select {
+				case <-done:
+					rez_time = (int64)(time.Since(star_gen))
+					return
+				case <-ticker.C:
+					number++
+				//	b := packetFormY1546(test.ToS, test.ipsrc, test.ipdst1, test.ipdst2, ifi.HardwareAddr, test.mac_dst, test.block_size, number, test.id_test_type, test.test_type)
+
+				//	for { //	time.Sleep(time.Millisecond * 1)
+					//	n, err := c.WriteTo(b, addr)
+						c.WriteTo(b, addr)
+				//		if n == len(b) && err == nil {
+				//			break
+				//		}
+				//	}
+					counter_rez = counter_rez + 1
+				}
+			}
+		}()
+		time.Sleep(time.Duration(test.period) * time.Second)
+		ticker.Stop()
+		done <- true
+		time.Sleep(1 * time.Second)
+		if verboseLogs {
+			fmt.Println("Packed send - ", counter_rez)
+		}
+		counter <- counter_rez
+		return rez_time
+	}
 */
 func (test *testY1564) genFramesY1564(thr int, counter chan uint64, counterRes chan uint64) int64 {
 	time.Sleep(time.Millisecond * 10)
@@ -769,7 +887,9 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 
 	ifi, err := net.InterfaceByName(test.net_interface_name)
 	if err != nil {
-		fmt.Println("failed to find interface %q: %v", test.net_interface_name, err)
+		if verboseLogs {
+			fmt.Printf("failed to find interface %q: %v\n", test.net_interface_name, err)
+		}
 		quit <- 1
 		return 0, 0
 	}
@@ -777,10 +897,8 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 	var netConf *raw.Config = new(raw.Config)
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 		bpf.LoadAbsolute{Off: 34, Size: 1},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
-		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test.id_test_type), SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
@@ -802,7 +920,6 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 		//	go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, test.block_size)
 
 		select {
-		//fmt.Println("Wait")
 		case detect := <-detectPackDelay:
 
 			if detect > 0 {
@@ -827,8 +944,12 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 			}
 		default:
 			if time.Since(timeStart) > time.Duration(time.Duration(test.period)*time.Second) {
-				fmt.Println("\n --> Number = ", number)
-				fmt.Println(" --> Size = ", test.block_size)
+				if verboseLogs {
+					fmt.Println("\n --> Number = ", number)
+				}
+				if verboseLogs {
+					fmt.Println(" --> Size = ", test.block_size)
+				}
 
 				if number > 0 {
 					floatDelay = (float32(delay) / float32(number)) * 1000000.0 / float32(math.Pow(2, 32))
@@ -838,17 +959,29 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 				floatDelayMax = float32(delayMax) * 1000000.0 / float32(math.Pow(2, 32))
 				floatDelayMin = float32(delayMin) * 1000000.0 / float32(math.Pow(2, 32))
 				/*
-					fmt.Println(" --> Delay = ", floatDelay)
-					fmt.Println(" --> DelayMax = ", floatDelayMax)
-					fmt.Println(" --> DelayMin = ", floatDelayMin)
+					if verboseLogs {
+						fmt.Println(" --> Delay = ", floatDelay)
+					}
+					if verboseLogs {
+						fmt.Println(" --> DelayMax = ", floatDelayMax)
+					}
+					if verboseLogs {
+						fmt.Println(" --> DelayMin = ", floatDelayMin)
+					}
 
 					floatDelay = (float32(delay) / float32(number))
 					floatDelayMax = float32(delayMax)
 					floatDelayMin = float32(delayMin)
 				*/
-				fmt.Println(" --> Delay = ", floatDelay)
-				fmt.Println(" --> DelayMax = ", floatDelayMax)
-				fmt.Println(" --> DelayMin = ", floatDelayMin)
+				if verboseLogs {
+					fmt.Println(" --> Delay = ", floatDelay)
+				}
+				if verboseLogs {
+					fmt.Println(" --> DelayMax = ", floatDelayMax)
+				}
+				if verboseLogs {
+					fmt.Println(" --> DelayMin = ", floatDelayMin)
+				}
 
 				/*
 					switch test.block_size {
@@ -884,7 +1017,6 @@ func (test *testY1564) getMetricsY1564(quit chan int64) (float32, float32) {
 				*/
 				time.Sleep(1000 * time.Millisecond)
 				quit_receive <- 1
-				//time.Sleep(100 * time.Millisecond)
 				quit <- 0
 				//	return floatDelay, float32(math.Max(float64(floatDelayMax-floatDelay), float64(floatDelay-floatDelayMin)))
 				return floatDelay, floatJitter
@@ -904,7 +1036,6 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 	t_ips[0] = byte((test_type >> 8) & 0xFF)
 	start := time.Now()
 	quit := make(chan int64, 10)
-	//fmt.Println("-> Begin Catch - ", start)
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(test.period)))
 	if packetSize == 64 {
 		packetSize += 2
@@ -914,7 +1045,6 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 		select {
 		case key := <-quit:
 			catchDetect <- key
-			//	fmt.Println("Chanel go")
 			return
 			//break ExitLoop
 		default:
@@ -923,7 +1053,6 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 			at_time := time.Now()
 			cc++
 			if err != nil {
-				//fmt.Printf("failed to receive message: %v", err)
 				if err.Error() == "i/o timeout" {
 					c.SetReadDeadline(start.Add(time.Hour * 24))
 					quit <- 0
@@ -942,17 +1071,17 @@ func (test *testY1564) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 				continue
 			}
 
-			//t_time := int64(float64(time.Now().UnixNano() - delta_nano )*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
 			delta_nano := int64((2208988800) * 1000000000)
 
 			t_time := int64(float64(at_time.UnixNano()-delta_nano) * float64(math.Pow(2, 32)/1000000000))
 			t_time = t_time & int64(0xFFFFFFFFFFFFFF)
-			//fmt.Println("  Now real - ",time.Now().UnixNano());
 
 			//n, addr, err := c.ReadFrom(b)
 			// Unpack Ethernet II frame into Go representation.
 			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
-				fmt.Printf("failed to unmarshal ethernet frame: %v", err)
+				if verboseLogs {
+					fmt.Printf("failed to unmarshal ethernet frame: %v", err)
+				}
 				continue
 			}
 
@@ -990,17 +1119,17 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 
 	ifi, err := net.InterfaceByName(test.net_interface_name)
 	if err != nil {
-		fmt.Println("failed to find interface %q: %v", test.net_interface_name, err)
+		if verboseLogs {
+			fmt.Printf("failed to find interface %q: %v\n", test.net_interface_name, err)
+		}
 		return
 	}
 
 	var netConf *raw.Config = new(raw.Config)
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 		bpf.LoadAbsolute{Off: 34, Size: 1},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
-		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test.id_test_type), SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
@@ -1011,7 +1140,6 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 
 	c, err := raw.ListenPacket(ifi, etherType, netConf)
 
-	//	var f ethernet.Frame
 	b := make([]byte, mtu)
 	var ips [4]byte
 	copy(ips[:], (test.ipdst1).To4())
@@ -1021,18 +1149,26 @@ func (test *testY1564) receivePacketsY(mtu int, quit chan int64, t_type uint16) 
 	t_ips[0] = byte((test.id_test_type >> 8) & 0xFF)
 	start := time.Now()
 	c.SetReadDeadline(start.Add(time.Second * time.Duration(1+test.period)))
-	fmt.Println("Start receive: ", time.Now())
+	if verboseLogs {
+		fmt.Println("Start receive: ", time.Now())
+	}
 	for {
 		select {
 		case <-quit:
-			fmt.Println("End receive: ", time.Now())
-			fmt.Println("Packets receive = ", test.numberRx)
+			if verboseLogs {
+				fmt.Println("End receive: ", time.Now())
+			}
+			if verboseLogs {
+				fmt.Println("Packets receive = ", test.numberRx)
+			}
 			return
 		default:
 		}
 		_, _, err := c.ReadFrom(b)
 		if err != nil {
-			fmt.Println("failed to receive message: ", err)
+			if verboseLogs {
+				fmt.Println("failed to receive message: ", err)
+			}
 			if err.Error() == "i/o timeout" {
 
 				c.SetReadDeadline(start.Add(time.Hour * 24))

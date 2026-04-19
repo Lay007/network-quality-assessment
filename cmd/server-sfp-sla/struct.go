@@ -48,34 +48,25 @@ type sfpsla struct {
 	//                            15    14    13   12 11 10 09 08 07 06 05 04 03 02 01 00
 	//                   test type:   0     0     0  - test Real SLA
 
-	//          4000     test type:   0     1     0  - test RFC 2544 - Пропускная способность
-	//          6000     test type:   0     1     1  - test RFC 2544 - Задержка
-	//          8000     test type:   1     0     0  - test RFC 2544 - Потеря пакетов
-	//          C000     test type:   1     1     0  - test RFC 2544 - Берстность
 	//          E000     test type:   1     1     1  - test Y.1544
-	//          2000     test type:   0     0     1  - test RFC 2544 - Пакеты нагрузки
 }
 
 type global_config struct {
 	server_ip          string
 	net_interface_name string
-	zabbix_server_name string
-	zabbix_server_port int
 	vlan               int
 	vlan_number        int
 	QinQ               int
 	QinQ_number        int
 }
 type module_sfp struct {
-	id          int
-	addres_mac  int64
-	name        string
-	address_ip  string
-	version     string
-	location    string
-	zabbix_node string
-
-	chan_stop chan int
+	id         int
+	addres_mac int64
+	name       string
+	address_ip string
+	version    string
+	location   string
+	chan_stop  chan int
 }
 
 type testThroughput struct {
@@ -149,15 +140,12 @@ type testDelay struct {
 type testReal struct {
 	id        int
 	test_type int //	1 - "SFP-SLA1 - SFP-SLA2"
-	//  2 - "Сервер - SFP-SLA1"
-	//  3 - "Сервер - SFP-SLA2"
 	name                string
 	module_first        int
 	module_second       int
 	block_size          int
 	clock               int
 	count               int
-	node_zabbix         string
 	test_delay          bool
 	test_delay_jitter   bool
 	test_loss           bool

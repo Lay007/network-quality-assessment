@@ -1,0 +1,6 @@
+DirectoryIndex start.php index.php
+Options -Indexes
+
+<FilesMatch "^(app|db)\.php$">
+    Require all denied
+</FilesMatch>

@@ -6,12 +6,9 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
 	"net"
 	"runtime"
 	"time"
-
-	. "./go-zabbix"
 
 	//"unsafe"
 	"golang.org/x/net/bpf"
@@ -20,24 +17,13 @@ import (
 
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
-
-	"database/sql"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
-// Параметры доступа к базе данных
 const (
-	db_user      = `sfp_user`
-	db_user_pass = `rootsfp`
-	db_database  = `server_sfp_sla`
-
-	debugV = true
 
 	etherType = 0x0800
 )
 
-// Функция вычисления контольной суммы пакета IP
 func checksum(buf []byte) uint16 {
 	sum := uint32(0)
 
@@ -56,7 +42,7 @@ func checksum(buf []byte) uint16 {
 	 * If the computed checksum is zero, it is transmitted as all ones (the
 	 * equivalent in one's complement arithmetic). An all zero transmitted
 	 * checksum value means that the transmitter generated no checksum (for
-	 * debugging or for higher level protocols that don't care).
+	 * for higher-level protocols that do not require it).
 	 */
 	if csum == 0 {
 		csum = 0xffff
@@ -71,11 +57,10 @@ func (h *iphdr) checksum() {
 	(*h).csum = checksum(b.Bytes())
 }
 
-// Функция перидической очистки базы данных
 func clearDB() {
-	t := time.NewTicker(1 * time.Hour) //проверка один раз за 25 часа
+	t := time.NewTicker(1 * time.Hour)
 	for range t.C {
-		clrdb, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		clrdb, _ := openDB()
 		clrdb.Exec("DELETE FROM modules_sfp_sla_load_rez WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)")
 		clrdb.Exec("DELETE FROM test_sla_real_rez WHERE datetime <= date_sub(now(), INTERVAL 24 HOUR)")
 		clrdb.Exec("DELETE FROM test_sla_real_alarm WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)")
@@ -89,28 +74,31 @@ func main() {
 
 	modules := []module_sfp{}
 
-	// запуск периодичной очистки БД
 
 	go clearDB()
 
-	// подключение к БД и обновление списка сетевых интерфейсов
-	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	db, err := openDB()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Error_BD = ", err)
+	if verboseLogs {
+		fmt.Println("Error_BD = ", err)
+	}
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
 	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
-	devices, err := pcap.FindAllDevs() // считывание перечня сетевых интерфейсов
-	fmt.Println(err)
+	devices, err := pcap.FindAllDevs()
+	if verboseLogs {
+		fmt.Println(err)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// запись перечня сетевых интерфейсов в БД
 	for _, device := range devices {
-		fmt.Println(device.Name)
+		if verboseLogs {
+			fmt.Println(device.Name)
+		}
 		netInterface, err := net.InterfaceByName(device.Name)
 		var addressMac net.HardwareAddr
 		if err == nil {
@@ -119,12 +107,10 @@ func main() {
 		//net_name = device.Name
 		for _, address := range device.Addresses {
 			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
-			//fmt.Println(res)
 
 		}
 	}
 
-	// Оценка выполнения тестов
 	db.Exec("UPDATE test_sla_real SET status=1 WHERE status=2")
 	db.Exec("UPDATE test_throughput SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
 	db.Exec("UPDATE test_bert SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
@@ -133,80 +119,114 @@ func main() {
 	db.Exec("UPDATE test_y1564 SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
 	db.Close()
 
-	db_SNMP, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+	db_SNMP, err = openDB()
 	//defer db_SNMP.Close()
-	t := time.NewTicker(15 * time.Second) //проверка один раз в 15 секунд
+	t := time.NewTicker(15 * time.Second)
 	for range t.C {
 
-		db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		db, err = openDB()
 		if err != nil {
 			db.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
-		// считывание из БД глобальных параметров
-		row_gc, err := db.Query("select * from global_config")
+		row_gc, err := db.Query("SELECT server_IP, net_interface_name, VLAN, VLAN_number, QinQ, QinQ_number FROM global_config LIMIT 1")
 		defer row_gc.Close()
 		if err != nil {
 			db.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 		row_gc.Next()
 		conf := new(global_config)
-		err = row_gc.Scan(&conf.server_ip, &conf.net_interface_name, &conf.zabbix_server_name, &conf.zabbix_server_port, &conf.vlan, &conf.vlan_number, &conf.QinQ, &conf.QinQ_number)
+		err = row_gc.Scan(&conf.server_ip, &conf.net_interface_name, &conf.vlan, &conf.vlan_number, &conf.QinQ, &conf.QinQ_number)
 		if err != nil {
 			db.Close()
 
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 		row_gc.Close()
 
 		if conf.net_interface_name == "" {
 			db.Close()
-			fmt.Println("Net interface is not selected")
+			if verboseLogs {
+				fmt.Println("Net interface is not selected")
+			}
 			continue
 		}
 
-		fmt.Println(conf.server_ip)
+		if verboseLogs {
+			fmt.Println(conf.server_ip)
+		}
 		//*
 		// Stop check SNMP
 		for i_m, _ := range modules {
-			fmt.Println("Chan stop ", modules[i_m].address_ip)
+			if verboseLogs {
+				fmt.Println("Chan stop ", modules[i_m].address_ip)
+			}
 			(&modules[i_m]).chan_stop <- 1
 		}
 		runtime.Gosched()
-		//time.Sleep(time.Second)
 
-		row_modules, err := db.Query("select * from modules_sfp_sla")
+		row_modules, err := db.Query("SELECT id, mac, name, address_ip, version, location FROM modules_sfp_sla")
 		defer row_modules.Close()
 		if err != nil {
 			db.Close()
 
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 		modules_up := []module_sfp{}
-		fmt.Println("Modules update")
+		if verboseLogs {
+			fmt.Println("Modules update")
+		}
 
 		for row_modules.Next() {
 			m := module_sfp{}
-			err = row_modules.Scan(&m.id, &m.addres_mac, &m.name, &m.address_ip, &m.version, &m.zabbix_node, &m.location)
+			err = row_modules.Scan(&m.id, &m.addres_mac, &m.name, &m.address_ip, &m.version, &m.location)
 			if err != nil {
-				fmt.Println(err)
+				if verboseLogs {
+					fmt.Println(err)
+				}
 				continue
 			}
 			m.chan_stop = make(chan int, 1)
-			fmt.Println(m.address_ip)
+			if verboseLogs {
+				fmt.Println(m.address_ip)
+			}
 			modules_up = append(modules_up, m)
 		}
 		modules = modules_up
@@ -215,10 +235,11 @@ func main() {
 		for _i_m, _ := range modules {
 			go (&modules[_i_m]).startSNMP(*conf)
 		}
-		//go zabbixHello("SFP-SLA_4401")
 		//*/
 		if (conf.net_interface_name == "") || (conf.net_interface_name == "0") {
-			fmt.Println("  Net interface not changed")
+			if verboseLogs {
+				fmt.Println("  Net interface not changed")
+			}
 			db.Close()
 			continue
 		}
@@ -227,50 +248,78 @@ func main() {
 		if err != nil {
 			//log.Fatalf("failed to find interface %q: %v", conf.net_interface_name, err)
 			db.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println("failed to find interface %q: %v", conf.net_interface_name, err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Printf("failed to find interface %q: %v\n", conf.net_interface_name, err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 
-		fmt.Println("Net_NAME: ", conf.net_interface_name)
-		fmt.Println("interface: ", ifi.Name)
-		fmt.Println("Time now: ", time.Now())
-		fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
+		if verboseLogs {
+			fmt.Println("Net_NAME: ", conf.net_interface_name)
+		}
+		if verboseLogs {
+			fmt.Println("interface: ", ifi.Name)
+		}
+		if verboseLogs {
+			fmt.Println("Time now: ", time.Now())
+		}
+		if verboseLogs {
+			fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
+		}
 
-		// проверка тестов пропускной способности
 		row_test_thr, err := db.Query("SELECT id FROM test_throughput WHERE status=1")
 		defer row_test_thr.Close()
 		if err != nil {
 			db.Close()
 			row_test_thr.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 
-		// проверка тестов SLA в реальном времени
 		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE status=1")
 		defer row_test_real.Close()
 		if err != nil {
 			db.Close()
 			row_test_real.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 
-		// проверка тестов максмальной пропускной способности
 		row_test_berst, err := db.Query("SELECT id FROM test_bert WHERE status=1")
 		defer row_test_berst.Close()
 		if err != nil {
 			db.Close()
-			//row_test_berst.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 
@@ -278,10 +327,15 @@ func main() {
 		defer row_test_latency.Close()
 		if err != nil {
 			db.Close()
-			//row_test_latency.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 
@@ -289,10 +343,15 @@ func main() {
 		defer row_test_loss.Close()
 		if err != nil {
 			db.Close()
-			//row_test_loss.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 
@@ -300,10 +359,15 @@ func main() {
 		defer row_test_y1564.Close()
 		if err != nil {
 			db.Close()
-			//row_test_y1564.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			continue
 		}
 
@@ -315,13 +379,21 @@ func main() {
 			if err != nil {
 				db.Close()
 				row_test_real.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				continue
 			}
-			fmt.Println("-== Test id  = ", id)
-			go TestReal(id, conf.net_interface_name, conf.zabbix_server_name, conf.zabbix_server_port)
+			if verboseLogs {
+				fmt.Println("-== Test id  = ", id)
+			}
+			go TestReal(id, conf.net_interface_name)
 		}
 		row_test_real.Close()
 
@@ -331,9 +403,15 @@ func main() {
 			if err != nil {
 				db.Close()
 				row_test_thr.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				continue
 			}
 			TestThroughput(id, conf.net_interface_name)
@@ -346,9 +424,15 @@ func main() {
 			if err != nil {
 				db.Close()
 				row_test_berst.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				continue
 			}
 			TestBerst(id, conf.net_interface_name)
@@ -361,9 +445,15 @@ func main() {
 			if err != nil {
 				db.Close()
 				row_test_latency.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				continue
 			}
 			TestDelay(id, conf.net_interface_name)
@@ -376,9 +466,15 @@ func main() {
 			if err != nil {
 				db.Close()
 				row_test_loss.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				continue
 			}
 			TestLoss(id, conf.net_interface_name)
@@ -391,16 +487,21 @@ func main() {
 			if err != nil {
 				db.Close()
 				row_test_y1564.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				continue
 			}
 			TestY1564(id, conf.net_interface_name)
 		}
 		row_test_y1564.Close()
 
-		//	row_test_real, err := db.Query("select * from global_config where status=1")
 
 		//go Test_SLA_real_go()
 
@@ -424,46 +525,68 @@ func main() {
 
 var count_recive int
 
-func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix int) {
-	db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+func TestReal(id int, net_interface_name string) {
+	db, err := openDB()
 	if err != nil {
 		db.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
-	db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 2, id) // Тест выполняется
+	db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 2, id)
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 
 		log.Fatalf("failed to find interface %q: %v", net_interface_name, err)
-		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 		db.Close()
 		return
 	}
 
-	db.Exec("UPDATE test_sla_real SET data_start=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), id) // Добавление времени начала
-	fmt.Println("Test time - ", time.Now())
-	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, node_zabbix, test_delay,test_delay_jitter, test_loss, test_delay_1,test_delay1_jitter FROM test_sla_real WHERE id=?", id)
+	db.Exec("UPDATE test_sla_real SET data_start=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), id)
+	if verboseLogs {
+		fmt.Println("Test time - ", time.Now())
+	}
+	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, test_delay, test_delay_jitter, test_loss, test_delay_1, test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
-	fmt.Println(row)
+	if verboseLogs {
+		fmt.Println(row)
+	}
 	defer row.Close()
 	row.Next()
 	test := new(testReal)
-	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.clock, &test.count, &test.node_zabbix, &test.test_delay, &test.test_delay_jitter, &test.test_loss, &test.test_delay_1, &test.test_delay_1_jitter)
+	err = row.Scan(&test.id, &test.test_type, &test.module_first, &test.module_second, &test.block_size, &test.clock, &test.count, &test.test_delay, &test.test_delay_jitter, &test.test_loss, &test.test_delay_1, &test.test_delay_1_jitter)
 	if err != nil {
 		db.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 
@@ -473,24 +596,36 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 	row, err = db.Query("SELECT server_IP FROM global_config")
 	if err != nil {
-		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 	for row.Next() {
 		err = row.Scan(&ipsrcstr)
 		if err != nil {
 
-			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 	}
@@ -500,12 +635,18 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	mac_dst := make([]byte, 6)
 	row, err = db.Query("SELECT module_first, module_second, delay_max, jitter_max, delay1_max, jitter1_max, loss_max FROM test_sla_real WHERE id=?", id)
 	if err != nil {
-		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 		db.Close()
 		row.Close()
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
 
@@ -513,23 +654,35 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		err = row.Scan(&id_sfp1, &id_sfp2, &testMax.delayMax, &testMax.jitterMax, &testMax.delayOneMax, &testMax.jitterOneMax, &testMax.lossMax)
 		if err != nil {
 
-			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		row_ip, err := db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 			db.Close()
 			row.Close()
 			row_ip.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_ip.Close()
@@ -537,41 +690,58 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			err = row_ip.Scan(&ipdst_1sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
 
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE id=?", id_sfp1)
 		if err != nil {
-			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 			db.Close()
 			row.Close()
 			row_mac.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		defer row_mac.Close()
-		//var mac_dst_str string
 		var test_mac int64
 		for row_mac.Next() {
 			//err = row_mac.Scan(&mac_dst_str)
 			err = row_mac.Scan(&test_mac)
 			if err != nil {
 
-				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -584,24 +754,36 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 		row_ip, err = db.Query("SELECT address_ip FROM modules_sfp_sla WHERE id=?", id_sfp2)
 		if err != nil {
-			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 			db.Close()
 			row.Close()
-			fmt.Println(" -!! Error !!-")
-			fmt.Println(err)
-			fmt.Println(" ----=====----")
+			if verboseLogs {
+				fmt.Println(" -!! Error !!-")
+			}
+			if verboseLogs {
+				fmt.Println(err)
+			}
+			if verboseLogs {
+				fmt.Println(" ----=====----")
+			}
 			return
 		}
 		for row_ip.Next() {
 			err = row_ip.Scan(&ipdst_2sfpsla_str)
 			if err != nil {
 
-				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id) // Ошибка выполнения
+				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 				db.Close()
 				row.Close()
-				fmt.Println(" -!! Error !!-")
-				fmt.Println(err)
-				fmt.Println(" ----=====----")
+				if verboseLogs {
+					fmt.Println(" -!! Error !!-")
+				}
+				if verboseLogs {
+					fmt.Println(err)
+				}
+				if verboseLogs {
+					fmt.Println(" ----=====----")
+				}
 				return
 			}
 		}
@@ -615,10 +797,8 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	var netConf *raw.Config = new(raw.Config)
 
 	(*netConf).Filter, _ = bpf.Assemble([]bpf.Instruction{
-		// Проверка идентификатора пакета (34 бит) (xFA-от 1 ко 2, xFB – от 2 к 1, xFC – от 1 к Серверу)
 		bpf.LoadAbsolute{Off: 34, Size: 1},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: 0xFC, SkipTrue: 3},
-		// Проверка идентификатора теста
 		bpf.LoadAbsolute{Off: 64, Size: 2},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: uint32(test_type), SkipTrue: 1},
 		// Verdict is "send up to 4k of the packet to userspace."
@@ -629,14 +809,21 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 	c, err := raw.ListenPacket(ifi, etherType, netConf)
 	if err != nil {
-		fmt.Println("failed to listen: %v", err)
+		if verboseLogs {
+			fmt.Printf("failed to listen: %v\n", err)
+		}
 
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return
 	}
-	//c.SetReadDeadline(time.Now().Add(time.Millisecond * 3000))
 	addr := &raw.Addr{
 		HardwareAddr: ethernet.Broadcast,
 	}
@@ -649,7 +836,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	go func() {
 		ind := 0
 		t_check := time.NewTicker(20 * time.Second)
-		db_go, _ := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+		db_go, _ := openDB()
 		for range t_check.C {
 			rez_f, _ := db_go.Query("SELECT status FROM test_sla_real WHERE id=?", id)
 			if rez_f.Next() {
@@ -667,11 +854,13 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 			if testPing(ipdst_1sfpsla_str) > 0 || testPing(ipdst_2sfpsla_str) > 0 {
 
-				fmt.Println("Test ping falue")
+				if verboseLogs {
+					fmt.Println("Test ping falue")
+				}
 				if ind == 0 {
-					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id) // Ошибка выполнения
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id)
 				} else {
-					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id) // Ошибка выполнения
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id)
 				}
 				db_go.Close()
 				return
@@ -679,11 +868,13 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 
 			if check_SNMP(ipdst_1sfpsla_str) > 0 || check_SNMP(ipdst_2sfpsla_str) > 0 {
 
-				fmt.Println("Test check SNMP falue")
+				if verboseLogs {
+					fmt.Println("Test check SNMP falue")
+				}
 				if ind == 0 {
-					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id) // Ошибка выполнения
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 6, id)
 				} else {
-					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id) // Ошибка выполнения
+					db_go.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 7, id)
 				}
 
 				db_go.Close()
@@ -713,12 +904,10 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 	counter := test.count
 
 	for range t.C {
-		//fmt.Print(" ==> Start - ")
-		//fmt.Println(time.Now())
 		if !circ {
 			counter--
 			if counter <= 0 {
-				db, _ = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+				db, _ = openDB()
 				db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 3, id)
 				db.Close()
 				break
@@ -728,7 +917,7 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 		number++
 		b := packetForm(ipsrc, ipdst1, ipdst2, ifi.HardwareAddr, mac_dst, test.block_size, number, test_type, test.test_type)
 
-		go test_this.receiveMessages(detectPack, id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
+		go test_this.receiveMessages(detectPack, id, c, ipdst_1sfpsla_str, ifi.MTU, *test, test_type, testMax, len(b))
 
 		for { //	time.Sleep(time.Millisecond * 1)
 			n, err := c.WriteTo(b, addr)
@@ -736,13 +925,15 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 				break
 			}
 			time.Sleep(time.Millisecond * 1)
-			fmt.Println(" !!Error write")
+			if verboseLogs {
+				fmt.Println(" !!Error write")
+			}
 		}
 
 		check_count--
 
 		if check_count < 0 {
-			db, err = sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+			db, err = openDB()
 			if err == nil {
 				rez_f, _ := db.Query("SELECT status FROM test_sla_real WHERE id=?", id)
 				if rez_f.Next() {
@@ -762,17 +953,12 @@ func TestReal(id int, net_interface_name string, host_zabbix string, port_zabbix
 			db.Close()
 			check_count = 10
 		}
-		//fmt.Println("Wait")
 		<-detectPack
-		//fmt.Println(<-detectPack)
-		//	go test_this.receiveMessages(id, c, ipdst_1sfpsla_str, test.node_zabbix, host_zabbix, port_zabbix, ifi.MTU, *test, test_type, testMax, len(b))
 
 		//	go func() {
-		//		time.Sleep(time.Millisecond * 1)
 		//		c.WriteTo(b, addr)
 		//	}()
 
-		//time.Sleep(time.Duration(test.clock/2) * time.Millisecond)
 
 	}
 
@@ -799,10 +985,6 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	var ind uint
 	//ip.iplen = uint16(20 + 26 + 4)
 	if testWay == 2 {
-		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) + 0xAABA4000000000
-		//t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
-		//	t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000))
-		//t_time = t_time << (4*8)
 		delta_nano := int64((2208988800) * 1e9)
 		t_time := int64(float64(time.Now().UnixNano()-delta_nano) * float64(math.Pow(2, 32)/float64(1e9)))
 		t_time = t_time & int64(0xFFFFFFFFFFFFFF)
@@ -848,31 +1030,35 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	if err != nil {
 		//log.Fatalf("failed to marshal ethernet frame: %v", err)
 
-		fmt.Println(" -!! Error !!-")
-		fmt.Println(err)
-		fmt.Println(" ----=====----")
+		if verboseLogs {
+			fmt.Println(" -!! Error !!-")
+		}
+		if verboseLogs {
+			fmt.Println(err)
+		}
+		if verboseLogs {
+			fmt.Println(" ----=====----")
+		}
 		return []byte{}
 	}
-	//	fmt.Print(" ==> Packet Form - ")
-	//	fmt.Println(time.Now())
 	return b
 }
 
-//var min_period = time.Duration(15) * time.Microsecond
 
 func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int, t_type uint16) (int, int64) {
 	var min_period = time.Duration(15) * time.Microsecond
 	time_to_Sleep := time.Duration(cnt) * min_period * 2
-	fmt.Println("time_to_Sleep= ", time_to_Sleep)
-	fmt.Println("cnt start= ", cnt)
+	if verboseLogs {
+		fmt.Println("time_to_Sleep= ", time_to_Sleep)
+	}
+	if verboseLogs {
+		fmt.Println("cnt start= ", cnt)
+	}
 	gen_start := time.Now()
 	var rez_time int64
 	test.numberCounter = 0
 	//for i := 0; i < 32; i++ {
 	go func() {
-		//timer := time.NewTimer(time.Nanosecond * 10)
-		//timer := time.NewTimer(time.Microsecond * 10)
-		//fmt.Println("Start")
 		//for range timer.C {
 		for {
 			cnt--
@@ -882,7 +1068,9 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 			}
 		}
 		rez_time = (int64)(time.Since(gen_start))
-		fmt.Println("rez_time = ", rez_time)
+		if verboseLogs {
+			fmt.Println("rez_time = ", rez_time)
+		}
 	}()
 	//}
 
@@ -891,7 +1079,9 @@ func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipd
 	time.Sleep(time_to_Sleep)
 
 	rez_count := test.numberCounter
-	fmt.Println("rez_count= ", rez_count)
+	if verboseLogs {
+		fmt.Println("rez_count= ", rez_count)
+	}
 	quit <- 1
 	return int(rez_count), rez_time
 }
@@ -950,16 +1140,34 @@ func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, dist
 		HardwareAddr: ethernet.Broadcast,
 	}
 	/*
-		fmt.Printf("raw:  %x \n", b)
-		fmt.Println(" --== Packet send ==--")
-		fmt.Printf("mac dst  %x \n", b[0:6])
-		fmt.Printf("mac src  %x \n", b[6:12])
-		fmt.Printf("type eth %x \n", b[12:14])
-		fmt.Printf("size     %v \n", b[16:18])
+		if verboseLogs {
+			fmt.Printf("raw:  %x \n", b)
+		}
+		if verboseLogs {
+			fmt.Println(" --== Packet send ==--")
+		}
+		if verboseLogs {
+			fmt.Printf("mac dst  %x \n", b[0:6])
+		}
+		if verboseLogs {
+			fmt.Printf("mac src  %x \n", b[6:12])
+		}
+		if verboseLogs {
+			fmt.Printf("type eth %x \n", b[12:14])
+		}
+		if verboseLogs {
+			fmt.Printf("size     %v \n", b[16:18])
+		}
 
-		fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
-		fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
-		fmt.Println(" --== End Packet ==--")
+		if verboseLogs {
+			fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
+		}
+		if verboseLogs {
+			fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
+		}
+		if verboseLogs {
+			fmt.Println(" --== End Packet ==--")
+		}
 	*/
 
 	//  t := time.NewTicker(
@@ -967,7 +1175,9 @@ func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, dist
 	for i := 0; i < 1000; i++ {
 		if _, err := c.WriteTo(b, addr); err != nil {
 			log.Fatalf("failed to send message: %v", err)
-			fmt.Println("failed to send message: ", err)
+			if verboseLogs {
+				fmt.Println("failed to send message: ", err)
+			}
 		}
 	}
 }
@@ -979,79 +1189,97 @@ func (test *testThr) sendPackets(c net.PacketConn, source net.HardwareAddr, dist
 // sourced from specified hardware address.
 func sendMessages(c net.PacketConn, source net.HardwareAddr) {
 
-	t := time.NewTicker(1 * time.Microsecond)
-	for range t.C {
+		t := time.NewTicker(1 * time.Microsecond)
+		for range t.C {
 
-		ipsrc := net.ParseIP(ipsrcstr)
-		ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
-		ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
+			ipsrc := net.ParseIP(ipsrcstr)
+			ipdst1 := net.ParseIP(ipdst_1sfpsla_str)
+			ipdst2 := net.ParseIP(ipdst_2sfpsla_str)
 
-		// Default message to system's hostname if empty.
-		ip := iphdr{
-			vhl:   0x45,
-			tos:   0,
-			id:    0x0000, // the kernel overwrites id if it is zero
-			off:   0,
-			ttl:   0xFF,
-			proto: 0x5E,
-		}
-		copy(ip.src[:], ipsrc.To4())
-		copy(ip.dst[:], ipdst1.To4())
-		sfpdat := sfpsla{
-			id: 0xFC,
-		}
-		copy(sfpdat.dst[:], ipdst2.To4())
-		numberTx++
-		sfpdat.number = numberTx
-		ip.iplen = uint16(20 + 26 + 4)
-		ip.checksum()
+			// Default message to system's hostname if empty.
+			ip := iphdr{
+				vhl:   0x45,
+				tos:   0,
+				id:    0x0000, // the kernel overwrites id if it is zero
+				off:   0,
+				ttl:   0xFF,
+				proto: 0x5E,
+			}
+			copy(ip.src[:], ipsrc.To4())
+			copy(ip.dst[:], ipdst1.To4())
+			sfpdat := sfpsla{
+				id: 0xFC,
+			}
+			copy(sfpdat.dst[:], ipdst2.To4())
+			numberTx++
+			sfpdat.number = numberTx
+			ip.iplen = uint16(20 + 26 + 4)
+			ip.checksum()
 
-		var bin_buf bytes.Buffer
-		binary.Write(&bin_buf, binary.BigEndian, ip)
-		binary.Write(&bin_buf, binary.BigEndian, sfpdat)
+			var bin_buf bytes.Buffer
+			binary.Write(&bin_buf, binary.BigEndian, ip)
+			binary.Write(&bin_buf, binary.BigEndian, sfpdat)
 
-		msg := bin_buf.Bytes()
-		f := &ethernet.Frame{
-			//Destination: ethernet.Broadcast,
-			Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
-			//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
-			Source:    source,
-			EtherType: 0x0800,
-			Payload:   []byte(msg),
-		}
+			msg := bin_buf.Bytes()
+			f := &ethernet.Frame{
+				//Destination: ethernet.Broadcast,
+				Destination: []byte{0x5A, 0x11, 0x22, 0x33, 0x44, 0x00},
+				//Destination: []byte{0x64, 0xD1, 0x54, 0x17, 0xF6, 0x82},
+				Source:    source,
+				EtherType: 0x0800,
+				Payload:   []byte(msg),
+			}
 
-		b, err := f.MarshalBinary()
-		if err != nil {
-			log.Fatalf("failed to marshal ethernet frame: %v", err)
-		}
+			b, err := f.MarshalBinary()
+			if err != nil {
+				log.Fatalf("failed to marshal ethernet frame: %v", err)
+			}
 
-		// Required by Linux, even though the Ethernet frame has a destination.
-		// Unused by BSD.
-		addr := &raw.Addr{
-			HardwareAddr: ethernet.Broadcast,
-		}
+			// Required by Linux, even though the Ethernet frame has a destination.
+			// Unused by BSD.
+			addr := &raw.Addr{
+				HardwareAddr: ethernet.Broadcast,
+			}
 
-		fmt.Printf("raw:  %x \n", b)
-		fmt.Println(" --== Packet send ==--")
-		fmt.Printf("mac dst  %x \n", b[0:6])
-		fmt.Printf("mac src  %x \n", b[6:12])
-		fmt.Printf("type eth %x \n", b[12:14])
-		fmt.Printf("size     %v \n", b[16:18])
+			if verboseLogs {
+				fmt.Printf("raw:  %x \n", b)
+			}
+			if verboseLogs {
+				fmt.Println(" --== Packet send ==--")
+			}
+			if verboseLogs {
+				fmt.Printf("mac dst  %x \n", b[0:6])
+			}
+			if verboseLogs {
+				fmt.Printf("mac src  %x \n", b[6:12])
+			}
+			if verboseLogs {
+				fmt.Printf("type eth %x \n", b[12:14])
+			}
+			if verboseLogs {
+				fmt.Printf("size     %v \n", b[16:18])
+			}
 
-		fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
-		fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
-		fmt.Println(" --== End Packet ==--")
+			if verboseLogs {
+				fmt.Printf("ip sourse %v.%v.%v.%v \n", b[26], b[27], b[28], b[29])
+			}
+			if verboseLogs {
+				fmt.Printf("ip dst    %v.%v.%v.%v \n", b[30], b[31], b[32], b[33])
+			}
+			if verboseLogs {
+				fmt.Println(" --== End Packet ==--")
+			}
 
-		if _, err := c.WriteTo(b, addr); err != nil {
-			log.Fatalf("failed to send message: %v", err)
+			if _, err := c.WriteTo(b, addr); err != nil {
+				log.Fatalf("failed to send message: %v", err)
+			}
 		}
 	}
-}
 
 // receiveMessages continuously receives messages over a connection. The messages
 // may be up to the interface's MTU in size.
 */
-func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketConn, ipdst_1sfpsla_str string, node_zabbix string, host_zabbix string, port_zabbix int, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
+func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketConn, ipdst_1sfpsla_str string, mtu int, test_id testReal, t_type uint16, tMax testRealMax, packetSize int) {
 	var f ethernet.Frame
 	b := make([]byte, mtu)
 	cc := 0
@@ -1060,7 +1288,6 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 	t_ips[0] = byte((t_type >> 8) & 0xFF)
 	start := time.Now()
 	quit := make(chan int, 10)
-	//fmt.Println("-> Begin Catch - ", start)
 	c.SetReadDeadline(start.Add(time.Microsecond * 3000))
 	var ErrorPacketNumber, Currentnumber uint32
 	var numberR uint32
@@ -1069,7 +1296,6 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 		select {
 		case key := <-quit:
 			catchDetect <- key
-			//fmt.Println("Chanel go")
 			return
 			//break ExitLoop
 		default:
@@ -1077,7 +1303,9 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 			n, _, err := c.ReadFrom(b)
 			cc++
 			if err != nil {
-				fmt.Printf("failed to receive message: %v", err)
+				if verboseLogs {
+					fmt.Printf("failed to receive message: %v", err)
+				}
 				if err.Error() == "resource temporarily unavailable" {
 					ErrorPacketNumber = numberR
 					Currentnumber = test.number
@@ -1097,30 +1325,21 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				continue
 			}
 
-			//t_time := int64(float64(time.Now().UnixNano() - delta_nano )*float64(math.Pow(2, 32)/1000000000)) - 0x55817F00000000
 
 			//n, addr, err := c.ReadFrom(b)
 			// Unpack Ethernet II frame into Go representation.
 			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
-				fmt.Printf("failed to unmarshal ethernet frame: %v", err)
+				if verboseLogs {
+					fmt.Printf("failed to unmarshal ethernet frame: %v", err)
+				}
 				log.Fatalf("failed to unmarshal ethernet frame: %v", err)
 				continue
 			}
 
-			//fmt.Println("\n\n--=Test ==-- - ")
-			//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
-			//fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-			//fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
 			var ips [4]byte
 			copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
-			//fmt.Printf("\n--=T_so ip dst    %v.%v.%v.%v \n", ips[0], ips[1], ips[2], ips[3])
-			//fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
 
-			//fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-			//fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-			//fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
 
-			//fmt.Println(" --== End Test ==--")
 
 			// Display source of message and message itself.
 			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
@@ -1131,24 +1350,46 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 
 				(*test).number++
 				/*
-					fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
-					fmt.Println(time.Now())
-					//fmt.Printf("\n\n--=Test %x - \n -== %x\n",f.Payload[12:15],net.ParseIP(ipdst_1sfpsla_str))
-					fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
-					//fmt.Printf("\n\rEthernet source: [%s]\n", addr.String())
+					if verboseLogs {
+						fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
+					}
+					if verboseLogs {
+						fmt.Println(time.Now())
+					}
+					if verboseLogs {
+						fmt.Printf("size: %v raw:  %x \n", len(f.Payload), f.Payload)
+					}
 
-					fmt.Printf("size     %x \n", b[2:4])
+					if verboseLogs {
+						fmt.Printf("size     %x \n", b[2:4])
+					}
 
-					fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-					fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+					if verboseLogs {
+						fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+					}
+					if verboseLogs {
+						fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+					}
 
-					fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+					if verboseLogs {
+						fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+					}
 
-					fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-					fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-					fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-					fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
-					fmt.Println(" --== End Packet ==--")
+					if verboseLogs {
+						fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+					}
+					if verboseLogs {
+						fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+					}
+					if verboseLogs {
+						fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+					}
+					if verboseLogs {
+						fmt.Printf("Number marker      :   %x \n", f.Payload[46:50])
+					}
+					if verboseLogs {
+						fmt.Println(" --== End Packet ==--")
+					}
 					//*/
 				var markerSFP11, markerSFP12, markerSFP2 int64
 				var ind uint
@@ -1174,7 +1415,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 
 				if test_id.test_delay == true {
 					if test_id.test_type == 1 {
-						delay = zabbix_delay(node_zabbix, markerSFP12-markerSFP11, host_zabbix, port_zabbix)
+						delay = delayToMicroseconds(markerSFP12 - markerSFP11)
 						if len((*test).delay_solve) < 2 {
 							(*test).delay_solve = append((*test).delay_solve, markerSFP12-markerSFP11)
 						} else {
@@ -1182,59 +1423,60 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 							(*test).delay_solve[1] = markerSFP12 - markerSFP11
 						}
 						if test_id.test_delay_jitter == true {
-							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(), host_zabbix, port_zabbix)
+							jitter = jitterToMicroseconds((*test).getJitter())
 						}
 					}
 					if test_id.test_type == 2 {
-						//t_time := int64(float32(time.Now().Nanosecond())) //* 1000000 / float32(math.Pow(2, 32)))
 						delay_avg := (*test).getDelayAvg(t_time - markerSFP2)
-						delay = zabbix_delay(node_zabbix, delay_avg, host_zabbix, port_zabbix)
+						delay = delayToMicroseconds(delay_avg)
 						if test_id.test_delay_jitter == true {
-							jitter = zabbix_jitter(node_zabbix, (*test).getJitter(), host_zabbix, port_zabbix)
+							jitter = jitterToMicroseconds((*test).getJitter())
 						}
 					}
 				}
-				//fmt.Println("==>> number_pack - ", numberR)
-				//fmt.Println("==>> number_test - ", test.number)
 				if test_id.test_loss == true {
 					if (test.number-Currentnumber == 1) && (numberR-ErrorPacketNumber) > 1 {
 						(*test).number++
 					}
-					loss = zabbix_error(node_zabbix, float32(numberR-test.number)/float32(numberR), host_zabbix, port_zabbix)
+					loss = float32(numberR-test.number) / float32(numberR)
 				}
 				//*
 				if test_id.test_type == 1 {
 					if test_id.test_delay_1 == true {
 						rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP11, markerSFP2, markerSFP12)
-						delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
-						delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
+						delay1 = delayToMicroseconds(rez_delay_to)
+						delay2 = delayToMicroseconds(rez_delay_un)
 						if test_id.test_delay_1_jitter == true {
-							jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
-							jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
+							jitter1 = jitterToMicroseconds((*test).getJitterto(rez_delay_to))
+							jitter2 = jitterToMicroseconds((*test).getJitterun(rez_delay_un))
 						}
 					}
 				}
 				if test_id.test_type == 2 {
-					//t_time := int64(time.Now().Nanosecond())
-					//t_time := int64(float64(time.Now().UnixNano())*float64(math.Pow(2, 32)/1000000000)) - 0x55817800000000
 					if test_id.test_delay_1 == true {
 						rez_delay_to, rez_delay_un := (*test).getOneDelay(markerSFP2, markerSFP12, t_time-markerSFP12)
-						delay1 = zabbix_delay_to(node_zabbix, rez_delay_to, host_zabbix, port_zabbix)
-						delay2 = zabbix_delay_un(node_zabbix, rez_delay_un, host_zabbix, port_zabbix)
+						delay1 = delayToMicroseconds(rez_delay_to)
+						delay2 = delayToMicroseconds(rez_delay_un)
 						if test_id.test_delay_1_jitter == true {
-							jitter1 = zabbix_jitter_to(node_zabbix, (*test).getJitterto(rez_delay_to), host_zabbix, port_zabbix)
-							jitter2 = zabbix_jitter_un(node_zabbix, (*test).getJitterun(rez_delay_un), host_zabbix, port_zabbix)
+							jitter1 = jitterToMicroseconds((*test).getJitterto(rez_delay_to))
+							jitter2 = jitterToMicroseconds((*test).getJitterun(rez_delay_un))
 
 						}
 					}
 				}
 				//*/
-				db, err := sql.Open("mysql", db_user+":"+db_user_pass+"@/"+db_database)
+				db, err := openDB()
 				if err != nil {
 					db.Close()
-					fmt.Println(" -!! Error !!-")
-					fmt.Println(err)
-					fmt.Println(" ----=====----")
+					if verboseLogs {
+						fmt.Println(" -!! Error !!-")
+					}
+					if verboseLogs {
+						fmt.Println(err)
+					}
+					if verboseLogs {
+						fmt.Println(" ----=====----")
+					}
 					quit <- 1
 					continue
 				}
@@ -1243,40 +1485,45 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				_, err = db.Exec("INSERT INTO test_sla_real_rez (datetime, test_id, delay_rez, delay_to_rez, delay_un_rez, jitter_delay_rez, jitter_delay_to, jitter_delay_un, packet_loss) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", dt.Format("2006-01-02 15:04:05"), id, delay, delay1, delay2, math.Abs(float64(jitter)), math.Abs(float64(jitter1)), math.Abs(float64(jitter2)), loss)
 				if err != nil {
 					db.Close()
-					fmt.Println(" -!! Error !!-")
-					fmt.Println(err)
-					fmt.Println(" ----=====----")
+					if verboseLogs {
+						fmt.Println(" -!! Error !!-")
+					}
+					if verboseLogs {
+						fmt.Println(err)
+					}
+					if verboseLogs {
+						fmt.Println(" ----=====----")
+					}
 					quit <- 1
 					continue
 				}
 				if (tMax.delayMax != 0) && (tMax.delayMax < delay) {
-					msg := fmt.Sprintf("!! Превышение порогового значения времени двусторонней задержки на %.4f мкс", delay-tMax.delayMax)
+					msg := fmt.Sprintf("!! Two-way delay threshold exceeded by %.4f us", delay-tMax.delayMax)
 					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 1, delay, dt.Format("2006-01-02 15:04:05"), msg)
 				}
 				if (tMax.jitterMax != 0) && (tMax.jitterMax < float32(math.Abs(float64(jitter)))) {
-					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени двусторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter)))-tMax.jitterMax)
+					msg := fmt.Sprintf("!! Two-way delay jitter threshold exceeded by %.4f us", float32(math.Abs(float64(jitter)))-tMax.jitterMax)
 					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 2, float32(math.Abs(float64(jitter))), dt.Format("2006-01-02 15:04:05"), msg)
 				}
 				if (tMax.lossMax != 0) && (tMax.lossMax < loss) {
-					msg := fmt.Sprintf("!! Превышение порогового значения коэффициента потери пакетов на %.6f", loss-tMax.lossMax)
+					msg := fmt.Sprintf("!! Packet loss threshold exceeded by %.6f", loss-tMax.lossMax)
 					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 3, loss, dt.Format("2006-01-02 15:04:05"), msg)
 				}
 
 				if (tMax.delayOneMax != 0) && ((tMax.delayOneMax < delay1) || (tMax.delayOneMax < delay2)) {
-					msg := fmt.Sprintf("!! Превышение порогового значения времени односторонней задержки на %.4f мкс", float32(math.Max(float64(delay1), float64(delay2)))-tMax.delayOneMax)
+					msg := fmt.Sprintf("!! One-way delay threshold exceeded by %.4f us", float32(math.Max(float64(delay1), float64(delay2)))-tMax.delayOneMax)
 					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 4, float32(math.Max(float64(delay1), float64(delay2))), dt.Format("2006-01-02 15:04:05"), msg)
 				}
 				if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter1)))) {
-					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter1)))-tMax.jitterOneMax)
+					msg := fmt.Sprintf("!! One-way delay jitter threshold exceeded by %.4f us", float32(math.Abs(float64(jitter1)))-tMax.jitterOneMax)
 					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 5, float32(math.Abs(float64(jitter1))), dt.Format("2006-01-02 15:04:05"), msg)
 				}
 				if (tMax.jitterOneMax != 0) && (tMax.jitterOneMax < float32(math.Abs(float64(jitter2)))) {
-					msg := fmt.Sprintf("!! Превышение порогового значения джиттера времени односторонней задержки на %.4f мкс", float32(math.Abs(float64(jitter2)))-tMax.jitterOneMax)
+					msg := fmt.Sprintf("!! One-way delay jitter threshold exceeded by %.4f us", float32(math.Abs(float64(jitter2)))-tMax.jitterOneMax)
 					db.Exec("INSERT INTO test_sla_real_alarm (id_test, id_var, Value, datatime, message) VALUES(?, ?, ?, ?, ?)", id, 5, float32(math.Abs(float64(jitter2))), dt.Format("2006-01-02 15:04:05"), msg)
 				}
 
 				db.Close()
-				//fmt.Printf("  ==>> %v  --> %s  - count = %v\n", id, time.Since(start), cc)
 				quit <- 1
 			}
 			//else {
@@ -1290,7 +1537,6 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 	var mean_delay float32
 	size_s := 100
-	//fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
 	if len((*test).delay_solve) == 0 {
 		(*test).delay_solve = append((*test).delay_solve, in_solve)
 		return in_solve
@@ -1310,18 +1556,31 @@ func (test *testSLA) getDelayAvg(in_solve int64) int64 {
 	}
 
 	/*
-		fmt.Printf(" --== Jitter debug ==-- \n")
-		fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
-		fmt.Printf(" --== Max = %x \n", max)
-		fmt.Printf(" --== Min = %x \n", min)
-		fmt.Printf(" --== Mean = %f \n", mean)
-		fmt.Printf(" --== Jitter = %f \n", jitter)
-		fmt.Printf(" --== End Jitter debug ==-- \n")
+		if verboseLogs {
+			fmt.Printf(" --== Jitter trace ==-- \n")
+		}
+		if verboseLogs {
+			fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
+		}
+		if verboseLogs {
+			fmt.Printf(" --== Max = %x \n", max)
+		}
+		if verboseLogs {
+			fmt.Printf(" --== Min = %x \n", min)
+		}
+		if verboseLogs {
+			fmt.Printf(" --== Mean = %f \n", mean)
+		}
+		if verboseLogs {
+			fmt.Printf(" --== Jitter = %f \n", jitter)
+		}
+		if verboseLogs {
+			fmt.Printf(" --== End jitter trace ==-- \n")
+		}
 	*/
 	return int64(mean_delay)
 }
 
-//var mass_solve []int64
 func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (int64, int64) {
 
 	size_s := 60 * 20
@@ -1381,13 +1640,27 @@ func (test *testSLA) getOneDelay(SFP_T11 int64, SFP_T2 int64, SFP_T12 int64) (in
 		(*test).delay_solve_un[0] = int64(mean_un)
 
 		/*
-			fmt.Printf(" --== Jitter debug ==-- \n")
-			fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
-			fmt.Printf(" --== Max = %x \n", max)
-			fmt.Printf(" --== Min = %x \n", min)
-			fmt.Printf(" --== Mean = %f \n", mean)
-			fmt.Printf(" --== Jitter = %f \n", jitter)
-			fmt.Printf(" --== End Jitter debug ==-- \n")
+			if verboseLogs {
+				fmt.Printf(" --== Jitter trace ==-- \n")
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Max = %x \n", max)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Min = %x \n", min)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Mean = %f \n", mean)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Jitter = %f \n", jitter)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== End jitter trace ==-- \n")
+			}
 	*/
 	return int64(mean_to), int64(mean_un)
 }
@@ -1402,7 +1675,6 @@ func (test *testSLA) getJitter() float32 {
 
 	jitter = float32((*test).delay_solve[l-1] - (*test).delay_solve[l-2])
 
-	//fmt.Println("-->> (*test).delay_solve -> ", (*test).delay_solve)
 
 	/*
 		var jitter, mean float32
@@ -1434,13 +1706,27 @@ func (test *testSLA) getJitter() float32 {
 			jitter = mean - float32(min)
 		}
 		/*
-			fmt.Printf(" --== Jitter debug ==-- \n")
-			fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
-			fmt.Printf(" --== Max = %x \n", max)
-			fmt.Printf(" --== Min = %x \n", min)
-			fmt.Printf(" --== Mean = %f \n", mean)
-			fmt.Printf(" --== Jitter = %f \n", jitter)
-			fmt.Printf(" --== End Jitter debug ==-- \n")
+			if verboseLogs {
+				fmt.Printf(" --== Jitter trace ==-- \n")
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Slice: %x \n", (*test).delay_solve)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Max = %x \n", max)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Min = %x \n", min)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Mean = %f \n", mean)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== Jitter = %f \n", jitter)
+			}
+			if verboseLogs {
+				fmt.Printf(" --== End jitter trace ==-- \n")
+			}
 	*/
 	return jitter
 }
@@ -1534,134 +1820,15 @@ func (test *testSLA) getJitterun(in_solve int64) float32 {
 	return jitter
 }
 
-func zabbixHello(host string, defaultHost string, defaultPort int) {
-	var delay int
-	for {
-		delay = rand.Intn(1500)
-		//delay:=i*100
-		var metrics []*Metric
-		metrics = append(metrics, NewMetric(host, "delay", fmt.Sprint(delay), time.Now().Unix()))
+func delayToMicroseconds(delay int64) float32 {
+	return float32(delay) * 1000000 / float32(math.Pow(2, 32))
+}
 
-		// Create instance of Packet class
-		packet := NewPacket(metrics)
-		//fmt.Println(packet);
-		// Send packet to zabbix
-		z := NewSender(defaultHost, defaultPort)
-		z.Send(packet)
-		time.Sleep(5 * time.Second)
+func jitterToMicroseconds(jitter float32) float32 {
+	if jitter == 0 {
+		return 0
 	}
-}
-
-func zabbix_delay(host string, delay int64, defaultHost string, defaultPort int) float32 {
-
-	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
-	//delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
-	var delfloat float32
-	delfloat = float32(delay) * 1000000 / float32(math.Pow(2, 32))
-	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "delay", fmt.Sprint(delfloat), time.Now().Unix()))
-
-	// Create instance of Packet class
-	packet := NewPacket(metrics)
-	//fmt.Println(packet);
-	// Send packet to zabbix
-	z := NewSender(defaultHost, defaultPort)
-	z.Send(packet)
-	return delfloat
-}
-
-func zabbix_delay_to(host string, delay int64, defaultHost string, defaultPort int) float32 {
-
-	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
-	//delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
-	var delfloat float32
-	delfloat = float32(delay) * 1000000 / float32(math.Pow(2, 32))
-	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "delay_SFP1_SFP2", fmt.Sprint(delfloat), time.Now().Unix()))
-
-	// Create instance of Packet class
-	packet := NewPacket(metrics)
-	//fmt.Println(packet);
-	// Send packet to zabbix
-	z := NewSender(defaultHost, defaultPort)
-	z.Send(packet)
-	return delfloat
-}
-
-func zabbix_delay_un(host string, delay int64, defaultHost string, defaultPort int) float32 {
-
-	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
-	//delay = int64( float64(delay) * 1000000 / (math.Pow(2, 32))) // [mks] 125 MGz - clock, => T = 8 mks
-	var delfloat float32
-	delfloat = float32(delay) * 1000000 / float32(math.Pow(2, 32))
-	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "delay_SFP2_SFP1", fmt.Sprint(delfloat), time.Now().Unix()))
-
-	// Create instance of Packet class
-	packet := NewPacket(metrics)
-	//fmt.Println(packet);
-	// Send packet to zabbix
-	z := NewSender(defaultHost, defaultPort)
-	z.Send(packet)
-	return delfloat
-}
-
-func zabbix_jitter(host string, jitter float32, defaultHost string, defaultPort int) float32 {
-
-	//delay = delay * 8 // [mks] 125 MGz - clock, => T = 8 mks
-	if jitter != 0 {
-		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
-	}
-	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "jitter", fmt.Sprint(math.Abs(float64(jitter))), time.Now().Unix()))
-
-	// Create instance of Packet class
-	packet := NewPacket(metrics)
-	//fmt.Println(packet);
-	// Send packet to zabbix
-	z := NewSender(defaultHost, defaultPort)
-	z.Send(packet)
-	return jitter
-}
-
-func zabbix_jitter_to(host string, jitter float32, defaultHost string, defaultPort int) float32 {
-
-	if jitter != 0 {
-		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
-	}
-	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "jitter_delay_SFP1_SFP2", fmt.Sprint(math.Abs(float64(jitter))), time.Now().Unix()))
-	packet := NewPacket(metrics)
-	z := NewSender(defaultHost, defaultPort)
-	z.Send(packet)
-	return jitter
-}
-
-func zabbix_jitter_un(host string, jitter float32, defaultHost string, defaultPort int) float32 {
-
-	if jitter != 0 {
-		jitter = jitter * 1000000 / float32(math.Pow(2, 32)) // [mks] 125 MGz - clock, => T = 8 mks
-	}
-	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "jitter_delay_SFP2_SFP1", fmt.Sprint(math.Abs(float64(jitter))), time.Now().Unix()))
-	packet := NewPacket(metrics)
-	z := NewSender(defaultHost, defaultPort)
-	z.Send(packet)
-	return jitter
-}
-
-func zabbix_error(host string, err float32, defaultHost string, defaultPort int) float32 {
-
-	var metrics []*Metric
-	metrics = append(metrics, NewMetric(host, "error_probability", fmt.Sprint(err), time.Now().Unix()))
-
-	// Create instance of Packet class
-	packet := NewPacket(metrics)
-	//fmt.Println(packet);
-	// Send packet to zabbix
-	z := NewSender(defaultHost, defaultPort)
-	z.Send(packet)
-	return err
+	return jitter * 1000000 / float32(math.Pow(2, 32))
 }
 
 /*import (

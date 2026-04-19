@@ -1,2 +1,26 @@
-Server_SFP_SLA.exe
-SFP_SLA.tar
+# Local configuration
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Go build/test artifacts
+/Server_SFP_SLA.exe
+/Server_SFP_SLA
+/bin
+/build/
+*.test
+coverage.out
+
+# Release/deployment archives
+*.tar
+*.tar.gz
+*.zip
+*.deb
+
+# Runtime noise
+.work_extract/
+_web_cyr.txt
+*.log
+*.tmp
