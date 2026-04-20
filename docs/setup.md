@@ -19,7 +19,7 @@ sudo -E scripts/add_user.sh
 
 ## What The Scripts Do
 
-- `scripts/init.sh` installs system dependencies: Go build prerequisites, `libpcap`, Apache, MySQL/MariaDB-compatible packages, PHP extensions, `net-tools`, and `pv`.
+- `scripts/init.sh` installs system dependencies: Go build prerequisites, Apache, MySQL/MariaDB-compatible packages, PHP extensions, `net-tools`, and `pv`.
 - `scripts/configServer.sh` creates the application database and database user, imports `db/server_sfp_sla.sql`, deploys the Go service, and publishes the web console to `/var/www/html`.
 - `scripts/deploy.sh` builds the Go binary when needed, installs it to `/usr/local/bin/Server_SFP_SLA`, installs the systemd unit, creates `/etc/default/server-sfp-sla` when missing, and starts the service.
 - `scripts/add_user.sh` creates a web-console user with a hashed password.

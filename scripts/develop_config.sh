@@ -9,6 +9,6 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 apt update
-apt -y install build-essential gcc libpcap0.8-dev php-cli php-mysql php-snmp php-curl
+apt -y install build-essential gcc php-cli php-mysql php-snmp php-curl
 
 echo "=>> Development dependencies installed"

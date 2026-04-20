@@ -1,26 +1,23 @@
-# Local configuration
-.env
-.env.*
-!.env.example
+# Go
+bin/
+pkg/
+*.exe
+*.out
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
 .vscode/
 .idea/
 
-# Go build/test artifacts
-/Server_SFP_SLA.exe
-/Server_SFP_SLA
-/bin
-/build/
-*.test
-coverage.out
+# Build artifacts
+build/
+dist/
 
-# Release/deployment archives
-*.tar
-*.tar.gz
-*.zip
-*.deb
-
-# Runtime noise
-.work_extract/
-_web_cyr.txt
-*.log
-*.tmp
+# Results
+results/*/plots/*.png

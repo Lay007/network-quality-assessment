@@ -856,34 +856,34 @@ func (test *testDelay) receiveMessagesDelay(catchDetect chan int64, c net.Packet
 
 				/*	fmt.Printf("\n\n--=Packet DETECT!!!=--\n")
 
-						if verboseLogs {
-							fmt.Printf("size     %x \n", b[2:4])
-						}
+					if verboseLogs {
+						fmt.Printf("size     %x \n", b[2:4])
+					}
 
-						if verboseLogs {
-							fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
-						}
-						if verboseLogs {
-							fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
-						}
+					if verboseLogs {
+						fmt.Printf("ip sourse %v.%v.%v.%v \n", f.Payload[12], f.Payload[13], f.Payload[14], f.Payload[15])
+					}
+					if verboseLogs {
+						fmt.Printf("ip dst    %v.%v.%v.%v \n", f.Payload[16], f.Payload[17], f.Payload[18], f.Payload[19])
+					}
 
-						if verboseLogs {
-							fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
-						}
+					if verboseLogs {
+						fmt.Printf("ip SFP2   %v.%v.%v.%v \n", f.Payload[21], f.Payload[22], f.Payload[23], f.Payload[24])
+					}
 
-						if verboseLogs {
-							fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
-						}
-						if verboseLogs {
-							fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
-						}
-						if verboseLogs {
-							fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
-						}
-						if verboseLogs {
-							fmt.Println(" --== End Packet ==--")
-						}
-						//*/
+					if verboseLogs {
+						fmt.Printf("time marker_SFP1_1 :   %x \n", f.Payload[25:32])
+					}
+					if verboseLogs {
+						fmt.Printf("time marker_SFP2   :   %x \n", f.Payload[32:39])
+					}
+					if verboseLogs {
+						fmt.Printf("time marker_SFP1_2 :   %x \n", f.Payload[39:46])
+					}
+					if verboseLogs {
+						fmt.Println(" --== End Packet ==--")
+					}
+					//*/
 				var markerSFP11, markerSFP12, markerSFP2 int64
 				var ind uint
 

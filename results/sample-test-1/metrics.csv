@@ -1,0 +1,9 @@
+metric,value,unit
+rtt_avg,12.4,us
+rtt_max,16.8,us
+rtt_min,11.7,us
+owd_forward,6.1,us
+owd_reverse,6.3,us
+jitter,0.4,us
+packet_loss,0.0001,ratio
+throughput,9.8,Gbps

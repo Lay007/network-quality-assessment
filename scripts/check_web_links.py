@@ -22,6 +22,7 @@ SKIP_PREFIXES = ("#", "http:", "https:", "//", "data:", "javascript:", "mailto:"
 
 def normalize(raw: str) -> str | None:
     value = raw.strip().replace('\\"', "").replace("\\'", "")
+    value = value.rstrip("\\")
     if not value or value.startswith(SKIP_PREFIXES):
         return None
     value = value.split("?", 1)[0].split("#", 1)[0]

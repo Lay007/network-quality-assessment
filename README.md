@@ -1,106 +1,85 @@
-﻿# Server SFP SLA
+# network-quality-assessment
 
-Server SFP SLA is a Linux service and PHP web console for configuring SFP-SLA modules, running SLA/RFC 2544/Y.1564 measurements, generating raw Ethernet traffic, and storing results in MySQL or MariaDB.
+Hardware-assisted network performance testing system with custom packet protocol, FPGA-based timestamping, and support for RFC 2544 and ITU-T Y.1564 methodologies.
 
-The repository is structured as a self-contained product demo: Go service, database schema, web console, deployment scripts, and operational documentation live in one place.
+## Overview
 
-## Features
+This repository contains code, documentation and experiments for practical evaluation of network quality and performance.
 
-- Raw Ethernet traffic generation for SFP-SLA measurement scenarios.
-- SLA real-time tests with delay, jitter, one-way delay, and packet-loss thresholds.
-- RFC 2544-style throughput, latency, frame-loss, and burst tests.
-- ITU-T Y.1564 service activation test workflow.
-- PHP web console for modules, tests, live status, and result charts.
-- MySQL/MariaDB persistence shared by the service and web console.
-- CSRF protection, centralized web authentication, prepared statements for write endpoints, and hashed web-user passwords.
+The current implementation is based on:
+- a Go-based packet generator and receiver
+- a custom IPv4 probe packet with an embedded SLA header
+- SFP modules with FPGA-based timestamp insertion
+- sequence-based loss detection
+- delay, one-way delay, jitter and throughput measurements
+- RFC 2544 style benchmarking
+- ITU-T Y.1564 service-oriented validation
 
-## Repository Layout
+## Documentation
 
-- `cmd/server-sfp-sla` - Go service entry point and measurement workflows.
-- `internal/zsocket` - Linux packet socket/ring-buffer implementation used by traffic generators.
-- `web/htdocs` - PHP web console served by Apache.
-- `db/server_sfp_sla.sql` - MySQL/MariaDB schema and bootstrap data.
-- `scripts` - installation, deployment, user management, cleanup, and validation scripts.
-- `deploy/systemd` - systemd unit for the Go service.
-- `docs/setup.md` - installation and operations guide.
-- `docs/web.md` - web-console architecture and security notes.
+- [Overview](docs/overview.md)
+- [Architecture](docs/architecture.md)
+- [Packet Format](docs/packet-format.md)
+- [Timestamp Model](docs/timestamp-model.md)
+- [Metrics](docs/metrics.md)
+- [Methodology](docs/methodology.md)
+- [Test Modes](docs/test-modes.md)
+- [Topology Detection](docs/topology-detection.md)
+- [Acceptance Criteria](docs/acceptance-criteria.md)
+- [Use Cases](docs/use-cases.md)
+- [Results Example](docs/results-example.md)
+- [Implementation Notes](docs/implementation-notes.md)
+- [Implementation Map](docs/implementation-map.md)
+- [Packet Route Diagram](docs/packet-route-diagram.md)
 
-## Requirements
+## Examples
 
-- Linux host with root privileges for deployment and raw socket access.
-- Go 1.22+ for building from source.
-- MySQL or MariaDB.
-- Apache with PHP and the `mysqli` and `snmp` extensions.
-- `libpcap0.8-dev` and a network interface that is allowed to generate raw Ethernet traffic.
+- [RFC 2544 Example](examples/rfc2544/readme.md)
+- [Y.1564 Example](examples/y1564/readme.md)
 
-## Configuration
+## Example Results
 
-The service and the web console read database configuration from environment variables:
+See:
+- [Sample Test 1 Summary](results/sample-test-1/summary.md)
+- [Sample Metrics CSV](results/sample-test-1/metrics.csv)
 
-```bash
-export SFP_SLA_DB_USER=sfp_user
-export SFP_SLA_DB_PASSWORD='<change-me>'
-export SFP_SLA_DB_NAME=server_sfp_sla
-export SFP_SLA_DB_ADDR=127.0.0.1:3306
-export SFP_SLA_TIMEZONE=UTC
-```
+## Status
 
-If `SFP_SLA_DB_ADDR` is empty, the Go service uses the local MySQL socket. The PHP console can also use `SFP_SLA_DB_HOST` and `SFP_SLA_DB_PORT` when a socket is not desired. See `.env.example` for the full list.
+- [x] metrics documented
+- [x] methodology documented
+- [x] packet format documented
+- [x] timestamp model documented
+- [x] test modes mapped to source files
+- [x] topology behavior documented
+- [x] example results added
+- [x] packet route diagram added
+- [ ] add real exported reports from production runs
 
-Do not publish real credentials. The sample values are placeholders only.
+## Build And Validation
 
-## Build
-
-```bash
-sudo apt update
-sudo apt install -y build-essential libpcap0.8-dev
-go mod download
-go build -o build/Server_SFP_SLA ./cmd/server-sfp-sla
-```
-
-## Install
-
-```bash
-export MYSQL_ROOT_PASSWORD='<mysql-root-password>'
-export SFP_SLA_DB_PASSWORD='<application-db-password>'
-sudo -E scripts/init.sh
-sudo -E scripts/configServer.sh
-sudo -E scripts/add_user.sh
-```
-
-`scripts/configServer.sh` imports `db/server_sfp_sla.sql`, deploys the Go service, and publishes `web/htdocs` to `/var/www/html`. `scripts/add_user.sh` creates the first web-console administrator with a `password_hash()` value.
-
-## Web Security
-
-- All `web/htdocs/action_*.php` files use the shared `web/htdocs/app.php` layer for authentication, CSRF checks, database access, and prepared statements.
-- POST forms receive a hidden `csrf_token` field automatically.
-- Web-user passwords are stored with PHP `password_hash()`.
-- Public repository data does not include a default web-console password.
-
-## Validation
+From Linux/WSL:
 
 ```bash
 make test
+make test-cover
+make build
 make lint
 ```
 
-Equivalent manual checks:
+Or run the full local pipeline:
 
 ```bash
-go test ./...
-go build -o /tmp/Server_SFP_SLA_check ./cmd/server-sfp-sla
-bash -n scripts/*.sh
-python scripts/check_web_links.py
-find web/htdocs -name '*.php' -print0 | xargs -0 -n1 php -l
+make ci
 ```
 
-PHP and Go tooling must be installed locally for the corresponding checks.
+## Runtime Configuration
 
-## Public Demo Notes
+The service reads database settings from environment variables:
 
-- The schema contains no production secrets or default web login.
-- Runtime credentials are supplied through environment variables or `/etc/default/server-sfp-sla`.
-- Generated binaries, archives, local `.env` files, logs, editor settings, and extracted temporary artifacts are ignored.
-- The web asset tree has been pruned to the files that are referenced by the PHP pages and CSS.
-- GitHub Actions CI validates Go tests/builds, shell syntax, PHP syntax, and local web asset links.
+- `SFP_SLA_DB_USER`
+- `SFP_SLA_DB_PASSWORD`
+- `SFP_SLA_DB_NAME`
+- `SFP_SLA_DB_ADDR` (empty for local socket, or `host:port` for TCP)
+- `SFP_SLA_VERBOSE=1` to enable verbose logs
 
+See [.env.example](.env.example) and [Setup Guide](docs/setup.md) for full deployment details.

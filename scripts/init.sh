@@ -11,7 +11,7 @@ fi
 echo "=> Installing system dependencies"
 
 apt update
-apt -y install build-essential gcc libpcap0.8-dev
+apt -y install build-essential gcc
 apt -y install apache2
 apt -y install mysql mysql-server
 apt -y install php php-cli php-common php-mysql php-snmp php-curl php-cgi libapache2-mod-php

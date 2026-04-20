@@ -164,7 +164,7 @@ func NewZSocket(ethIndex, options int, maxFrameSize, maxTotalFrames uint, ethTyp
 		return nil, fmt.Errorf("maxFrameSize must be at least %d (MINIMUM_FRAME_SIZE), be at most %d (MAXIMUM_FRAME_SIZE), and be a power of 2",
 			MINIMUM_FRAME_SIZE, MAXIMUM_FRAME_SIZE)
 	}
-	if maxTotalFrames < 16 && maxTotalFrames%8 == 0 {
+	if maxTotalFrames < 16 || maxTotalFrames%8 != 0 {
 		return nil, fmt.Errorf("maxTotalFrames must be at least 16, and be a multiple of 8")
 	}
 
@@ -263,11 +263,15 @@ func NewZSocket(ethIndex, options int, maxFrameSize, maxTotalFrames uint, ethTyp
 }
 
 func calculateLargestFrame(ceil uint) uint {
-	i := uint(MINIMUM_FRAME_SIZE)
-	for i < ceil {
-		i <<= 1
+	if ceil <= uint(MINIMUM_FRAME_SIZE) {
+		return uint(MINIMUM_FRAME_SIZE)
 	}
-	return (i >> 1)
+
+	frame := uint(MINIMUM_FRAME_SIZE)
+	for frame<<1 <= ceil {
+		frame <<= 1
+	}
+	return frame
 }
 
 // Returns the maximum amount of frame packets that can be written

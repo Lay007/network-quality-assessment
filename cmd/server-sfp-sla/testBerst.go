@@ -562,8 +562,8 @@ func TestBerst(id int, net_interface_name string) {
 				fmt.Println("rez_count= ", rez_count)
 			}
 			if test_c.numberCounter >= uint64(packet_count) {
-				continue
 				packet_count += int64(packet_count_step_packets)
+				continue
 			} else {
 				break
 			}
@@ -626,8 +626,8 @@ func TestBerst(id int, net_interface_name string) {
 				fmt.Println("rez_count= ", rez_count)
 			}
 			if test_c.numberCounter >= uint64(packet_count) {
-				continue
 				packet_count += int64(packet_count_step_packets)
+				continue
 			} else {
 				break
 			}
@@ -689,8 +689,8 @@ func TestBerst(id int, net_interface_name string) {
 				fmt.Println("rez_count= ", rez_count)
 			}
 			if test_c.numberCounter >= uint64(packet_count) {
-				continue
 				packet_count += int64(packet_count_step_packets)
+				continue
 			} else {
 				break
 			}
@@ -752,8 +752,8 @@ func TestBerst(id int, net_interface_name string) {
 				fmt.Println("rez_count= ", rez_count)
 			}
 			if test_c.numberCounter >= uint64(packet_count) {
-				continue
 				packet_count += int64(packet_count_step_packets)
+				continue
 			} else {
 				break
 			}
@@ -815,8 +815,8 @@ func TestBerst(id int, net_interface_name string) {
 				fmt.Println("rez_count= ", rez_count)
 			}
 			if test_c.numberCounter >= uint64(packet_count) {
-				continue
 				packet_count += int64(packet_count_step_packets)
+				continue
 			} else {
 				break
 			}
@@ -878,8 +878,8 @@ func TestBerst(id int, net_interface_name string) {
 				fmt.Println("rez_count= ", rez_count)
 			}
 			if test_c.numberCounter >= uint64(packet_count) {
-				continue
 				packet_count += int64(packet_count_step_packets)
+				continue
 			} else {
 				break
 			}
@@ -941,8 +941,8 @@ func TestBerst(id int, net_interface_name string) {
 				fmt.Println("rez_count= ", rez_count)
 			}
 			if test_c.numberCounter >= uint64(packet_count) {
-				continue
 				packet_count += int64(packet_count_step_packets)
+				continue
 			} else {
 				break
 			}

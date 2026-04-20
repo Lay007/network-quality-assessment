@@ -13,14 +13,11 @@ import (
 	//"unsafe"
 	"golang.org/x/net/bpf"
 
-	"github.com/google/gopacket/pcap"
-
 	"github.com/mdlayher/ethernet"
 	"github.com/mdlayher/raw"
 )
 
 const (
-
 	etherType = 0x0800
 )
 
@@ -74,7 +71,6 @@ func main() {
 
 	modules := []module_sfp{}
 
-
 	go clearDB()
 
 	db, err := openDB()
@@ -87,27 +83,28 @@ func main() {
 	db.Exec("DELETE FROM net_interfaces_from_server_sla")
 	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
 
-	devices, err := pcap.FindAllDevs()
-	if verboseLogs {
-		fmt.Println(err)
-	}
+	interfaces, err := net.Interfaces()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, device := range devices {
+	for _, device := range interfaces {
 		if verboseLogs {
 			fmt.Println(device.Name)
 		}
-		netInterface, err := net.InterfaceByName(device.Name)
-		var addressMac net.HardwareAddr
-		if err == nil {
-			addressMac = netInterface.HardwareAddr
+		addresses, err := device.Addrs()
+		if err != nil {
+			if verboseLogs {
+				fmt.Printf("failed to read addresses for interface %s: %v\n", device.Name, err)
+			}
+			continue
 		}
-		//net_name = device.Name
-		for _, address := range device.Addresses {
-			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, address.IP.String(), addressMac.String())
-
+		for _, address := range addresses {
+			ipStr := address.String()
+			if ip, ok := address.(*net.IPNet); ok {
+				ipStr = ip.IP.String()
+			}
+			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, ipStr, device.HardwareAddr.String())
 		}
 	}
 
@@ -501,7 +498,6 @@ func main() {
 			TestY1564(id, conf.net_interface_name)
 		}
 		row_test_y1564.Close()
-
 
 		//go Test_SLA_real_go()
 
@@ -959,7 +955,6 @@ func TestReal(id int, net_interface_name string) {
 		//		c.WriteTo(b, addr)
 		//	}()
 
-
 	}
 
 }
@@ -1043,7 +1038,6 @@ func packetForm(ipsrc net.IP, ipdst1 net.IP, ipdst2 net.IP, mac_src []byte, mac_
 	}
 	return b
 }
-
 
 func (test *testThr) testMax(b []byte, c *raw.Conn, addr *raw.Addr, mtu int, ipdst_1sfpsla_str string, cnt int, t_type uint16) (int, int64) {
 	var min_period = time.Duration(15) * time.Microsecond
@@ -1325,7 +1319,6 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				continue
 			}
 
-
 			//n, addr, err := c.ReadFrom(b)
 			// Unpack Ethernet II frame into Go representation.
 			if err := (&f).UnmarshalBinary(b[:n]); err != nil {
@@ -1338,8 +1331,6 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 
 			var ips [4]byte
 			copy(ips[:], (net.ParseIP(ipdst_1sfpsla_str)).To4())
-
-
 
 			// Display source of message and message itself.
 			if (len(f.Payload) >= 52) && (f.Payload[20] == 0xFC) && (bytes.Equal(f.Payload[12:16], ips[:]) == true) && (bytes.Equal(f.Payload[50:52], t_ips[:]) == true) {
@@ -1674,7 +1665,6 @@ func (test *testSLA) getJitter() float32 {
 	}
 
 	jitter = float32((*test).delay_solve[l-1] - (*test).delay_solve[l-2])
-
 
 	/*
 		var jitter, mean float32

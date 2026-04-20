@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"database/sql"
@@ -39,4 +39,3 @@ func dbDSN() string {
 func openDB() (*sql.DB, error) {
 	return sql.Open("mysql", dbDSN())
 }
-

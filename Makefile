@@ -1,28 +1,42 @@
-.PHONY: build test lint ci php-lint shell-lint web-link-check clean
+.PHONY: build test test-cover vet lint ci php-lint shell-lint web-link-check gofmt-check clean
 
-BINARY ?= build/Server_SFP_SLA
+GO ?= go
+GOFMT ?= gofmt
+PYTHON ?= python3
+PHP ?= php
+BINARY ?= build/server-sfp-sla
 
 build:
-	go build -o $(BINARY) ./cmd/server-sfp-sla
+	$(GO) build -o $(BINARY) ./cmd/server-sfp-sla
 
 test:
-	go test ./...
+	$(GO) test ./...
 
-lint: shell-lint web-link-check php-lint
+test-cover:
+	$(GO) test -cover ./...
 
-ci: test build lint
+vet:
+	$(GO) vet ./...
 
 gofmt-check:
-	@test -z "$$(gofmt -l cmd internal)"
+	@test -z "$$($(GOFMT) -l cmd internal)"
 
 shell-lint:
 	bash -n scripts/*.sh
 
 php-lint:
-	find web/htdocs -name '*.php' -print0 | xargs -0 -n1 php -l
+	@if command -v $(PHP) >/dev/null 2>&1; then \
+		find web/htdocs -name '*.php' -print0 | xargs -0 -n1 $(PHP) -l; \
+	else \
+		echo "skip php-lint: $(PHP) not found"; \
+	fi
 
 web-link-check:
-	python scripts/check_web_links.py
+	$(PYTHON) scripts/check_web_links.py
+
+lint: gofmt-check vet shell-lint web-link-check php-lint
+
+ci: test test-cover build lint
 
 clean:
 	rm -rf build
