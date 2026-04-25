@@ -1,89 +1,62 @@
 # network-quality-assessment
 
 [![Go](https://img.shields.io/badge/Go-1.22-blue)](#)
-[![Build](https://img.shields.io/badge/build-Makefile-informational)](#)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 🚀 Hardware timestamping vs software measurements
-
-A **hardware-assisted network performance testing system** combining:
-- custom IPv4 probe packets
-- FPGA/SFP timestamping
-- SLA-oriented metrics (RFC 2544 / ITU-T Y.1564)
 
 ---
 
 ## 🧭 Architecture
-
 ![Architecture](docs/assets/architecture.svg)
 
----
-
 ## 🔁 Packet flow
-
 ![Packet Flow](docs/assets/packet_flow.svg)
 
----
-
-## 🌐 Test topology
-
+## 🌐 Topology
 ![Topology](docs/assets/topology.svg)
 
----
-
-## 📊 Benchmark dashboard
-
+## 📊 Benchmark (static)
 ![Benchmark](docs/assets/benchmark_dashboard.svg)
 
----
-
-## 📊 Example report
-
-![Report](docs/assets/report_example.svg)
-
----
+## 📊 Benchmark (generated from CSV)
+![Generated](docs/assets/generated_benchmark.svg)
 
 ## 🧪 Case study
+👉 docs/case-study.md
 
-👉 [Metro Ethernet SLA validation](docs/case-study.md)
+---
+
+## 🧠 Hardcore engineering
+
+### Timing error budget
+👉 docs/timing-error-budget.md
+
+### Latency model
+👉 docs/latency-model.md
+
+---
+
+## 🔬 Generate your own benchmark
+
+```bash
+python tools/generate_demo_benchmark.py
+```
+
+Outputs:
+- results/demo-benchmark/metrics.csv
+- docs/assets/generated_benchmark.svg
 
 ---
 
 ## ⚖️ Measurement approaches
 
-| Approach | Accuracy | Where measured | Use case |
-|----------|--------|---------------|----------|
-| ping | low | OS | connectivity |
-| software timestamps | medium | CPU | lab tests |
-| FPGA/SFP timestamps | high | datapath | SLA / engineering |
+| Approach | Accuracy | Where measured |
+|----------|--------|---------------|
+| ping | low | OS |
+| software | medium | CPU |
+| FPGA/SFP | high | datapath |
 
 ---
 
-## 💡 Why this is interesting
-
-Unlike typical tools, this system:
-
-- separates **network delay vs host delay**
-- embeds measurement data directly into packets
-- enables **engineering-grade SLA validation**
-
----
-
-## 🔧 Build
-
-```bash
-make build
-make test
-```
-
----
-
-## 📁 Docs
-
-See `/docs` for full methodology and implementation details.
-
----
-
-## 📜 License
-
+## License
 MIT
