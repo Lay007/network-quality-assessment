@@ -29,8 +29,14 @@
 
 ---
 
-## 🌐 Network effects
+## 🌐 Network analysis
 👉 docs/network-effects.md
+👉 docs/traffic-analysis.md
+
+---
+
+## ⏱️ Clock synchronization
+👉 docs/ptp-clock-sync.md
 
 ---
 
