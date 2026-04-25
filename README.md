@@ -1,82 +1,124 @@
 # network-quality-assessment
 
-## 🚀 Hardware timestamping vs software measurements
+[![Docs Check](https://img.shields.io/badge/docs-link--check-enabled-green)](#)
+
+A **hardware-assisted network measurement and SLA validation system** combining FPGA timestamping, packet-level telemetry and real-time analytics.
+
+---
+
+## 🚀 Quick navigation
+
+- [Architecture](#-architecture)
+- [Packet flow](#-packet-flow)
+- [Benchmark & analytics](#-benchmark--analytics)
+- [Case study](#-case-study)
+- [Network analysis](#-network-analysis)
+- [Real-time system](#-real-time-system)
+- [Root cause analysis](#-root-cause-analysis)
+- [Clock synchronization](#-clock-synchronization)
+- [Hardcore engineering](#-hardcore-engineering)
+- [Quick start](#-quick-start)
 
 ---
 
 ## 🧭 Architecture
+
 ![Architecture](docs/assets/architecture.svg)
 
+---
+
 ## 🔁 Packet flow
+
 ![Packet Flow](docs/assets/packet_flow.svg)
 
+---
+
 ## 🌐 Topology
+
 ![Topology](docs/assets/topology.svg)
 
+---
+
 ## ⚙️ FPGA timestamp pipeline
+
 ![FPGA](docs/assets/fpga_timestamp_pipeline.svg)
 
 ---
 
-## 📦 Packet decode
+## 📦 Packet decode (Wireshark-style)
+
 ![Packet](docs/assets/packet_format_decode.svg)
 
 ---
 
-## 📊 Benchmark
+## 📊 Benchmark & analytics
+
 ![Benchmark](docs/assets/benchmark_dashboard.svg)
 ![Generated](docs/assets/generated_benchmark.svg)
-
-## 📈 Correlation analytics
 ![Analytics](docs/assets/analytics_correlation.svg)
 
 ---
 
 ## 🧪 Case study
-👉 docs/case-study.md
+
+👉 [Metro Ethernet SLA validation](docs/case-study.md)
 
 ---
 
 ## 🌐 Network analysis
-👉 docs/network-effects.md
-👉 docs/traffic-analysis.md
-👉 docs/anomaly-detection.md
+
+- 👉 [Network effects](docs/network-effects.md)
+- 👉 [Traffic analysis](docs/traffic-analysis.md)
+- 👉 [Anomaly detection](docs/anomaly-detection.md)
 
 ---
 
 ## 🧠 Root cause analysis
-👉 docs/root-cause-analysis.md
+
+👉 [Root cause analysis rules](docs/root-cause-analysis.md)
 
 ---
 
 ## ⚡ Real-time system
-👉 docs/realtime-pipeline.md
+
+👉 [Real-time pipeline](docs/realtime-pipeline.md)
 
 ---
 
 ## 📡 Monitoring integration
-👉 docs/integration-monitoring.md
+
+👉 [Monitoring integration](docs/integration-monitoring.md)
 
 ---
 
 ## ⏱️ Clock synchronization
-👉 docs/ptp-clock-sync.md
+
+👉 [PTP / clock sync](docs/ptp-clock-sync.md)
 
 ---
 
 ## 🧠 Hardcore engineering
-👉 docs/timing-error-budget.md
-👉 docs/latency-model.md
+
+- 👉 [Timing error budget](docs/timing-error-budget.md)
+- 👉 [Latency model](docs/latency-model.md)
 
 ---
 
-## 🔬 Generate benchmark
+## 🔬 Quick start
+
+Generate demo dataset and graphs:
 
 ```bash
 python tools/generate_demo_benchmark.py
 ```
 
+Outputs:
+
+- `results/demo-benchmark/metrics.csv`
+- `docs/assets/generated_benchmark.svg`
+
 ---
 
-## License
+## 📜 License
+
 MIT
