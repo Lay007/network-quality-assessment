@@ -2,7 +2,30 @@
 
 [![Docs Check](https://github.com/Lay007/network-quality-assessment/actions/workflows/docs-link-check.yml/badge.svg)](https://github.com/Lay007/network-quality-assessment/actions/workflows/docs-link-check.yml)
 
-A **hardware-assisted network measurement and SLA validation system** combining FPGA timestamping, packet-level telemetry and real-time analytics.
+## 🚀 Hardware timestamping vs software measurement
+
+**Problem**
+
+Software-based measurements are affected by OS scheduling, buffering and interrupt latency.
+
+**Solution**
+
+Use FPGA/SFP datapath timestamping with custom SLA probe packets.
+
+**Result**
+
+- microsecond-level jitter visibility
+- accurate one-way delay
+- reliable SLA validation
+
+---
+
+## ⚡ What you get
+
+- true network delay (not host delay)
+- real jitter (not OS noise)
+- packet loss on datapath
+- correlation-ready metrics
 
 ---
 
@@ -118,8 +141,18 @@ python tools/generate_demo_benchmark.py
 ## 🎯 Demo
 
 👉 [Run demo scenario](examples/demo/README.md)
+👉 [View demo report](examples/demo/report.md)
 
-This demo shows a full measurement flow:
+### Example output
+
+```text
+Packet loss: 0.02%   PASS
+Delay:       0.384ms PASS
+Jitter:      42us    PASS
+Throughput:  941Mb/s PASS
+```
+
+### Flow
 
 ```text
 probe -> timestamp -> metrics -> detection -> report
