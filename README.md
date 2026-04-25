@@ -1,7 +1,5 @@
 # network-quality-assessment
 
-[![Go](https://img.shields.io/badge/Go-1.22-blue)](#)
-
 ## 🚀 Hardware timestamping vs software measurements
 
 ---
@@ -15,14 +13,24 @@
 ## 🌐 Topology
 ![Topology](docs/assets/topology.svg)
 
-## 📊 Benchmark (static)
-![Benchmark](docs/assets/benchmark_dashboard.svg)
+## ⚙️ FPGA timestamp pipeline
+![FPGA](docs/assets/fpga_timestamp_pipeline.svg)
 
-## 📊 Benchmark (generated from CSV)
+---
+
+## 📊 Benchmark
+![Benchmark](docs/assets/benchmark_dashboard.svg)
 ![Generated](docs/assets/generated_benchmark.svg)
+
+---
 
 ## 🧪 Case study
 👉 docs/case-study.md
+
+---
+
+## 🌐 Network effects
+👉 docs/network-effects.md
 
 ---
 
@@ -36,25 +44,11 @@
 
 ---
 
-## 🔬 Generate your own benchmark
+## 🔬 Generate benchmark
 
 ```bash
 python tools/generate_demo_benchmark.py
 ```
-
-Outputs:
-- results/demo-benchmark/metrics.csv
-- docs/assets/generated_benchmark.svg
-
----
-
-## ⚖️ Measurement approaches
-
-| Approach | Accuracy | Where measured |
-|----------|--------|---------------|
-| ping | low | OS |
-| software | medium | CPU |
-| FPGA/SFP | high | datapath |
 
 ---
 
