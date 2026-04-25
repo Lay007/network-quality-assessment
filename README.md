@@ -1,6 +1,6 @@
 # network-quality-assessment
 
-[![Docs Check](https://img.shields.io/badge/docs-link--check-enabled-green)](#)
+[![Docs Check](https://github.com/Lay007/network-quality-assessment/actions/workflows/docs-link-check.yml/badge.svg)](https://github.com/Lay007/network-quality-assessment/actions/workflows/docs-link-check.yml)
 
 A **hardware-assisted network measurement and SLA validation system** combining FPGA timestamping, packet-level telemetry and real-time analytics.
 
@@ -18,6 +18,7 @@ A **hardware-assisted network measurement and SLA validation system** combining 
 - [Clock synchronization](#-clock-synchronization)
 - [Hardcore engineering](#-hardcore-engineering)
 - [Quick start](#-quick-start)
+- [Demo](#-demo)
 
 ---
 
@@ -112,10 +113,17 @@ Generate demo dataset and graphs:
 python tools/generate_demo_benchmark.py
 ```
 
-Outputs:
+---
 
-- `results/demo-benchmark/metrics.csv`
-- `docs/assets/generated_benchmark.svg`
+## 🎯 Demo
+
+👉 [Run demo scenario](examples/demo/README.md)
+
+This demo shows a full measurement flow:
+
+```text
+probe -> timestamp -> metrics -> detection -> report
+```
 
 ---
 
