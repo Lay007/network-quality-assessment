@@ -44,8 +44,18 @@
 
 ---
 
+## 🧠 Root cause analysis
+👉 docs/root-cause-analysis.md
+
+---
+
 ## ⚡ Real-time system
 👉 docs/realtime-pipeline.md
+
+---
+
+## 📡 Monitoring integration
+👉 docs/integration-monitoring.md
 
 ---
 
