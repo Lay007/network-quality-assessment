@@ -31,9 +31,21 @@ A **hardware-assisted network performance testing system** combining:
 
 ---
 
+## 📊 Benchmark dashboard
+
+![Benchmark](docs/assets/benchmark_dashboard.svg)
+
+---
+
 ## 📊 Example report
 
 ![Report](docs/assets/report_example.svg)
+
+---
+
+## 🧪 Case study
+
+👉 [Metro Ethernet SLA validation](docs/case-study.md)
 
 ---
 
