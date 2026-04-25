@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520">
+  <rect width="980" height="520" rx="20" fill="#0f172a"/>
+  <text x="40" y="60" fill="#e2e8f0" font-family="monospace" font-size="22">Network Quality Assessment Report</text>
+  <text x="40" y="100" fill="#94a3b8" font-family="monospace" font-size="16">Profile: Y.1564 SLA validation</text>
+
+  <g font-family="monospace" font-size="16" fill="#e2e8f0">
+    <text x="60" y="160">Packet loss:</text>
+    <text x="260" y="160" fill="#22c55e">0.02 %</text>
+
+    <text x="60" y="200">One-way delay:</text>
+    <text x="260" y="200" fill="#22c55e">0.384 ms</text>
+
+    <text x="60" y="240">Jitter:</text>
+    <text x="260" y="240" fill="#22c55e">42 us</text>
+
+    <text x="60" y="280">Throughput:</text>
+    <text x="260" y="280" fill="#22c55e">941 Mbit/s</text>
+
+    <text x="60" y="340" fill="#38bdf8">Timestamp source:</text>
+    <text x="260" y="340" fill="#38bdf8">FPGA/SFP hardware path</text>
+  </g>
+
+  <text x="40" y="440" fill="#64748b" font-family="monospace" font-size="14">
+  Hardware timestamps allow separating network delay from host stack noise
+  </text>
+</svg>
