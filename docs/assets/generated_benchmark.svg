@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="560" viewBox="0 0 1180 560">
+<rect width="1180" height="560" rx="24" fill="#0b1220"/>
+<text x="40" y="55" font-family="Arial" font-size="28" font-weight="700" fill="#e5e7eb">Generated benchmark from CSV</text>
+<text x="40" y="82" font-family="Arial" font-size="15" fill="#94a3b8">Synthetic deterministic dataset for documentation, CI checks and report rendering experiments</text>
+<g fill="#111827" stroke="#334155"><rect x="50" y="115" width="500" height="185" rx="16"/><rect x="620" y="115" width="500" height="185" rx="16"/><rect x="50" y="335" width="500" height="185" rx="16"/><rect x="620" y="335" width="500" height="185" rx="16"/></g>
+<g font-family="Arial" fill="#e5e7eb" font-size="16" font-weight="700"><text x="75" y="142">One-way delay, ms</text><text x="645" y="142">Throughput, Mbit/s</text><text x="75" y="362">Jitter, us</text><text x="645" y="362">Loss, %</text></g>
+<polyline points="80,230 120,226 160,228 200,221 240,217 280,215 320,208 360,210 400,205 440,209 480,201 520,204" fill="none" stroke="#38bdf8" stroke-width="3"/>
+<polyline points="650,212 690,206 730,200 770,195 810,190 850,188 890,184 930,186 970,191 1010,197 1050,205 1090,212" fill="none" stroke="#22c55e" stroke-width="3"/>
+<polyline points="80,470 120,462 160,452 200,445 240,431 280,423 320,430 360,441 400,456 440,468 480,460 520,449" fill="none" stroke="#facc15" stroke-width="3"/>
+<polyline points="650,490 690,490 730,475 770,490 810,490 850,490 890,470 930,490 970,490 1010,490 1050,490 1090,490" fill="none" stroke="#fb7185" stroke-width="3"/>
+<g stroke="#334155"><line x1="80" y1="270" x2="520" y2="270"/><line x1="80" y1="490" x2="520" y2="490"/><line x1="650" y1="270" x2="1090" y2="270"/><line x1="650" y1="490" x2="1090" y2="490"/></g>
+</svg>
