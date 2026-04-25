@@ -8,6 +8,101 @@ A **hardware-assisted network performance testing system** for practical assessm
 
 The repository is centered around real measurement tasks rather than synthetic benchmarks alone. It combines packet generation, custom probe packets, timestamp-aware processing, and structured validation approaches aligned with **RFC 2544** and **ITU-T Y.1564**.
 
+## Why it is engineering-interesting
+
+This project is not just a `ping` wrapper or a throughput script. It demonstrates a full measurement chain where software controls the test scenario, custom packets carry measurement metadata, and FPGA/SFP-side timestamps can be used to move timing closer to the physical network path.
+
+In practice, that means the project can explain and prototype the difference between:
+
+- host-level availability checks;
+- software timestamp based measurements;
+- hardware-assisted timestamping for SLA, delay, jitter, and acceptance testing.
+
+## System architecture
+
+```mermaid
+flowchart LR
+    subgraph Host[Linux measurement host]
+        CLI[CLI / web console]
+        GEN[Go probe generator]
+        RX[Packet receiver]
+        MET[Metrics engine]
+        REP[CSV / report output]
+    end
+
+    subgraph HW[Timestamp-capable hardware path]
+        SFP1[SFP / FPGA ingress timestamp]
+        NET[Network under test]
+        SFP2[SFP / FPGA egress timestamp]
+    end
+
+    CLI --> GEN
+    GEN -->|custom IPv4 SLA probe| SFP1
+    SFP1 --> NET
+    NET --> SFP2
+    SFP2 -->|timestamped probe / return leg| RX
+    RX --> MET
+    SFP1 -. T1 / T3 .-> MET
+    SFP2 -. T2 / T4 .-> MET
+    MET --> REP
+```
+
+## Packet flow
+
+```mermaid
+sequenceDiagram
+    participant App as Measurement service
+    participant Tx as Host TX path
+    participant F1 as FPGA/SFP point A
+    participant Net as Network under test
+    participant F2 as FPGA/SFP point B
+    participant Rx as Host RX path
+    participant M as Metrics engine
+
+    App->>Tx: Build custom IPv4 probe<br/>sequence, test id, SLA fields
+    Tx->>F1: Send probe packet
+    F1->>F1: Insert ingress timestamp T1
+    F1->>Net: Forward packet
+    Net->>F2: Impairment: delay, jitter, loss
+    F2->>F2: Insert egress timestamp T2
+    F2->>Rx: Return / receive timestamped probe
+    Rx->>M: Decode packet and timestamps
+    M->>M: Calculate loss, delay, jitter, throughput
+```
+
+## Example report snapshot
+
+```text
+Network Quality Assessment Report
+Test profile : SLA validation / Y.1564-oriented service check
+Probe mode   : Custom IPv4 packets with timestamp fields
+Duration     : 60 s
+Packet rate  : 10 000 packets/s
+Frame size   : 256 bytes
+
++----------------------+------------------+------------------+-------------+
+| Metric               | Target           | Measured         | Status      |
++----------------------+------------------+------------------+-------------+
+| Packet loss          | <= 0.10 %        | 0.02 %           | PASS        |
+| Mean one-way delay   | <= 1.000 ms      | 0.384 ms         | PASS        |
+| Peak-to-peak jitter  | <= 100 us        | 42 us            | PASS        |
+| Throughput           | >= 900 Mbit/s    | 941 Mbit/s       | PASS        |
+| Timestamp source     | FPGA/SFP path    | Hardware-assisted| OK          |
++----------------------+------------------+------------------+-------------+
+
+Engineering value: the report separates traffic generation, packet metadata,
+timestamp source, and SLA decision logic instead of treating the network as a
+black box.
+```
+
+## Measurement approaches compared
+
+| Approach | What it really measures | Timing point | Strengths | Limitations | Best use |
+|---|---|---|---|---|---|
+| `ping` / ICMP RTT | Host-to-host reachability and round-trip response time | OS network stack | Simple, universal, quick diagnostics | RTT only, OS scheduling noise, weak SLA detail, no packet-flow metadata | First-line connectivity check |
+| Software timestamps | Application or kernel-level packet timing | Host CPU / OS path | Flexible, easy to integrate with Go services, good for prototypes and lab automation | Affected by scheduler, driver, buffering, interrupt moderation, and NIC queues | Functional testing, trend monitoring, repeatable lab workflows |
+| FPGA/SFP timestamps | Packet timing close to the physical ingress/egress path | Hardware datapath near SFP / FPGA logic | Lower host-induced timing error, better separation of network delay from software overhead, suitable for SLA and acceptance workflows | Requires hardware support, timestamp discipline, calibration, and topology documentation | Engineering-grade delay, jitter, loss, and service-validation testing |
+
 ## Highlights
 
 - **Go-based measurement service** and packet-processing pipeline
