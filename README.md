@@ -18,6 +18,11 @@
 
 ---
 
+## 📦 Packet decode (Wireshark-style)
+![Packet](docs/assets/packet_format_decode.svg)
+
+---
+
 ## 📊 Benchmark
 ![Benchmark](docs/assets/benchmark_dashboard.svg)
 ![Generated](docs/assets/generated_benchmark.svg)
@@ -32,6 +37,7 @@
 ## 🌐 Network analysis
 👉 docs/network-effects.md
 👉 docs/traffic-analysis.md
+👉 docs/anomaly-detection.md
 
 ---
 
