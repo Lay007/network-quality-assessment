@@ -18,7 +18,7 @@
 
 ---
 
-## 📦 Packet decode (Wireshark-style)
+## 📦 Packet decode
 ![Packet](docs/assets/packet_format_decode.svg)
 
 ---
@@ -26,6 +26,9 @@
 ## 📊 Benchmark
 ![Benchmark](docs/assets/benchmark_dashboard.svg)
 ![Generated](docs/assets/generated_benchmark.svg)
+
+## 📈 Correlation analytics
+![Analytics](docs/assets/analytics_correlation.svg)
 
 ---
 
@@ -41,17 +44,18 @@
 
 ---
 
+## ⚡ Real-time system
+👉 docs/realtime-pipeline.md
+
+---
+
 ## ⏱️ Clock synchronization
 👉 docs/ptp-clock-sync.md
 
 ---
 
 ## 🧠 Hardcore engineering
-
-### Timing error budget
 👉 docs/timing-error-budget.md
-
-### Latency model
 👉 docs/latency-model.md
 
 ---
