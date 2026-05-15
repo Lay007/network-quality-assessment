@@ -35,6 +35,7 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 - [Packet flow](#-packet-flow)
 - [Benchmark & analytics](#-benchmark--analytics)
 - [Measurement credibility](docs/measurement-credibility.md)
+- [Engineering metrics](docs/engineering-metrics.md)
 - [Case study](#-case-study)
 - [Network analysis](#-network-analysis)
 - [Real-time system](#-real-time-system)
@@ -67,6 +68,10 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 ## ⚙️ FPGA timestamp pipeline
 
 ![FPGA](docs/assets/fpga_timestamp_pipeline.svg)
+
+### Hardware timestamp datapath
+
+![Hardware timestamp datapath](docs/assets/hardware_timestamp_datapath.svg)
 
 ---
 
@@ -127,6 +132,7 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 - 👉 [Timing error budget](docs/timing-error-budget.md)
 - 👉 [Latency model](docs/latency-model.md)
 - 👉 [Measurement credibility](docs/measurement-credibility.md)
+- 👉 [Engineering metrics](docs/engineering-metrics.md)
 
 ---
 
@@ -145,6 +151,7 @@ python tools/generate_demo_benchmark.py
 👉 [Run demo scenario](examples/demo/README.md)
 👉 [View demo report](examples/demo/report.md)
 👉 [Executive summary](examples/demo/executive-summary.md)
+👉 [SLA demo manifest](experiments/sla_demo.yaml)
 
 ### Example output
 
