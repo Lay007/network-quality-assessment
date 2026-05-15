@@ -1,0 +1,33 @@
+experiment:
+  id: sla_demo
+  title: Hardware timestamping SLA demonstration
+  objective: Compare SLA metrics generated from datapath-oriented timestamps against software-observed behavior.
+
+traffic:
+  mode: synthetic_probe_stream
+  packet_profile: fixed_interval_probe
+  expected_loss: low
+
+measurement:
+  timestamp_origin: FPGA_or_datapath_reference
+  metrics:
+    - one_way_delay
+    - jitter
+    - packet_loss
+    - p95_latency
+    - p99_latency
+    - timing_uncertainty
+
+outputs:
+  reports:
+    - reports/sla_report.md
+    - examples/demo/executive-summary.md
+  figures:
+    - reports/latency_distribution.png
+    - reports/jitter_histogram.png
+    - reports/packet_loss_timeline.png
+  data:
+    - reports/metrics.json
+
+notes:
+  credibility: Timestamp origin, clock assumptions and uncertainty budget must be documented together with metrics.
