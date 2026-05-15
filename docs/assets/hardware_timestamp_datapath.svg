@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="430" viewBox="0 0 1400 430" role="img" aria-labelledby="title desc">
+  <title id="title">Hardware timestamp datapath</title>
+  <desc id="desc">FPGA/SFP timestamping flow from packet ingress to SLA analytics.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ecfeff"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.14"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>.bg{fill:#f8fafc}.card{fill:url(#g);stroke:#cbd5e1;stroke-width:1.5;filter:url(#shadow)}.label{font-family:Arial,Helvetica,sans-serif;font-size:21px;font-weight:700;fill:#0f172a;text-anchor:middle}.sub{font-family:Arial,Helvetica,sans-serif;font-size:14px;fill:#475569;text-anchor:middle}.arrow{stroke:#334155;stroke-width:2.2;fill:none;marker-end:url(#arrow)}.title{font-family:Arial,Helvetica,sans-serif;font-size:30px;font-weight:800;fill:#0f172a}.note{font-family:Arial,Helvetica,sans-serif;font-size:16px;fill:#475569}</style>
+  </defs>
+  <rect class="bg" width="1400" height="430" rx="28"/>
+  <text class="title" x="56" y="58">Hardware Timestamp Datapath</text>
+  <text class="note" x="56" y="88">Timestamp packets close to the datapath instead of measuring host scheduling noise</text>
+  <g transform="translate(55,150)">
+    <rect class="card" x="0" y="0" width="150" height="110" rx="18"/><text class="label" x="75" y="42">SFP RX</text><text class="sub" x="75" y="70">packet ingress</text>
+    <path class="arrow" d="M160 55 L210 55"/>
+    <rect class="card" x="220" y="0" width="170" height="110" rx="18"/><text class="label" x="305" y="42">Timestamp</text><text class="sub" x="305" y="70">FPGA clock domain</text>
+    <path class="arrow" d="M400 55 L450 55"/>
+    <rect class="card" x="460" y="0" width="160" height="110" rx="18"/><text class="label" x="540" y="42">Parser</text><text class="sub" x="540" y="70">probe fields</text>
+    <path class="arrow" d="M630 55 L680 55"/>
+    <rect class="card" x="690" y="0" width="170" height="110" rx="18"/><text class="label" x="775" y="42">Metrics</text><text class="sub" x="775" y="70">delay / jitter / loss</text>
+    <path class="arrow" d="M870 55 L920 55"/>
+    <rect class="card" x="930" y="0" width="165" height="110" rx="18"/><text class="label" x="1012.5" y="42">Export</text><text class="sub" x="1012.5" y="70">JSON / report</text>
+    <path class="arrow" d="M1105 55 L1155 55"/>
+    <rect class="card" x="1165" y="0" width="170" height="110" rx="18"/><text class="label" x="1250" y="42">SLA</text><text class="sub" x="1250" y="70">analytics</text>
+  </g>
+  <text class="note" x="76" y="330">Trust boundary: hardware timestamp origin + clock synchronization assumptions + explicit timing error budget</text>
+</svg>
