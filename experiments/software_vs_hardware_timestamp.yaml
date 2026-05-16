@@ -1,0 +1,42 @@
+experiment:
+  id: software_vs_hardware_timestamp
+  title: Software vs hardware timestamp comparison
+  objective: Show how timestamp placement changes latency, jitter and SLA confidence.
+
+timestamp_sources:
+  software:
+    origin: application_or_socket_layer
+    expected_noise_sources:
+      - os_scheduling
+      - driver_buffering
+      - interrupt_latency
+  hardware:
+    origin: fpga_or_datapath
+    expected_noise_sources:
+      - clock_error
+      - serialization_delay
+      - timestamp_resolution
+
+traffic:
+  mode: synthetic_probe_stream
+  packet_profile: fixed_interval_probe
+
+metrics:
+  - latency_average
+  - latency_p95
+  - latency_p99
+  - jitter_rms
+  - packet_loss
+  - timestamp_uncertainty
+
+outputs:
+  report_template: reports/sla_report.template.md
+  figures:
+    - docs/assets/sla_dashboard.svg
+    - docs/assets/hardware_timestamp_datapath.svg
+
+acceptance:
+  - timing_origin_is_documented
+  - uncertainty_sources_are_listed
+  - hardware_and_software_results_are_compared
+  - conclusion_mentions_sla_confidence
