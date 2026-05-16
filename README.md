@@ -36,6 +36,8 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 - [Benchmark & analytics](#-benchmark--analytics)
 - [Measurement credibility](docs/measurement-credibility.md)
 - [Engineering metrics](docs/engineering-metrics.md)
+- [SLA report template](reports/sla_report.template.md)
+- [Experiment manifests](experiments/README.md)
 - [Case study](#-case-study)
 - [Network analysis](#-network-analysis)
 - [Real-time system](#-real-time-system)
@@ -87,6 +89,10 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 ![Generated](docs/assets/generated_benchmark.svg)
 ![Analytics](docs/assets/analytics_correlation.svg)
 
+### SLA dashboard
+
+![SLA dashboard](docs/assets/sla_dashboard.svg)
+
 ---
 
 ## 🧪 Case study
@@ -133,6 +139,8 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 - 👉 [Latency model](docs/latency-model.md)
 - 👉 [Measurement credibility](docs/measurement-credibility.md)
 - 👉 [Engineering metrics](docs/engineering-metrics.md)
+- 👉 [SLA report template](reports/sla_report.template.md)
+- 👉 [Timestamp comparison manifest](experiments/software_vs_hardware_timestamp.yaml)
 
 ---
 
@@ -152,6 +160,7 @@ python tools/generate_demo_benchmark.py
 👉 [View demo report](examples/demo/report.md)
 👉 [Executive summary](examples/demo/executive-summary.md)
 👉 [SLA demo manifest](experiments/sla_demo.yaml)
+👉 [Software vs hardware timestamp manifest](experiments/software_vs_hardware_timestamp.yaml)
 
 ### Example output
 
