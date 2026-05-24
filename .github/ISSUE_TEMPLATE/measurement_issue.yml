@@ -1,0 +1,40 @@
+name: Measurement issue
+description: Report a problem or improvement related to metrics, timestamps or reports
+title: "[Measurement]: "
+labels: ["measurement", "enhancement"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Measurement context
+      description: What scenario, topology, packet flow or SLA case is affected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or improvement
+      description: What is wrong, missing or unclear?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected engineering result
+      description: Describe the desired metric, report, graph or validation outcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Attach logs, generated reports, demo manifests, plots or packet examples.
+
+  - type: textarea
+    id: assumptions
+    attributes:
+      label: Assumptions and constraints
+      description: Include timestamp source, clock sync, traffic model, thresholds and units.
