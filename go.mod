@@ -1,6 +1,6 @@
 module server_sfp_sla
 
-go 1.22
+go 1.25.0
 
 require (
 	github.com/go-ping/ping v1.2.0
@@ -11,7 +11,7 @@ require (
 	github.com/soniah/gosnmp v1.23.1
 	github.com/tatsushid/go-fastping v0.0.0-20160109021039-d7bb493dee3e
 	golang.org/x/net v0.24.0
-	golang.org/x/sys v0.19.0
+	golang.org/x/sys v0.45.0
 )
 
 require (
