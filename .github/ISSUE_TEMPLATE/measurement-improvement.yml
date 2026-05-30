@@ -1,0 +1,31 @@
+name: Measurement improvement
+description: Propose a report, timestamping, dashboard, or CI improvement
+title: "Measurement: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or limitation
+      description: What is unclear, hard to reproduce, or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Describe the concrete change.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Which reports, logs, screenshots, or before-after graphs should prove the improvement?
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: How should the change be tested or reviewed?
