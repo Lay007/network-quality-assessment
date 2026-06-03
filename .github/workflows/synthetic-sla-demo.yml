@@ -1,0 +1,45 @@
+name: Synthetic SLA Demo
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  synthetic-sla-demo:
+    name: Generate and analyze synthetic SLA trace
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Generate synthetic trace
+        run: |
+          python tools/generate_synthetic_sla_trace.py \
+            --output verification/reports/synthetic_sla_demo/synthetic_trace.csv
+
+      - name: Analyze synthetic trace
+        run: |
+          python tools/analyze_sla_trace.py \
+            --input verification/reports/synthetic_sla_demo/synthetic_trace.csv \
+            --output-dir verification/reports/synthetic_sla_demo
+
+      - name: Check generated artifacts
+        run: |
+          test -s verification/reports/synthetic_sla_demo/synthetic_trace.csv
+          test -s verification/reports/synthetic_sla_demo/sla_summary.csv
+          test -s verification/reports/synthetic_sla_demo/report.md
+          test -s verification/reports/synthetic_sla_demo/one_way_delay_timeseries.svg
+          test -s verification/reports/synthetic_sla_demo/jitter_histogram.svg
+          test -s verification/reports/synthetic_sla_demo/packet_loss_timeline.svg
+
+      - name: Upload synthetic SLA demo artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-sla-demo
+          path: verification/reports/synthetic_sla_demo/
