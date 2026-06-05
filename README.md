@@ -1,6 +1,7 @@
 # network-quality-assessment
 
 [![Docs Check](https://github.com/Lay007/network-quality-assessment/actions/workflows/docs-link-check.yml/badge.svg)](https://github.com/Lay007/network-quality-assessment/actions/workflows/docs-link-check.yml)
+[![Synthetic SLA Demo](https://github.com/Lay007/network-quality-assessment/actions/workflows/synthetic-sla-demo.yml/badge.svg)](https://github.com/Lay007/network-quality-assessment/actions/workflows/synthetic-sla-demo.yml)
 
 ## 🚀 Hardware timestamping vs software measurement
 
@@ -26,11 +27,14 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 - real jitter (not OS noise)
 - packet loss on datapath
 - correlation-ready metrics
+- hardware-free synthetic SLA demo for reproducible review
 
 ---
 
 ## 🚀 Quick navigation
 
+- [Runnable synthetic SLA demo](docs/synthetic-sla-demo.md)
+- [Synthetic SLA demo plan](docs/synthetic-sla-demo-plan.md)
 - [Architecture](#-architecture)
 - [Packet flow](#-packet-flow)
 - [Benchmark & analytics](#-benchmark--analytics)
@@ -46,6 +50,35 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 - [Hardcore engineering](#-hardcore-engineering)
 - [Quick start](#-quick-start)
 - [Demo](#-demo)
+
+---
+
+## 🧪 Runnable synthetic SLA demo
+
+Run the full reporting pipeline without FPGA/SFP hardware:
+
+```bash
+python tools/generate_synthetic_sla_trace.py \
+  --output verification/reports/synthetic_sla_demo/synthetic_trace.csv
+
+python tools/analyze_sla_trace.py \
+  --input verification/reports/synthetic_sla_demo/synthetic_trace.csv \
+  --output-dir verification/reports/synthetic_sla_demo
+```
+
+Generated artifacts:
+
+```text
+verification/reports/synthetic_sla_demo/
+├─ synthetic_trace.csv
+├─ sla_summary.csv
+├─ report.md
+├─ one_way_delay_timeseries.svg
+├─ jitter_histogram.svg
+└─ packet_loss_timeline.svg
+```
+
+The same flow is checked by GitHub Actions in `synthetic-sla-demo.yml`.
 
 ---
 
@@ -152,10 +185,18 @@ Generate demo dataset and graphs:
 python tools/generate_demo_benchmark.py
 ```
 
+Run the synthetic SLA demo:
+
+```bash
+python tools/generate_synthetic_sla_trace.py --output verification/reports/synthetic_sla_demo/synthetic_trace.csv
+python tools/analyze_sla_trace.py --input verification/reports/synthetic_sla_demo/synthetic_trace.csv --output-dir verification/reports/synthetic_sla_demo
+```
+
 ---
 
 ## 🎯 Demo
 
+👉 [Runnable synthetic SLA demo](docs/synthetic-sla-demo.md)
 👉 [Run demo scenario](examples/demo/README.md)
 👉 [View demo report](examples/demo/report.md)
 👉 [Executive summary](examples/demo/executive-summary.md)
