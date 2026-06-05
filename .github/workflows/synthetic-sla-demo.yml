@@ -18,6 +18,10 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Run analyzer unit tests
+        run: |
+          python tools/test_sla_analysis.py
+
       - name: Generate synthetic trace
         run: |
           python tools/generate_synthetic_sla_trace.py \
