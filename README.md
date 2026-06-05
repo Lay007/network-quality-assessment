@@ -34,6 +34,7 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 ## 🚀 Quick navigation
 
 - [Runnable synthetic SLA demo](docs/synthetic-sla-demo.md)
+- [SLA trace schema](docs/sla-trace-schema.md)
 - [Synthetic SLA demo plan](docs/synthetic-sla-demo-plan.md)
 - [Architecture](#-architecture)
 - [Packet flow](#-packet-flow)
@@ -78,7 +79,7 @@ verification/reports/synthetic_sla_demo/
 └─ packet_loss_timeline.svg
 ```
 
-The same flow is checked by GitHub Actions in `synthetic-sla-demo.yml`.
+The same flow is checked by GitHub Actions in `synthetic-sla-demo.yml`. The input/output CSV contract is described in [SLA trace schema](docs/sla-trace-schema.md).
 
 ---
 
@@ -196,12 +197,13 @@ python tools/analyze_sla_trace.py --input verification/reports/synthetic_sla_dem
 
 ## 🎯 Demo
 
-👉 [Runnable synthetic SLA demo](docs/synthetic-sla-demo.md)
-👉 [Run demo scenario](examples/demo/README.md)
-👉 [View demo report](examples/demo/report.md)
-👉 [Executive summary](examples/demo/executive-summary.md)
-👉 [SLA demo manifest](experiments/sla_demo.yaml)
-👉 [Software vs hardware timestamp manifest](experiments/software_vs_hardware_timestamp.yaml)
+- 👉 [Runnable synthetic SLA demo](docs/synthetic-sla-demo.md)
+- 👉 [SLA trace schema](docs/sla-trace-schema.md)
+- 👉 [Run demo scenario](examples/demo/README.md)
+- 👉 [View demo report](examples/demo/report.md)
+- 👉 [Executive summary](examples/demo/executive-summary.md)
+- 👉 [SLA demo manifest](experiments/sla_demo.yaml)
+- 👉 [Software vs hardware timestamp manifest](experiments/software_vs_hardware_timestamp.yaml)
 
 ### Example output
 
