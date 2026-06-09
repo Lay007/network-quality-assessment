@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -77,11 +78,39 @@ def test_scenario_summary(analyzer) -> None:
     assert row["root_cause_hint"] == "within SLA thresholds"
 
 
+def test_plot_rendering_with_empty_inputs(analyzer) -> None:
+    with TemporaryDirectory() as tmp:
+        out = Path(tmp)
+
+        analyzer.write_delay_plot([], out / "delay-empty.svg")
+        analyzer.write_loss_plot([], out / "loss-empty.svg")
+        analyzer.write_delay_plot(
+            [
+                {
+                    "packet_id": 1,
+                    "tx_timestamp_ns": 0,
+                    "rx_timestamp_ns": None,
+                    "one_way_delay_ns": None,
+                    "jitter_ns": None,
+                    "lost": 1,
+                    "burst_id": 0,
+                    "scenario": "all_lost",
+                }
+            ],
+            out / "delay-all-lost.svg",
+        )
+
+        assert "No packets available" in (out / "loss-empty.svg").read_text(encoding="utf-8")
+        assert "No received packets available" in (out / "delay-empty.svg").read_text(encoding="utf-8")
+        assert "No received packets available" in (out / "delay-all-lost.svg").read_text(encoding="utf-8")
+
+
 def main() -> int:
     analyzer = load_analyzer()
     test_percentile(analyzer)
     test_root_cause(analyzer)
     test_scenario_summary(analyzer)
+    test_plot_rendering_with_empty_inputs(analyzer)
     print("PASS: synthetic SLA analyzer unit tests")
     return 0
 
