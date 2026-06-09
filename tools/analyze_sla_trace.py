@@ -149,11 +149,47 @@ def svg_header(width: int, height: int, title: str) -> list[str]:
     ]
 
 
+def write_empty_plot(
+    path: Path,
+    *,
+    width: int,
+    height: int,
+    title: str,
+    xlabel: str,
+    ylabel: str,
+    message: str,
+) -> None:
+    left, top, right, bottom = 70, 60, 30, 70
+    plot_w = width - left - right
+    plot_h = height - top - bottom
+    lines = svg_header(width, height, title)
+    lines.append(f'<rect x="{left}" y="{top}" width="{plot_w}" height="{plot_h}" fill="#f7fbff" stroke="#c8d7e6"/>')
+    add_axes(lines, left, top, plot_w, plot_h, xlabel, ylabel)
+    lines.append(
+        f'<text x="{left + plot_w / 2:.1f}" y="{top + plot_h / 2:.1f}" '
+        f'font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#667a99">{escape(message)}</text>'
+    )
+    lines.append("</svg>")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def write_delay_plot(rows: list[dict[str, object]], path: Path) -> None:
     received = [r for r in rows if int(r["lost"]) == 0]
     points = [(int(r["packet_id"]), float(r["one_way_delay_ns"]) / 1000.0) for r in received if r["one_way_delay_ns"] is not None]
     width, height = 1100, 520
     left, top, right, bottom = 70, 60, 30, 70
+    if not points:
+        write_empty_plot(
+            path,
+            width=width,
+            height=height,
+            title="Synthetic SLA Demo: one-way delay",
+            xlabel="packet_id",
+            ylabel="delay, us",
+            message="No received packets available",
+        )
+        return
+
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
     x_min, x_max = min(xs), max(xs)
@@ -204,6 +240,18 @@ def write_jitter_plot(rows: list[dict[str, object]], path: Path) -> None:
 def write_loss_plot(rows: list[dict[str, object]], path: Path) -> None:
     width, height = 1100, 300
     left, top, right, bottom = 70, 60, 30, 60
+    if not rows:
+        write_empty_plot(
+            path,
+            width=width,
+            height=height,
+            title="Synthetic SLA Demo: packet loss timeline",
+            xlabel="packet_id",
+            ylabel="loss events",
+            message="No packets available",
+        )
+        return
+
     plot_w = width - left - right
     plot_h = height - top - bottom
     packet_ids = [int(r["packet_id"]) for r in rows]
