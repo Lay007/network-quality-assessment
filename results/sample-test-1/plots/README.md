@@ -1,8 +1,14 @@
 # Plots
 
-Place exported latency, jitter or throughput plots here.
+This folder stores small reviewer-facing plot artifacts derived from the
+committed sample result package.
 
-Suggested files:
-- latency-histogram.png
-- jitter-timeseries.png
-- throughput-summary.png
+## Available files
+
+- `sample-metrics.svg` - compact summary of delay, jitter, packet loss and throughput.
+
+## Suggested future additions
+
+- `latency-histogram.png`
+- `jitter-timeseries.png`
+- `throughput-summary.png`

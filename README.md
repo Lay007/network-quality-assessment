@@ -39,6 +39,7 @@ Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 - [Architecture](#-architecture)
 - [Packet flow](#-packet-flow)
 - [Benchmark & analytics](#-benchmark--analytics)
+- [Sample result package](#-sample-result-package)
 - [Measurement credibility](docs/measurement-credibility.md)
 - [Engineering metrics](docs/engineering-metrics.md)
 - [SLA report template](reports/sla_report.template.md)
@@ -126,6 +127,23 @@ The same flow is checked by GitHub Actions in `synthetic-sla-demo.yml`. The inpu
 ### SLA dashboard
 
 ![SLA dashboard](docs/assets/sla_dashboard.svg)
+
+The dashboard is populated with the baseline metrics from the committed
+sample result package under `results/sample-test-1/`.
+
+---
+
+## Sample result package
+
+The repository includes a small checked-in result set that reviewers can open
+without generating new data:
+
+- [Sample summary](results/sample-test-1/summary.md)
+- [Sample plot package](results/sample-test-1/plots/README.md)
+- [Filled report example](reports/sla_report.example.md)
+
+It is intentionally compact, but it gives the repository one concrete
+measurement artifact path instead of only templates.
 
 ---
 

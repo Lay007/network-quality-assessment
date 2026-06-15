@@ -7,6 +7,7 @@ This directory is intended for generated measurement reports.
 | Artifact | Purpose |
 |---|---|
 | `sla_report.md` | engineering SLA summary |
+| `sla_report.example.md` | filled example based on committed sample metrics |
 | `latency_distribution.png` | delay analysis |
 | `jitter_histogram.png` | jitter visibility |
 | `packet_loss_timeline.png` | transport stability |
