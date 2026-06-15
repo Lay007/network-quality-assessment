@@ -4,10 +4,10 @@
 
 | Field | Value |
 |---|---|
-| Scenario | software vs datapath timing comparison |
-| Measurement window | example synthetic interval |
-| SLA status | TBD |
-| Main observation | timestamp origin strongly affects confidence |
+| Scenario | baseline network test with two SFP modules in a serial path |
+| Measurement window | sample exported interval from `results/sample-test-1/` |
+| SLA status | PASS |
+| Main observation | stable microsecond-scale delay with negligible loss and near line-rate throughput |
 
 ## Measurement topology
 
@@ -23,54 +23,57 @@ probe generator
 
 | Item | Description |
 |---|---|
-| Timestamp origin | software or datapath |
-| Clock source | documented per scenario |
-| Uncertainty | explicitly listed in the report |
-| Main risk | OS noise or clock drift, depending on method |
+| Timestamp origin | sample exported summary from the repository result package |
+| Clock source | not modeled in detail in this example package |
+| Uncertainty | low for documentation review, still not a substitute for calibrated hardware validation |
+| Main risk | the sample package demonstrates reporting structure more strongly than clock-origin rigor |
 
-## SLA thresholds
+## Example acceptance thresholds
 
 | Metric | Threshold | Measured | Status |
 |---|---:|---:|---|
-| p95 latency | TBD | TBD | TBD |
-| p99 latency | TBD | TBD | TBD |
-| RMS jitter | TBD | TBD | TBD |
-| Packet loss | TBD | TBD | TBD |
+| RTT avg | <= 15.0 us | 12.4 us | PASS |
+| RTT max | <= 20.0 us | 16.8 us | PASS |
+| Jitter | <= 1.0 us | 0.4 us | PASS |
+| Packet loss | <= 0.01% | 0.0001% | PASS |
+| Throughput | >= 9.5 Gbps | 9.8 Gbps | PASS |
 
-## Latency distribution
+## Available artifacts
 
-Expected artifact:
+- `results/sample-test-1/summary.md`
+- `results/sample-test-1/plots/sample-metrics.svg`
+- `docs/assets/sla_dashboard.svg`
 
-```text
-reports/latency_distribution.svg
-```
+## Delay and directionality
 
-## Jitter analysis
+The committed sample package reports:
 
-Expected artifact:
+- RTT min: 11.7 us
+- RTT avg: 12.4 us
+- RTT max: 16.8 us
+- OWD forward: 6.1 us
+- OWD reverse: 6.3 us
 
-```text
-reports/jitter_histogram.svg
-```
+The forward and reverse directions are close enough to treat the path as balanced in this example.
 
-## Packet-loss timeline
+## Jitter and loss interpretation
 
-Expected artifact:
+The sample run shows low timing variation and effectively zero loss:
 
-```text
-reports/packet_loss_timeline.svg
-```
+- jitter: 0.4 us
+- packet loss: 0.0001%
+- throughput: 9.8 Gbps
+
+That combination is consistent with a clean baseline path rather than congestion, queue buildup or bursty impairment.
 
 ## Root-cause hypothesis
 
 Potential explanations:
 
-- queue buildup;
-- unstable host timing;
-- packet burst effects;
-- clock uncertainty;
-- link-level issues.
+- no strong fault signal is visible in the sample package;
+- residual variation is consistent with a healthy baseline export;
+- deeper root-cause work would need packet-level traces and timestamp-origin details.
 
 ## Engineering conclusion
 
-The report should state whether the SLA conclusion is valid, uncertain or blocked by missing timing assumptions.
+The committed result package is suitable as a reviewer-facing example because it contains a concrete summary, a concrete plot artifact and a filled report. It still does not replace calibrated hardware validation, but it closes the gap between pure templates and real measurement evidence.
