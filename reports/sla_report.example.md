@@ -8,6 +8,11 @@
 | Measurement window | sample exported interval from `results/sample-test-1/` |
 | SLA status | PASS |
 | Main observation | stable microsecond-scale delay with negligible loss and near line-rate throughput |
+| Customer-facing conclusion | the sample path meets the example latency, jitter, loss and throughput acceptance gates |
+
+## Customer decision
+
+The measured sample package is suitable for a baseline acceptance report. No immediate network fault is visible in the example data. The recommended action is to preserve this run as the reference baseline and compare later field measurements against the same threshold table.
 
 ## Measurement topology
 
@@ -30,13 +35,13 @@ probe generator
 
 ## Example acceptance thresholds
 
-| Metric | Threshold | Measured | Status |
-|---|---:|---:|---|
-| RTT avg | <= 15.0 us | 12.4 us | PASS |
-| RTT max | <= 20.0 us | 16.8 us | PASS |
-| Jitter | <= 1.0 us | 0.4 us | PASS |
-| Packet loss | <= 0.01% | 0.0001% | PASS |
-| Throughput | >= 9.5 Gbps | 9.8 Gbps | PASS |
+| Metric | Threshold | Measured | Margin | Status |
+|---|---:|---:|---:|---|
+| RTT avg | <= 15.0 us | 12.4 us | 2.6 us | PASS |
+| RTT max | <= 20.0 us | 16.8 us | 3.2 us | PASS |
+| Jitter | <= 1.0 us | 0.4 us | 0.6 us | PASS |
+| Packet loss | <= 0.01% | 0.0001% | 0.0099% | PASS |
+| Throughput | >= 9.5 Gbps | 9.8 Gbps | 0.3 Gbps | PASS |
 
 ## Available artifacts
 
@@ -74,6 +79,25 @@ Potential explanations:
 - residual variation is consistent with a healthy baseline export;
 - deeper root-cause work would need packet-level traces and timestamp-origin details.
 
+## Limitations
+
+This is a compact repository example, not a calibrated production acceptance test. A production report should additionally include:
+
+- exact hardware model and firmware version;
+- timestamp source and clock synchronization method;
+- packet rate and payload size;
+- test duration;
+- raw or reduced trace checksum;
+- operator and environment notes;
+- uncertainty budget.
+
+## Recommended follow-up
+
+1. Run the synthetic SLA generator and confirm the report pipeline from a clean clone.
+2. Replace sample metrics with a real trace package when hardware timestamp data is available.
+3. Preserve this report structure for customer-facing acceptance documents.
+4. Add a before/after comparison when the report is used for fault localization.
+
 ## Engineering conclusion
 
-The committed result package is suitable as a reviewer-facing example because it contains a concrete summary, a concrete plot artifact and a filled report. It still does not replace calibrated hardware validation, but it closes the gap between pure templates and real measurement evidence.
+The committed result package is suitable as a reviewer-facing and customer-facing example because it contains a concrete summary, concrete plot artifacts, threshold margins and a filled report. It still does not replace calibrated hardware validation, but it closes the gap between pure templates and real measurement evidence.
