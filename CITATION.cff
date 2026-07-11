@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this project, its synthetic SLA pipeline, or its measurement methodology, please cite it using the metadata below."
+title: "Network Quality Assessment: Reproducible SLA Measurement from Software to FPGA Timestamping"
+type: software
+authors:
+  - family-names: "Lyubko"
+    given-names: "Alexander"
+repository-code: "https://github.com/Lay007/network-quality-assessment"
+url: "https://github.com/Lay007/network-quality-assessment"
+license: MIT
+keywords:
+  - network measurement
+  - service-level agreement
+  - latency
+  - jitter
+  - packet loss
+  - hardware timestamping
+  - FPGA
+  - SFP
+  - reproducible benchmarking
+abstract: >-
+  An engineering project for assessing network latency, jitter and packet loss,
+  with a reproducible synthetic SLA analysis pipeline and a path toward
+  FPGA/SFP datapath timestamping for separating host noise from network behavior.
