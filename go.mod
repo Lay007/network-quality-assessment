@@ -11,7 +11,7 @@ require (
 	github.com/soniah/gosnmp v1.23.1
 	github.com/tatsushid/go-fastping v0.0.0-20160109021039-d7bb493dee3e
 	golang.org/x/net v0.56.0
-	golang.org/x/sys v0.46.0
+	golang.org/x/sys v0.47.0
 )
 
 require (
