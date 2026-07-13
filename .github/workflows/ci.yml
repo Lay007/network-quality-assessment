@@ -7,9 +7,17 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: network-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -29,11 +37,16 @@ jobs:
       - name: Download Go modules
         run: go mod download
 
-      - name: Test Go packages
-        run: go test ./...
-
       - name: Test Go packages with coverage
-        run: go test -cover ./...
+        run: |
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+
+      - name: Upload Go coverage profile
+        uses: actions/upload-artifact@v7
+        with:
+          name: go-coverage
+          path: coverage.out
 
       - name: Run go vet
         run: go vet ./...
