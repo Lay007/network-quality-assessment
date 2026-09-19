@@ -104,6 +104,8 @@ def scenario_summary(rows: list[dict[str, object]], args: argparse.Namespace) ->
 
 
 def root_cause(loss_pct: float, delay_p95_us: float, jitter_p95_us: float, args: argparse.Namespace) -> str:
+    if not all(math.isfinite(value) for value in (loss_pct, delay_p95_us, jitter_p95_us)):
+        return "insufficient timing evidence"
     if loss_pct > args.loss_threshold_pct and jitter_p95_us > args.jitter_p95_threshold_us:
         return "loss and jitter impairment"
     if loss_pct > args.loss_threshold_pct:
@@ -280,6 +282,7 @@ def write_report(summary: list[dict[str, object]], output_dir: Path, input_path:
         "# Synthetic SLA Demo Report",
         "",
         "This report is generated from a deterministic synthetic packet trace. It demonstrates the reporting flow without FPGA/SFP timestamping hardware.",
+        "Evidence scope: synthetic analysis only. Clock synchronization, timestamp accuracy and hardware SLA compliance are not qualified. Root-cause hints are threshold heuristics, not causal diagnoses.",
         "",
         "## Input",
         "",
