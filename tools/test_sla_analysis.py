@@ -48,6 +48,8 @@ def test_root_cause(analyzer) -> None:
     assert analyzer.root_cause(0.0, 320.0, 80.0, args) == "jitter burst or queueing"
     assert analyzer.root_cause(5.0, 320.0, 3.0, args) == "packet loss burst"
     assert analyzer.root_cause(5.0, 320.0, 80.0, args) == "loss and jitter impairment"
+    assert analyzer.root_cause(0.0, float("nan"), 0.0, args) == "insufficient timing evidence"
+    assert analyzer.root_cause(100.0, float("nan"), float("nan"), args) == "insufficient timing evidence"
 
 
 def test_scenario_summary(analyzer) -> None:

@@ -13,19 +13,21 @@ Software-based measurements are affected by OS scheduling, buffering and interru
 
 Use FPGA/SFP datapath timestamping with custom SLA probe packets.
 
-**Result**
+**Validation status**
 
-- microsecond-level jitter visibility
-- accurate one-way delay
-- reliable SLA validation
+- The committed synthetic demo validates parsing, statistics and reporting.
+- Hardware timestamp accuracy, residual clock offset and calibrated one-way
+  delay remain unqualified; see [measurement gates](docs/measurement-quality-gates.md).
+- FPGA/SFP timestamping is the target architecture. A diagram or synthetic
+  microsecond-scale plot is not a hardware accuracy measurement.
 
 ---
 
 ## ⚡ What you get
 
-- true network delay (not host delay)
-- real jitter (not OS noise)
-- packet loss on datapath
+- delay/jitter/loss analysis for the supplied trace
+- explicit separation of synthetic evidence and hardware qualification
+- a documented path toward calibrated datapath timestamp measurements
 - correlation-ready metrics
 - hardware-free synthetic SLA demo for reproducible review
 
