@@ -76,6 +76,7 @@ func runLegacy(ctx context.Context) error {
 		return fmt.Errorf("open database: %w", err)
 	}
 	defer db.Close()
+	db.SetMaxOpenConns(4)
 	if err := db.PingContext(ctx); err != nil {
 		return fmt.Errorf("connect database: %w", err)
 	}

@@ -39,6 +39,7 @@ cache outside the repository; no root installation was required.
 | High | `testBerst.go`, `testLoss.go`, `testDelay.go`, `testY1564.go` | Initial `status=?, datatime=?` received a date then integer 2. Corrected; AST regression checks status argument type/value. |
 | High | `testThroughput.go` | Intermediate update supplied nine values for eight placeholders and omitted `rez_64`. Corrected; all literal SQL call sites have an arity regression check. |
 | High | legacy SQL error paths | Calling `Close` on rows/DB returned with constructor errors could dereference nil. Removed invalid closes. Pending-query error and cancellation paths are tested with a standard-library fake driver. |
+| High | legacy existence queries | Repeated `SELECT EXISTS` results were not exhausted or closed. Use bounded `QueryRowContext.Scan` and test 64 iterations with a single-connection fake DB. The four-connection cap applies only to the dispatcher; imposing it on unaudited legacy pools would introduce a wait regression. |
 | High | `main.go` polling | Rows were deferred in the process loop before checking errors; six query results were held simultaneously. Polling now materializes and closes each result before launching work, checks iteration errors, limits jobs to one active legacy measurement and suppresses duplicate running keys. |
 | High | `internal/zsocket/zsocket.go` | Bind/ring/mmap failures leaked the socket; Close never unmapped the ring. Constructor failure closes its descriptor, concurrent Close is idempotent and waits for active operations. Anonymous mmap and pipe tests need no privileges. |
 | High | `internal/zsocket/zsocket.go` | `WriteToBuffer` sliced before checking source length; direct `CopyToBuffer` lacked bounds checks. Reject invalid lengths and callback lengths before publishing a frame; add regression tests. |
@@ -46,7 +47,7 @@ cache outside the repository; no root installation was required.
 | Medium | `requestSNMP.go` | Defers accumulated a new connection per polling tick; workers could overlap while replacing the module list. Each sample now closes its own connection; context cancellation joins old monitors before replacement. |
 | Medium | `testDelay.go` | A new receiver was started every 5 ms on one socket and shared deadlines. Receive serially and stop/close ticker/socket; guard zero-sample division. |
 | Medium | `testThroughput.go:genSocket` | Failed generator initialization never notified its owner; zero rate divided by zero. Completion channel always closes, setup failures return counters, rate validation precedes arithmetic. |
-| Medium | `config.go` | Driver I/O had no time bounds; DSN construction interpolated database names. Driver config now escapes names and sets 5 s connect/read/write bounds and pool limits. Credentials are never included in new logs. |
+| Medium | `config.go` | Driver I/O had no time bounds; DSN construction interpolated database names. Driver config now escapes names and sets 5 s connect/read/write bounds and dispatcher pool limits. Credentials are never included in new logs. |
 
 The suspected 64-bit `tpacket_req` layout defect was **not confirmed**:
 `inet.HOST_INT_SIZE` is four on LP64. Typed kernel helpers replace the handwritten

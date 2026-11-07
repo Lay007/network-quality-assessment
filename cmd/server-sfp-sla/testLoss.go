@@ -506,11 +506,7 @@ func TestLoss(id int, net_interface_name string) {
 	test.mac_src = ifi.HardwareAddr
 	for step := 0; step < test.count_steps; step++ {
 
-		yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
-		yest.Next()
-		t_y := 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_frame_loss", id); err != nil || !exists {
 			return
 		}
 
@@ -561,11 +557,7 @@ func TestLoss(id int, net_interface_name string) {
 			fmt.Println(" Receive Packets - ", test.numberRx)
 		}
 
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_frame_loss", id); err != nil || !exists {
 			return
 		}
 
@@ -597,11 +589,7 @@ func TestLoss(id int, net_interface_name string) {
 			fmt.Println(" Receive Packets - ", test.numberRx)
 		}
 
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_frame_loss", id); err != nil || !exists {
 			return
 		}
 
@@ -633,11 +621,7 @@ func TestLoss(id int, net_interface_name string) {
 			fmt.Println(" Receive Packets - ", test.numberRx)
 		}
 
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_frame_loss", id); err != nil || !exists {
 			return
 		}
 
@@ -668,11 +652,7 @@ func TestLoss(id int, net_interface_name string) {
 			fmt.Println(" Receive Packets - ", test.numberRx)
 		}
 
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_frame_loss", id); err != nil || !exists {
 			return
 		}
 
@@ -703,11 +683,7 @@ func TestLoss(id int, net_interface_name string) {
 			fmt.Println(" Receive Packets - ", test.numberRx)
 		}
 
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_frame_loss", id); err != nil || !exists {
 			return
 		}
 
@@ -738,11 +714,7 @@ func TestLoss(id int, net_interface_name string) {
 			fmt.Println(" Receive Packets - ", test.numberRx)
 		}
 
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_frame_loss WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_frame_loss", id); err != nil || !exists {
 			return
 		}
 

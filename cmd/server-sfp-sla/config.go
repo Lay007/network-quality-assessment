@@ -3,7 +3,9 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"os"
 	"time"
 
@@ -42,8 +44,22 @@ func openDB() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(4)
 	db.SetMaxIdleConns(2)
 	db.SetConnMaxLifetime(5 * time.Minute)
 	return db, nil
+}
+
+// QueryRow.Scan closes its result even when scanning fails. Repeated existence
+// checks must not keep connections checked out for the entire hardware test.
+func measurementExists(db *sql.DB, table string, id int) (bool, error) {
+	switch table {
+	case "test_sla_real", "test_throughput", "test_bert", "test_latency", "test_frame_loss", "test_y1564":
+	default:
+		return false, fmt.Errorf("unknown measurement table")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var exists bool
+	err := db.QueryRowContext(ctx, "SELECT EXISTS(SELECT id FROM "+table+" WHERE id=?)", id).Scan(&exists)
+	return exists, err
 }
