@@ -110,6 +110,8 @@ confirm the FPGA timestamp contract and run an authorized remote/hardware experi
 
 A subsequent review added concurrent cancellation requests within the existing
 cleanup deadline, with a regression where one cancel endpoint stalls until the
-other agent is canceled. The current suite has **46 tests**; Linux tests/race/vet
-and Windows portable tests/vet pass after that change. The archived 45-test and
+other agent is canceled. The scalar-query follow-up adds a regression with 64 checks through one database
+connection and scopes the connection cap to the dispatcher. Allocation guards are
+also explicit at slice creation sites. The current suite has **47 tests**; Linux
+tests/race/vet and Windows portable tests/vet pass after these changes. The archived 45-test and
 performance snapshot above remains tied to its explicitly recorded source revision.
