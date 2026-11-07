@@ -14,6 +14,9 @@ trace. These timestamps and packet losses are **synthetic**. The existing Python
 analyzer produces delay/jitter distributions and reports from the trace.
 
 - [Agent configuration, lifecycle and analysis](docs/go-measurement-agent.md)
+- [Two-agent loopback bench and deployment](docs/distributed-go-bench.md)
+- [Go engineering case study](docs/go-engineering-case-study.md)
+- [Actual validation and benchmark evidence](docs/go-validation.md)
 - [Go reliability audit and remaining legacy risks](docs/go-engineering-audit.md)
 
 
