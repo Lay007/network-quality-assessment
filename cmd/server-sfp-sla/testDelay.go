@@ -387,11 +387,7 @@ func TestDelay(id int, net_interface_name string) {
 	rez := 1
 	connectTestSFP, err := raw.ListenPacket(ifi, etherType, nil)
 
-	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
-	yest.Next()
-	t_y := 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_latency", id); err != nil || !exists {
 		return
 	}
 
@@ -524,11 +520,7 @@ func TestDelay(id int, net_interface_name string) {
 	time.Sleep(time.Second * 2)
 	<-quit
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_latency", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
@@ -542,11 +534,7 @@ func TestDelay(id int, net_interface_name string) {
 	time.Sleep(time.Second * 2)
 	<-quit
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_latency", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
@@ -560,11 +548,7 @@ func TestDelay(id int, net_interface_name string) {
 	time.Sleep(time.Second * 2)
 	<-quit
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_latency", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
@@ -578,11 +562,7 @@ func TestDelay(id int, net_interface_name string) {
 	time.Sleep(time.Second * 2)
 	<-quit
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_latency", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
@@ -596,11 +576,7 @@ func TestDelay(id int, net_interface_name string) {
 	time.Sleep(time.Second * 2)
 	<-quit
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_latency", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_latency SET rez_64=?,rez_64_max=?,rez_64_min=?,rez_128=?,rez_128_max=?,rez_128_min=?,rez_256=?,rez_256_max=?,rez_256_min=?,rez_512=?,rez_512_max=?,rez_512_min=?,rez_1024=?,rez_1024_max=?,rez_1024_min=?,rez_1280=?,rez_1280_max=?,rez_1280_min=?, rez_1518=?,rez_1518_max=?,rez_1518_min=?, status=? WHERE id=?", test.rez_64, test.rez_64_max, test.rez_64_min, test.rez_128, test.rez_128_max, test.rez_128_min, test.rez_256, test.rez_256_max, test.rez_256_min, test.rez_512, test.rez_512_max, test.rez_512_min, test.rez_1024, test.rez_1024_max, test.rez_1024_min, test.rez_1280, test.rez_1280_max, test.rez_1280_min, test.rez_1518, test.rez_1518_max, test.rez_1518_min, test.status, id)
@@ -614,11 +590,7 @@ func TestDelay(id int, net_interface_name string) {
 	time.Sleep(time.Second * 2)
 	<-quit
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_latency WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_latency", id); err != nil || !exists {
 		return
 	}
 

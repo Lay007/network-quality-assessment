@@ -441,11 +441,7 @@ func TestBerst(id int, net_interface_name string) {
 	}
 	//db.Close()
 
-	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y := 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 
@@ -576,11 +572,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_64 = ", test.rez_64)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 
@@ -640,11 +632,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_128 = ", test.rez_128)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -703,11 +691,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_256 = ", test.rez_256)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -766,11 +750,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_512 = ", test.rez_512)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -829,11 +809,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_1024 = ", test.rez_1024)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -892,11 +868,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_1280 = ", test.rez_1280)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
