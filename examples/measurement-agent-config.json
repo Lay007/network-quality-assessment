@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "mode": "synthetic",
+  "interface": "synthetic",
+  "packets": 1000,
+  "workers": 2,
+  "interval_ns": 1000000,
+  "timeout_ns": 10000000000,
+  "seed": 1,
+  "loss_every": 20,
+  "delay_ns": 300000,
+  "variation_ns": 10000
+}
