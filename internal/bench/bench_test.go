@@ -348,3 +348,53 @@ func TestLostAcceptanceResponseStillCancelsSession(t *testing.T) {
 		t.Fatalf("accepted session orphaned: %s", s.State)
 	}
 }
+
+func TestStalledCancellationDoesNotBlockOtherAgent(t *testing.T) {
+	a, _ := testAgent(t, "stalled-a")
+	b, originalB := testAgent(t, "responsive-b")
+	client := testClient(t)
+	secondCanceled := make(chan struct{}, 1)
+	first := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/v1/sessions/") {
+			http.Error(w, "injected control failure", 503)
+			return
+		}
+		if r.Method == "DELETE" {
+			select {
+			case <-secondCanceled:
+				http.Error(w, "injected cancel failure", 503)
+			case <-r.Context().Done():
+			}
+			return
+		}
+		a.Handler().ServeHTTP(w, r)
+	}))
+	defer first.Close()
+	second := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b.Handler().ServeHTTP(w, r)
+		if r.Method == "DELETE" {
+			select {
+			case secondCanceled <- struct{}{}:
+			default:
+			}
+		}
+	}))
+	defer second.Close()
+	c := udpConfig()
+	c.Packets = 1000
+	if _, err := client.Run(context.Background(), []string{first.URL, second.URL}, c); err == nil {
+		t.Fatal("control failure not reported")
+	}
+	b.mu.Lock()
+	ids := []string{}
+	for id := range b.sessions {
+		ids = append(ids, id)
+	}
+	b.mu.Unlock()
+	if len(ids) != 1 {
+		t.Fatal("second session was not started")
+	}
+	if session := terminal(t, client, originalB.URL, ids[0]); session.State != "canceled" {
+		t.Fatalf("responsive agent not canceled: %s", session.State)
+	}
+}

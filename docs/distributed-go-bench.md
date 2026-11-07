@@ -78,7 +78,8 @@ addresses, DNS names, URL credentials, redirects and proxies are rejected/disabl
 HTTP time bounds: 2 s client requests, 1 s dial, 2 s header read, 3 s server read/write,
 5 s idle. Start bodies are limited to 64 KiB and responses to 8 MiB. Controller
 execution is bounded by 30 s; best-effort cancellation uses a separate 2 s cleanup
-context. A dead agent may make cleanup impossible; the agent's own session timeout
+context. Cancellation requests run concurrently so a stalled agent cannot consume
+the other agent's cleanup opportunity. A dead agent may make cleanup impossible; the agent's own session timeout
 still bounds work if it remains alive. No public listener, TLS deployment or real
 remote-machine deployment is claimed by this local-only milestone.
 

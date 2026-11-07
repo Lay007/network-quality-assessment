@@ -106,3 +106,10 @@ and shared-state repair**. The residual hardware worker risks listed in
 [the audit](go-engineering-audit.md) remain before production qualification.
 Prioritize context ownership for those workers and a MySQL/socket fixture, then
 confirm the FPGA timestamp contract and run an authorized remote/hardware experiment.
+
+
+A subsequent review added concurrent cancellation requests within the existing
+cleanup deadline, with a regression where one cancel endpoint stalls until the
+other agent is canceled. The current suite has **46 tests**; Linux tests/race/vet
+and Windows portable tests/vet pass after that change. The archived 45-test and
+performance snapshot above remains tied to its explicitly recorded source revision.

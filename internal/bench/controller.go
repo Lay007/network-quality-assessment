@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"server_sfp_sla/internal/measurement"
+	"sync"
 	"time"
 )
 
@@ -162,11 +163,13 @@ func (c *Client) Run(parent context.Context, bases []string, config measurement.
 	defer func() {
 		cleanup, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
+		var wg sync.WaitGroup
 		for i, s := range r.Sessions {
 			if s.State == "running" || s.State == "stopping" {
-				_ = c.request(cleanup, bases[i], "DELETE", "/v1/sessions/"+s.ID, nil, nil)
+				wg.Go(func() { _ = c.request(cleanup, bases[i], "DELETE", "/v1/sessions/"+s.ID, nil, nil) })
 			}
 		}
+		wg.Wait()
 	}()
 	for i, base := range bases {
 		cfg := config
