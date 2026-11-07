@@ -1,0 +1,48 @@
+{
+  "source_revision": "7bed4448987c6b331e414b78c4b2b90706b0d659",
+  "environment": [
+    "go version go1.26.0 linux/amd64",
+    "Linux 6.18.54.1-microsoft-standard-WSL2",
+    "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+  ],
+  "passed_tests": {
+    "server_sfp_sla/cmd/measurement-agent": 4,
+    "server_sfp_sla/cmd/server-sfp-sla": 13,
+    "server_sfp_sla/cmd/measurement-bench": 2,
+    "server_sfp_sla/internal/measurement": 8,
+    "server_sfp_sla/internal/zsocket": 9,
+    "server_sfp_sla/internal/bench": 9
+  },
+  "total_passed_tests": 45,
+  "statement_coverage": {
+    "server_sfp_sla/cmd/measurement-agent": "coverage: 82.6% of statements",
+    "server_sfp_sla/cmd/measurement-bench": "coverage: 79.1% of statements",
+    "server_sfp_sla/internal/measurement": "coverage: 76.8% of statements",
+    "server_sfp_sla/internal/zsocket": "coverage: 26.3% of statements",
+    "server_sfp_sla/cmd/server-sfp-sla": "coverage: 1.2% of statements",
+    "server_sfp_sla/internal/bench": "coverage: 79.7% of statements"
+  },
+  "checks": {
+    "go_test": "passed",
+    "go_test_race": "passed",
+    "go_vet": "passed",
+    "gofmt": "passed",
+    "linux_amd64_build": "passed",
+    "linux_arm64_whole_repository_build": "passed",
+    "linux_armv7_standalone_commands_build": "passed",
+    "arm_runtime": "not_run",
+    "two_physical_machines": "not_run",
+    "hardware_timestamping": "not_run"
+  },
+  "allocation_benchmark": [
+    "goos: linux",
+    "goarch: amd64",
+    "pkg: server_sfp_sla/internal/measurement",
+    "cpu: Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+    "BenchmarkSynthetic1000-8   \t    1020\t   1139923 ns/op\t   92693 B/op\t    2878 allocs/op",
+    "BenchmarkSynthetic1000-8   \t    1323\t    893568 ns/op\t   92667 B/op\t    2878 allocs/op",
+    "BenchmarkSynthetic1000-8   \t    1354\t   1322150 ns/op\t   92644 B/op\t    2878 allocs/op",
+    "PASS",
+    "ok  \tserver_sfp_sla/internal/measurement\t4.193s"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "loopback-software-round-trip",
+  "platform": {
+    "os": "Linux",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "architecture": "x86_64"
+  },
+  "method": "Two local agents exchange authenticated 64-byte UDP requests/replies, one outstanding per session, >=10ms pause after each completed probe. HTTP coordinates lifecycle, not synchronized clocks or launches.",
+  "limitations": "Application RTT includes scheduling, queues and echo handling. Not one-way delay, hardware precision, line rate or a two-machine validation. RSS is the maximum individual child RSS, not aggregate memory.",
+  "runs": [
+    {
+      "run": 1,
+      "bench_session_id": "9982e3766d5241e420ab3d92633f0b6b",
+      "packets_attempted": 200,
+      "packets_received": 200,
+      "packets_lost": 0,
+      "rtt_ns": {
+        "min": 133816,
+        "mean": 363519.35,
+        "p50": 350490.0,
+        "p95": 491450.15,
+        "p99": 729438.79,
+        "max": 2396373
+      },
+      "software_versions": [
+        "7bed4448987c6b331e414b78c4b2b90706b0d659 (go1.26.0)"
+      ]
+    },
+    {
+      "run": 2,
+      "bench_session_id": "c4742aec645ef051f8a63c4fc09abadc",
+      "packets_attempted": 200,
+      "packets_received": 200,
+      "packets_lost": 0,
+      "rtt_ns": {
+        "min": 80209,
+        "mean": 261784.785,
+        "p50": 256879.0,
+        "p95": 407456.05,
+        "p99": 475057.06,
+        "max": 633973
+      },
+      "software_versions": [
+        "7bed4448987c6b331e414b78c4b2b90706b0d659 (go1.26.0)"
+      ]
+    },
+    {
+      "run": 3,
+      "bench_session_id": "c6a3951d71b6379825f03674ee9abe18",
+      "packets_attempted": 200,
+      "packets_received": 200,
+      "packets_lost": 0,
+      "rtt_ns": {
+        "min": 152017,
+        "mean": 332279.865,
+        "p50": 304584.5,
+        "p95": 505093.0,
+        "p99": 810960.35,
+        "max": 2029631
+      },
+      "software_versions": [
+        "7bed4448987c6b331e414b78c4b2b90706b0d659 (go1.26.0)"
+      ]
+    }
+  ],
+  "elapsed_seconds": 5.587871854999975,
+  "agents_exited_cleanly": true,
+  "children_cpu_seconds": {
+    "user": 0.359995,
+    "system": 0.7734099999999999
+  },
+  "max_child_rss_kib": 19048
+}
