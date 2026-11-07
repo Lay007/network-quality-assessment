@@ -503,11 +503,7 @@ func TestY1564(id int, net_interface_name string) {
 		fmt.Println(" Rez find : ", rez)
 	}
 
-	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
-	yest.Next()
-	t_y := 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_y1564", id); err != nil || !exists {
 		return
 	}
 
@@ -570,11 +566,7 @@ func TestY1564(id int, net_interface_name string) {
 
 	if test.step_count > 1 {
 
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_y1564", id); err != nil || !exists {
 			return
 		}
 
@@ -598,11 +590,7 @@ func TestY1564(id int, net_interface_name string) {
 	}
 
 	if test.step_count > 2 {
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_y1564", id); err != nil || !exists {
 			return
 		}
 
@@ -626,11 +614,7 @@ func TestY1564(id int, net_interface_name string) {
 	}
 
 	if test.step_count > 3 {
-		yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
-		yest.Next()
-		t_y = 0
-		yest.Scan(&t_y)
-		if t_y != 1 {
+		if exists, err := measurementExists(db, "test_y1564", id); err != nil || !exists {
 			return
 		}
 		go test.genFramesY1564(thr_s[3], counter, counterRes)
@@ -653,11 +637,7 @@ func TestY1564(id int, net_interface_name string) {
 	}
 
 	runtime.Gosched()
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_y1564", id); err != nil || !exists {
 		return
 	}
 	go test.genFramesY1564(test.CIR+test.EIR, counter, counterRes)
@@ -678,11 +658,7 @@ func TestY1564(id int, net_interface_name string) {
 	test.numberRx = 0
 
 	runtime.Gosched()
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_y1564 WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_y1564", id); err != nil || !exists {
 		return
 	}
 	go test.genFramesY1564(test.CIR+test.TP, counter, counterRes)

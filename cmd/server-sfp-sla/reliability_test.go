@@ -86,7 +86,10 @@ func TestGeneratorRejectsInvalidRateWithoutBlocking(t *testing.T) {
 
 type rowDriver struct{}
 type rowConn struct{ fail bool }
-type auditRows struct{ pos int }
+type auditRows struct {
+	pos   int
+	value int64
+}
 
 var rowsClosed int
 var registerAudit sync.Once
@@ -95,14 +98,18 @@ func (rowDriver) Open(name string) (driver.Conn, error) { return &rowConn{fail: 
 func (*rowConn) Prepare(string) (driver.Stmt, error)    { return nil, errors.New("unsupported") }
 func (*rowConn) Close() error                           { return nil }
 func (*rowConn) Begin() (driver.Tx, error)              { return nil, errors.New("unsupported") }
-func (c *rowConn) QueryContext(ctx context.Context, _ string, _ []driver.NamedValue) (driver.Rows, error) {
+func (c *rowConn) QueryContext(ctx context.Context, query string, _ []driver.NamedValue) (driver.Rows, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	if c.fail {
 		return nil, errors.New("injected query error")
 	}
-	return &auditRows{}, nil
+	value := int64(7)
+	if strings.HasPrefix(query, "SELECT EXISTS") {
+		value = 1
+	}
+	return &auditRows{value: value}, nil
 }
 func (*auditRows) Columns() []string { return []string{"id"} }
 func (*auditRows) Close() error      { rowsClosed++; return nil }
@@ -111,7 +118,7 @@ func (r *auditRows) Next(dest []driver.Value) error {
 		return io.EOF
 	}
 	r.pos++
-	dest[0] = int64(7)
+	dest[0] = r.value
 	return nil
 }
 func TestPendingIDsClosesRowsAndPropagatesErrors(t *testing.T) {
@@ -138,5 +145,39 @@ func TestPendingIDsClosesRowsAndPropagatesErrors(t *testing.T) {
 	cancel()
 	if _, err := pendingIDs(ctx, db, "test_latency"); !errors.Is(err, context.Canceled) {
 		t.Fatal(err)
+	}
+}
+
+func TestExistenceChecksReleaseSingleConnection(t *testing.T) {
+	registerAudit.Do(func() { sql.Register("nqa-audit", rowDriver{}) })
+	rowsClosed = 0
+	db, err := sql.Open("nqa-audit", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+	for range 64 {
+		exists, err := measurementExists(db, "test_throughput", 7)
+		if err != nil || !exists {
+			t.Fatalf("exists=%v error=%v", exists, err)
+		}
+		if db.Stats().InUse != 0 {
+			t.Fatal("scalar query retained the only connection")
+		}
+	}
+	if rowsClosed != 64 {
+		t.Fatalf("closed %d scalar query results", rowsClosed)
+	}
+	if _, err := measurementExists(nil, "untrusted", 7); err == nil {
+		t.Fatal("accepted untrusted table")
+	}
+	bad, err := sql.Open("nqa-audit", "fail")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer bad.Close()
+	if _, err := measurementExists(bad, "test_throughput", 7); err == nil {
+		t.Fatal("discarded scalar query error")
 	}
 }
