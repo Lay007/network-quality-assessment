@@ -144,7 +144,7 @@ func newResult(c Config) (Result, error) {
 		return Result{}, err
 	}
 	hash := sha256.Sum256(encoded)
-	return Result{SchemaVersion: 1, ID: hex.EncodeToString(id[:]), Software: SoftwareVersion(), Platform: runtime.GOOS + "/" + runtime.GOARCH, Config: c, ConfigHash: hex.EncodeToString(hash[:]), Status: "running", Start: time.Now().UTC(), Errors: []SessionError{}, Samples: make([]Sample, c.Packets)}, nil
+	return Result{SchemaVersion: 1, ID: hex.EncodeToString(id[:]), Software: SoftwareVersion(), Platform: runtime.GOOS + "/" + runtime.GOARCH, Config: c, ConfigHash: hex.EncodeToString(hash[:]), Status: "running", Start: time.Now().UTC(), Errors: []SessionError{}}, nil
 }
 
 // Run models a trace without sleeping or sending packets. Context controls actual
@@ -163,8 +163,14 @@ func Run(ctx context.Context, c Config) (Result, error) {
 	r.Provenance = Provenance{Kind: "synthetic", Source: "deterministic-integer-model-v1", ClockDomain: "modeled-relative-nanoseconds", Synchronization: "not-applicable", MeasurementKind: "synthetic-one-way", Note: "Simulated timestamps; no packets, host clock accuracy or hardware evidence."}
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
+	// Keep allocation bounds visible at the allocation site as well as in Config.
+	packetCount := c.Packets
+	if packetCount < 1 || packetCount > 10000 {
+		return Result{}, fmt.Errorf("packet allocation outside 1..10000")
+	}
+	r.Samples = make([]Sample, packetCount)
 	jobs := make(chan int, c.Workers*2)
-	ready := make([]bool, c.Packets)
+	ready := make([]bool, packetCount)
 	var wg sync.WaitGroup
 	for range c.Workers {
 		wg.Go(func() {

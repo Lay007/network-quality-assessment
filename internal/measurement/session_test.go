@@ -58,7 +58,8 @@ func TestSyntheticRepeatabilityAndLoss(t *testing.T) {
 func TestConfigurationBounds(t *testing.T) {
 	for _, modify := range []func(*Config){
 		func(c *Config) { c.Version = 2 }, func(c *Config) { c.Mode = "hardware" }, func(c *Config) { c.Interface = "eth0" },
-		func(c *Config) { c.Packets = 0 }, func(c *Config) { c.Packets = 10001 }, func(c *Config) { c.Workers = 0 }, func(c *Config) { c.Workers = 17 },
+		func(c *Config) { c.Packets = 0 }, func(c *Config) { c.Packets = 10001 },
+		func(c *Config) { c.Packets = 1 << 30 }, func(c *Config) { c.Workers = 0 }, func(c *Config) { c.Workers = 17 },
 		func(c *Config) { c.Interval = 0 }, func(c *Config) { c.Timeout = 0 }, func(c *Config) { c.LossEvery = -1 }, func(c *Config) { c.Variation = c.Delay + 1 },
 	} {
 		c := DefaultConfig()
