@@ -1,13 +1,18 @@
+//go:build linux
+
 package zsocket
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"golang.org/x/sys/unix"
+	"net"
 	"os"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"syscall"
-	"unsafe"
 
 	"github.com/newtools/zsocket/inet"
 	"github.com/newtools/zsocket/nettypes"
@@ -115,8 +120,7 @@ func errnoErr(e syscall.Errno) error {
 }
 
 func copyFx(dst, src []byte, len uint16) uint16 {
-	copy(dst, src)
-	return len
+	return uint16(copy(dst[:len], src[:len]))
 }
 
 // IZSocket is an interface for interacting with eth-iface like
@@ -126,9 +130,9 @@ type IZSocket interface {
 	MaxPackets() int32
 	MaxPacketSize() uint16
 	WrittenPackets() int32
-	Listen(fx func(*nettypes.Frame, uint16, uint16))
+	Listen(fx func(*nettypes.Frame, uint16, uint16)) error
 	WriteToBuffer(buf []byte, l uint16) (int32, error)
-	CopyToBuffer(buf []byte, l uint16, copyFx func(dst, src []byte, l uint16)) (int32, error)
+	CopyToBuffer(buf []byte, l uint16, copyFx func(dst, src []byte, l uint16) uint16) (int32, error)
 	FlushFrames() (uint, error, []error)
 	Close() error
 }
@@ -136,6 +140,11 @@ type IZSocket interface {
 // ZSocket opens a zero copy ring-buffer to the specified interface.
 // Do not manually initialize ZSocket. Use `NewZSocket`.
 type ZSocket struct {
+	life           sync.RWMutex
+	txMu           sync.Mutex
+	closed         atomic.Bool
+	closeOnce      sync.Once
+	closeErr       error
 	socket         int
 	raw            []byte
 	listening      int32
@@ -168,6 +177,9 @@ func NewZSocket(ethIndex, options int, maxFrameSize, maxTotalFrames uint, ethTyp
 		return nil, fmt.Errorf("maxTotalFrames must be at least 16, and be a multiple of 8")
 	}
 
+	if ethIndex <= 0 || options & ^(ENABLE_RX|ENABLE_TX|DISABLE_TX_LOSS) != 0 || options&(ENABLE_RX|ENABLE_TX) == 0 || maxTotalFrames > 1<<20 {
+		return nil, fmt.Errorf("invalid interface, options, or frame count")
+	}
 	zs := new(ZSocket)
 	eT := inet.HToNS(ethType[0:])
 	// in Linux PF_PACKET is actually defined by AF_PACKET.
@@ -176,6 +188,12 @@ func NewZSocket(ethIndex, options int, maxFrameSize, maxTotalFrames uint, ethTyp
 		return nil, err
 	}
 	zs.socket = sock
+	success := false
+	defer func() {
+		if !success {
+			_ = syscall.Close(sock)
+		}
+	}()
 	sll := syscall.SockaddrLinklayer{}
 	sll.Protocol = eT
 	sll.Ifindex = ethIndex
@@ -204,17 +222,15 @@ func NewZSocket(ethIndex, options int, maxFrameSize, maxTotalFrames uint, ethTyp
 	req.blockSize = req.frameSize * 8
 	req.blockNum = maxTotalFrames / 8
 	req.frameNum = (req.blockSize / req.frameSize) * req.blockNum
-	reqP := req.getPointer()
+	kernelReq := &unix.TpacketReq{Block_size: uint32(req.blockSize), Block_nr: uint32(req.blockNum), Frame_size: uint32(req.frameSize), Frame_nr: uint32(req.frameNum)}
 	if zs.rxEnabled {
-		_, _, e1 := syscall.Syscall6(uintptr(syscall.SYS_SETSOCKOPT), uintptr(sock), uintptr(syscall.SOL_PACKET), uintptr(_PACKET_RX_RING), uintptr(reqP), uintptr(req.size()), 0)
-		if e1 != 0 {
-			return nil, errnoErr(e1)
+		if err := unix.SetsockoptTpacketReq(sock, unix.SOL_PACKET, _PACKET_RX_RING, kernelReq); err != nil {
+			return nil, err
 		}
 	}
 	if zs.txEnabled {
-		_, _, e1 := syscall.Syscall6(uintptr(syscall.SYS_SETSOCKOPT), uintptr(sock), uintptr(syscall.SOL_PACKET), uintptr(_PACKET_TX_RING), uintptr(reqP), uintptr(req.size()), 0)
-		if e1 != 0 {
-			return nil, errnoErr(e1)
+		if err := unix.SetsockoptTpacketReq(sock, unix.SOL_PACKET, _PACKET_TX_RING, kernelReq); err != nil {
+			return nil, err
 		}
 		/*
 			Can't get this to work for some reason
@@ -259,6 +275,7 @@ func NewZSocket(ethIndex, options int, maxFrameSize, maxTotalFrames uint, ethTyp
 			zs.txFrames = append(zs.txFrames, tx)
 		}
 	}
+	success = true
 	return zs, nil
 }
 
@@ -316,32 +333,47 @@ func (zs *ZSocket) WrittenPackets() int32 {
 }
 
 // Listen to all specified packets in the RX ring-buffer
+// Listen borrows each frame only for the callback; copy retained data.
 func (zs *ZSocket) Listen(fx func(*nettypes.Frame, uint16, uint16)) error {
-	if !zs.rxEnabled {
-		return fmt.Errorf("the RX ring is disabled on this socket")
+	return zs.ListenContext(context.Background(), fx)
+}
+
+func (zs *ZSocket) ListenContext(ctx context.Context, fx func(*nettypes.Frame, uint16, uint16)) error {
+	zs.life.RLock()
+	defer zs.life.RUnlock()
+	if zs.closed.Load() {
+		return net.ErrClosed
+	}
+	if !zs.rxEnabled || fx == nil {
+		return fmt.Errorf("RX ring and callback required")
 	}
 	if !atomic.CompareAndSwapInt32(&zs.listening, 0, 1) {
-		return fmt.Errorf("there is already a listener on this socket")
+		return fmt.Errorf("listener already running")
 	}
-	pfd := &pollfd{}
-	pfd.fd = zs.socket
-	pfd.events = _POLLERR | _POLLIN
-	pfd.revents = 0
-	pfdP := uintptr(pfd.getPointer())
-	rxIndex := int32(0)
-	rf := zs.rxFrames[rxIndex]
-	pollTimeout := -1
-	pTOPointer := uintptr(unsafe.Pointer(&pollTimeout))
+	defer atomic.StoreInt32(&zs.listening, 0)
+	index := int32(0)
 	for {
-		for ; rf.rxReady(); rf = zs.rxFrames[rxIndex] {
-			f := nettypes.Frame(rf.raw[rf.macStart():])
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if zs.closed.Load() {
+			return net.ErrClosed
+		}
+		rf := zs.rxFrames[index]
+		if rf.rxReady() {
+			start, length := int(rf.macStart()), int(rf.tpSnapLen())
+			if start > len(rf.raw) || length > len(rf.raw)-start {
+				rf.rxSet()
+				return fmt.Errorf("invalid RX frame bounds")
+			}
+			f := nettypes.Frame(rf.raw[start : start+length])
 			fx(&f, rf.tpLen(), rf.tpSnapLen())
 			rf.rxSet()
-			rxIndex = (rxIndex + 1) % zs.frameNum
+			index = (index + 1) % zs.frameNum
+			continue
 		}
-		_, _, e1 := syscall.Syscall(syscall.SYS_POLL, pfdP, uintptr(1), pTOPointer)
-		if e1 != 0 {
-			return e1
+		if _, err := unix.Poll([]unix.PollFd{{Fd: int32(zs.socket), Events: unix.POLLIN}}, 50); err != nil && err != syscall.EINTR {
+			return err
 		}
 	}
 }
@@ -349,13 +381,7 @@ func (zs *ZSocket) Listen(fx func(*nettypes.Frame, uint16, uint16)) error {
 // WriteToBuffer writes a raw frame in bytes to the TX ring buffer.
 // The length of the frame must be specified.
 func (zs *ZSocket) WriteToBuffer(buf []byte, l uint16) (int32, error) {
-	if l > zs.txFrameSize {
-		return -1, fmt.Errorf("the length of the write exceeds the size of the TX frame")
-	}
-	if l < 0 {
-		return zs.CopyToBuffer(buf, uint16(len(buf)), copyFx)
-	}
-	return zs.CopyToBuffer(buf[:l], l, copyFx)
+	return zs.CopyToBuffer(buf, l, copyFx)
 }
 
 // CopyToBuffer is like WriteToBuffer, it writes a frame to the TX
@@ -363,6 +389,17 @@ func (zs *ZSocket) WriteToBuffer(buf []byte, l uint16) (int32, error) {
 // be passed the raw TX byes so that custom logic can be applied
 // to copying the frame (for example, encrypting the frame).
 func (zs *ZSocket) CopyToBuffer(buf []byte, l uint16, copyFx func(dst, src []byte, l uint16) uint16) (int32, error) {
+	zs.life.RLock()
+	defer zs.life.RUnlock()
+	zs.txMu.Lock()
+	defer zs.txMu.Unlock()
+	if zs.closed.Load() {
+		return -1, net.ErrClosed
+	}
+	if int(l) > len(buf) || l > zs.txFrameSize || copyFx == nil {
+		return -1, fmt.Errorf("invalid TX length or copy function")
+	}
+
 	if !zs.txEnabled {
 		return -1, fmt.Errorf("the TX ring is not enabled on this socket")
 	}
@@ -370,7 +407,12 @@ func (zs *ZSocket) CopyToBuffer(buf []byte, l uint16, copyFx func(dst, src []byt
 	if err != nil {
 		return -1, err
 	}
-	cL := copyFx(tx.txStart, buf, l)
+	cL := copyFx(tx.txStart[:l], buf[:l], l)
+	if cL > l {
+		atomic.StoreUint32(&tx.mb, 0)
+		atomic.StoreInt32(&zs.txIndex, txIndex)
+		return -1, fmt.Errorf("copy function exceeded requested length")
+	}
 	tx.setTpLen(cL)
 	tx.setTpSnapLen(cL)
 	written := atomic.AddInt32(&zs.txWritten, 1)
@@ -383,6 +425,14 @@ func (zs *ZSocket) CopyToBuffer(buf []byte, l uint16, copyFx func(dst, src []byt
 // FlushFrames tells the kernel to flush all packets written
 // to the TX ring buffer.n
 func (zs *ZSocket) FlushFrames() (uint, error, []error) {
+	zs.life.RLock()
+	defer zs.life.RUnlock()
+	zs.txMu.Lock()
+	defer zs.txMu.Unlock()
+	if zs.closed.Load() {
+		return 0, net.ErrClosed, nil
+	}
+
 	if !zs.txEnabled {
 		return 0, fmt.Errorf("the TX ring is not enabled on this socket, there is nothing to flush"), nil
 	}
@@ -399,13 +449,16 @@ func (zs *ZSocket) FlushFrames() (uint, error, []error) {
 	written := atomic.SwapInt32(&zs.txWritten, 0)
 	framesFlushed := uint(0)
 	frameNum := int32(zs.frameNum)
-	z := uintptr(0)
 	for t, w := index, written; w > 0; w-- {
 		zs.txFrames[t].txSet()
 		t = (t + 1) % frameNum
 	}
-	if _, _, e1 := syscall.Syscall6(syscall.SYS_SENDTO, uintptr(zs.socket), z, z, z, z, z); e1 != 0 {
-		return framesFlushed, e1, nil
+	if err := unix.Sendto(zs.socket, nil, unix.MSG_DONTWAIT, nil); err != nil {
+		for t, w := index, written; w > 0; w-- {
+			zs.txFrames[t].txSetMB()
+			t = (t + 1) % frameNum
+		}
+		return framesFlushed, err, nil
 	}
 	var errs []error = nil
 	for t, w := index, written; w > 0; w-- {
@@ -423,7 +476,18 @@ func (zs *ZSocket) FlushFrames() (uint, error, []error) {
 
 // Close socket
 func (zs *ZSocket) Close() error {
-	return syscall.Close(zs.socket)
+	zs.closeOnce.Do(func() {
+		zs.closed.Store(true)
+		zs.life.Lock()
+		defer zs.life.Unlock()
+		if zs.raw != nil {
+			zs.closeErr = syscall.Munmap(zs.raw)
+			zs.raw = nil
+		}
+		zs.closeErr = errors.Join(zs.closeErr, syscall.Close(zs.socket))
+		zs.rxFrames, zs.txFrames = nil, nil
+	})
+	return zs.closeErr
 }
 
 func (zs *ZSocket) getFreeTx() (*ringFrame, int32, error) {
@@ -435,17 +499,17 @@ func (zs *ZSocket) getFreeTx() (*ringFrame, int32, error) {
 	}
 	tx := zs.txFrames[txIndex]
 	for !tx.txReady() {
-		pfd := &pollfd{}
-		pfd.fd = zs.socket
-		pfd.events = _POLLERR | _POLLOUT
-		pfd.revents = 0
-		timeout := -1
-		_, _, e1 := syscall.Syscall(syscall.SYS_POLL, uintptr(pfd.getPointer()), uintptr(1), uintptr(unsafe.Pointer(&timeout)))
-		if e1 != 0 {
-			return nil, -1, e1
+		if zs.closed.Load() {
+			return nil, -1, net.ErrClosed
+		}
+		if _, err := unix.Poll([]unix.PollFd{{Fd: int32(zs.socket), Events: unix.POLLOUT}}, 50); err != nil && err != syscall.EINTR {
+			return nil, -1, err
 		}
 	}
 	for !tx.txMBReady() {
+		if zs.closed.Load() {
+			return nil, -1, net.ErrClosed
+		}
 		runtime.Gosched()
 	}
 	return tx, txIndex, nil
@@ -462,72 +526,6 @@ type tpacketReq struct {
 	blockNum, /* Number of blocks */
 	frameSize, /* Size of frame */
 	frameNum uint
-}
-
-func (tr *tpacketReq) getPointer() unsafe.Pointer {
-	if inet.HOST_INT_SIZE == 4 {
-		return unsafe.Pointer(&(struct {
-			blockSize,
-			blockNum,
-			frameSize,
-			frameNum uint32
-		}{
-			uint32(tr.blockSize),
-			uint32(tr.blockNum),
-			uint32(tr.frameSize),
-			uint32(tr.frameNum),
-		}))
-	} else {
-		return unsafe.Pointer(&(struct {
-			blockSize,
-			blockNum,
-			frameSize,
-			frameNum uint64
-		}{
-			uint64(tr.blockSize),
-			uint64(tr.blockNum),
-			uint64(tr.frameSize),
-			uint64(tr.frameNum),
-		}))
-	}
-}
-
-func (req *tpacketReq) size() int {
-	return inet.HOST_INT_SIZE * 4
-}
-
-type pollfd struct {
-	fd      int
-	events  int16
-	revents int16
-}
-
-func (pfd *pollfd) getPointer() unsafe.Pointer {
-	if inet.HOST_INT_SIZE == 4 {
-		return unsafe.Pointer(&(struct {
-			fd      int32
-			events  int16
-			revents int16
-		}{
-			int32(pfd.fd),
-			pfd.events,
-			pfd.revents,
-		}))
-	} else {
-		return unsafe.Pointer(&(struct {
-			fd      int64
-			events  int16
-			revents int16
-		}{
-			int64(pfd.fd),
-			pfd.events,
-			pfd.revents,
-		}))
-	}
-}
-
-func (req *pollfd) size() int {
-	return inet.HOST_INT_SIZE + 2*inet.HOST_SHORT_SIZE
 }
 
 type ringFrame struct {

@@ -1,3 +1,5 @@
+//go:build linux
+
 package main
 
 import (
@@ -22,7 +24,6 @@ func TestY1564(id int, net_interface_name string) {
 	}
 	db, err := openDB()
 	if err != nil {
-		db.Close()
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -34,7 +35,7 @@ func TestY1564(id int, net_interface_name string) {
 		}
 		return
 	}
-	db.Exec("UPDATE test_y1564 SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id)
+	db.Exec("UPDATE test_y1564 SET status=?, datatime=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id)
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 
@@ -50,7 +51,7 @@ func TestY1564(id int, net_interface_name string) {
 		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -96,7 +97,7 @@ func TestY1564(id int, net_interface_name string) {
 		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -133,7 +134,7 @@ func TestY1564(id int, net_interface_name string) {
 		db.Exec("UPDATE test_y1564 SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -169,7 +170,7 @@ func TestY1564(id int, net_interface_name string) {
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 			db.Close()
 			row.Close()
-			row_ip.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -208,7 +209,7 @@ func TestY1564(id int, net_interface_name string) {
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database query failed")
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -255,7 +256,7 @@ func TestY1564(id int, net_interface_name string) {
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 5, id, "Database result parsing failed")
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -457,7 +458,7 @@ func TestY1564(id int, net_interface_name string) {
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}

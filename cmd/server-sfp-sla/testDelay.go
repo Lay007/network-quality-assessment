@@ -1,3 +1,5 @@
+//go:build linux
+
 package main
 
 import (
@@ -18,7 +20,6 @@ func TestDelay(id int, net_interface_name string) {
 	}
 	db, err := openDB()
 	if err != nil {
-		db.Close()
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -30,7 +31,7 @@ func TestDelay(id int, net_interface_name string) {
 		}
 		return
 	}
-	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id)
+	db.Exec("UPDATE test_latency SET status=?, datatime=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id)
 
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
@@ -43,7 +44,7 @@ func TestDelay(id int, net_interface_name string) {
 	row, err := db.Query("select id, miss_init_test, test_type, module_first, module_second, thr_begin, count_packs, count_tests, status from test_latency where id=?", id)
 	if err != nil {
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -86,7 +87,7 @@ func TestDelay(id int, net_interface_name string) {
 	if err != nil {
 		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -122,7 +123,7 @@ func TestDelay(id int, net_interface_name string) {
 	if err != nil {
 		db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -157,7 +158,7 @@ func TestDelay(id int, net_interface_name string) {
 			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_ip.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -195,7 +196,7 @@ func TestDelay(id int, net_interface_name string) {
 			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -241,7 +242,7 @@ func TestDelay(id int, net_interface_name string) {
 			db.Exec("UPDATE test_latency SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -459,7 +460,7 @@ func TestDelay(id int, net_interface_name string) {
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -636,7 +637,6 @@ func TestDelay(id int, net_interface_name string) {
 	/*
 		db, err = openDB()
 		if err != nil {
-			db.Close()
 
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
@@ -693,13 +693,19 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 	})
 
 	c, err := raw.ListenPacket(ifi, etherType, netConf)
+	if err != nil {
+		quit <- 1
+		return
+	}
+	defer c.Close()
 
 	SolveDelayTicker := time.NewTicker(5 * time.Millisecond)
+	defer SolveDelayTicker.Stop()
 	b := packetForm(test.ipsrc, test.ipdst1, test.ipdst2, test.mac_src, test.mac_dst, size, 1, test.id_test_type, test.test_type)
 
 	for range SolveDelayTicker.C {
 
-		go test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, len(b))
+		test.receiveMessagesDelay(detectPackDelay, c, ifi.MTU, test.id_test_type, len(b))
 
 		select {
 		case detect := <-detectPackDelay:
@@ -729,7 +735,7 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 					fmt.Println(" --> Size = ", size)
 				}
 
-				floatDelay = (float32(delay) / float32(number)) * 1000000.0 / float32(math.Pow(2, 32))
+				floatDelay = (float32(delay) / float32(max(number, 1))) * 1000000.0 / float32(math.Pow(2, 32))
 				floatDelayMax = float32(delayMax) * 1000000.0 / float32(math.Pow(2, 32))
 				floatDelayMin = float32(delayMin) * 1000000.0 / float32(math.Pow(2, 32))
 				/*
@@ -743,7 +749,7 @@ func (test *testDelay) getMonDelay(quit chan int64, size int) {
 						fmt.Println(" --> DelayMin = ", floatDelayMin)
 					}
 
-					floatDelay = (float32(delay) / float32(number))
+					floatDelay = (float32(delay) / float32(max(number, 1)))
 					floatDelayMax = float32(delayMax)
 					floatDelayMin = float32(delayMin)
 				*/

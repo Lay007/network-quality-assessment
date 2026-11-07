@@ -1,13 +1,21 @@
+//go:build linux
+
 package main //serverSLA
 
 import (
 	"bytes"
+	"context"
+	"database/sql"
 	"encoding/binary"
 	"fmt"
 	"log"
 	"math"
 	"net"
-	"runtime"
+	"os"
+	"os/signal"
+
+	"sync"
+	"syscall"
 	"time"
 
 	//"unsafe"
@@ -54,469 +62,159 @@ func (h *iphdr) checksum() {
 	(*h).csum = checksum(b.Bytes())
 }
 
-func clearDB() {
-	t := time.NewTicker(1 * time.Hour)
-	for range t.C {
-		clrdb, _ := openDB()
-		clrdb.Exec("DELETE FROM modules_sfp_sla_load_rez WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)")
-		clrdb.Exec("DELETE FROM test_sla_real_rez WHERE datetime <= date_sub(now(), INTERVAL 24 HOUR)")
-		clrdb.Exec("DELETE FROM test_sla_real_alarm WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)")
-		clrdb.Close()
+func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if err := runLegacy(ctx); err != nil {
+		log.Print(err)
 	}
 }
 
-func main() {
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	modules := []module_sfp{}
-
-	go clearDB()
-
+func runLegacy(ctx context.Context) error {
 	db, err := openDB()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("open database: %w", err)
 	}
-	if verboseLogs {
-		fmt.Println("Error_BD = ", err)
+	defer db.Close()
+	if err := db.PingContext(ctx); err != nil {
+		return fmt.Errorf("connect database: %w", err)
 	}
-	db.Exec("DELETE FROM net_interfaces_from_server_sla")
-	db.Exec("ALTER TABLE net_interfaces_from_server_sla AUTO_INCREMENT = 1")
-
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-
+	if _, err := db.ExecContext(ctx, "DELETE FROM net_interfaces_from_server_sla"); err != nil {
+		return err
+	}
 	for _, device := range interfaces {
-		if verboseLogs {
-			fmt.Println(device.Name)
-		}
 		addresses, err := device.Addrs()
 		if err != nil {
-			if verboseLogs {
-				fmt.Printf("failed to read addresses for interface %s: %v\n", device.Name, err)
-			}
-			continue
+			return err
 		}
 		for _, address := range addresses {
 			ipStr := address.String()
 			if ip, ok := address.(*net.IPNet); ok {
 				ipStr = ip.IP.String()
 			}
-			db.Exec("INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, ipStr, device.HardwareAddr.String())
+			if _, err := db.ExecContext(ctx, "INSERT INTO net_interfaces_from_server_sla (name, address_IP, address_mac) VALUES(?, ?, ?)", device.Name, ipStr, device.HardwareAddr.String()); err != nil {
+				return err
+			}
 		}
 	}
-
-	db.Exec("UPDATE test_sla_real SET status=1 WHERE status=2")
-	db.Exec("UPDATE test_throughput SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
-	db.Exec("UPDATE test_bert SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
-	db.Exec("UPDATE test_latency SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
-	db.Exec("UPDATE test_frame_loss SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
-	db.Exec("UPDATE test_y1564 SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05"))
-	db.Close()
-
-	db_SNMP, err = openDB()
-	//defer db_SNMP.Close()
-	t := time.NewTicker(15 * time.Second)
-	for range t.C {
-
-		db, err = openDB()
-		if err != nil {
-			db.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-		row_gc, err := db.Query("SELECT server_IP, net_interface_name, VLAN, VLAN_number, QinQ, QinQ_number FROM global_config LIMIT 1")
-		defer row_gc.Close()
-		if err != nil {
-			db.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-		row_gc.Next()
-		conf := new(global_config)
-		err = row_gc.Scan(&conf.server_ip, &conf.net_interface_name, &conf.vlan, &conf.vlan_number, &conf.QinQ, &conf.QinQ_number)
-		if err != nil {
-			db.Close()
-
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-		row_gc.Close()
-
-		if conf.net_interface_name == "" {
-			db.Close()
-			if verboseLogs {
-				fmt.Println("Net interface is not selected")
-			}
-			continue
-		}
-
-		if verboseLogs {
-			fmt.Println(conf.server_ip)
-		}
-		//*
-		// Stop check SNMP
-		for i_m, _ := range modules {
-			if verboseLogs {
-				fmt.Println("Chan stop ", modules[i_m].address_ip)
-			}
-			(&modules[i_m]).chan_stop <- 1
-		}
-		runtime.Gosched()
-
-		row_modules, err := db.Query("SELECT id, mac, name, address_ip, version, location FROM modules_sfp_sla")
-		defer row_modules.Close()
-		if err != nil {
-			db.Close()
-
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-		modules_up := []module_sfp{}
-		if verboseLogs {
-			fmt.Println("Modules update")
-		}
-
-		for row_modules.Next() {
-			m := module_sfp{}
-			err = row_modules.Scan(&m.id, &m.addres_mac, &m.name, &m.address_ip, &m.version, &m.location)
-			if err != nil {
-				if verboseLogs {
-					fmt.Println(err)
-				}
-				continue
-			}
-			m.chan_stop = make(chan int, 1)
-			if verboseLogs {
-				fmt.Println(m.address_ip)
-			}
-			modules_up = append(modules_up, m)
-		}
-		modules = modules_up
-		row_modules.Close()
-		//defer db.Close()
-		for _i_m, _ := range modules {
-			go (&modules[_i_m]).startSNMP(*conf)
-		}
-		//*/
-		if (conf.net_interface_name == "") || (conf.net_interface_name == "0") {
-			if verboseLogs {
-				fmt.Println("  Net interface not changed")
-			}
-			db.Close()
-			continue
-		}
-
-		ifi, err := net.InterfaceByName(conf.net_interface_name)
-		if err != nil {
-			//log.Fatalf("failed to find interface %q: %v", conf.net_interface_name, err)
-			db.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Printf("failed to find interface %q: %v\n", conf.net_interface_name, err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-
-		if verboseLogs {
-			fmt.Println("Net_NAME: ", conf.net_interface_name)
-		}
-		if verboseLogs {
-			fmt.Println("interface: ", ifi.Name)
-		}
-		if verboseLogs {
-			fmt.Println("Time now: ", time.Now())
-		}
-		if verboseLogs {
-			fmt.Printf("goroutine num: %d\n", runtime.NumGoroutine())
-		}
-
-		row_test_thr, err := db.Query("SELECT id FROM test_throughput WHERE status=1")
-		defer row_test_thr.Close()
-		if err != nil {
-			db.Close()
-			row_test_thr.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-
-		row_test_real, err := db.Query("SELECT id FROM test_sla_real WHERE status=1")
-		defer row_test_real.Close()
-		if err != nil {
-			db.Close()
-			row_test_real.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-
-		row_test_berst, err := db.Query("SELECT id FROM test_bert WHERE status=1")
-		defer row_test_berst.Close()
-		if err != nil {
-			db.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-
-		row_test_latency, err := db.Query("SELECT id FROM test_latency WHERE status=1")
-		defer row_test_latency.Close()
-		if err != nil {
-			db.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-
-		row_test_loss, err := db.Query("SELECT id FROM test_frame_loss WHERE status=1")
-		defer row_test_loss.Close()
-		if err != nil {
-			db.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-
-		row_test_y1564, err := db.Query("SELECT id FROM test_y1564 WHERE status=1")
-		defer row_test_y1564.Close()
-		if err != nil {
-			db.Close()
-			if verboseLogs {
-				fmt.Println(" -!! Error !!-")
-			}
-			if verboseLogs {
-				fmt.Println(err)
-			}
-			if verboseLogs {
-				fmt.Println(" ----=====----")
-			}
-			continue
-		}
-
-		db.Close()
-
-		for row_test_real.Next() {
-			var id int
-			err = row_test_real.Scan(&id)
-			if err != nil {
-				db.Close()
-				row_test_real.Close()
-				if verboseLogs {
-					fmt.Println(" -!! Error !!-")
-				}
-				if verboseLogs {
-					fmt.Println(err)
-				}
-				if verboseLogs {
-					fmt.Println(" ----=====----")
-				}
-				continue
-			}
-			if verboseLogs {
-				fmt.Println("-== Test id  = ", id)
-			}
-			go TestReal(id, conf.net_interface_name)
-		}
-		row_test_real.Close()
-
-		for row_test_thr.Next() {
-			var id int
-			err = row_test_thr.Scan(&id)
-			if err != nil {
-				db.Close()
-				row_test_thr.Close()
-				if verboseLogs {
-					fmt.Println(" -!! Error !!-")
-				}
-				if verboseLogs {
-					fmt.Println(err)
-				}
-				if verboseLogs {
-					fmt.Println(" ----=====----")
-				}
-				continue
-			}
-			TestThroughput(id, conf.net_interface_name)
-		}
-		row_test_thr.Close()
-
-		for row_test_berst.Next() {
-			var id int
-			err = row_test_berst.Scan(&id)
-			if err != nil {
-				db.Close()
-				row_test_berst.Close()
-				if verboseLogs {
-					fmt.Println(" -!! Error !!-")
-				}
-				if verboseLogs {
-					fmt.Println(err)
-				}
-				if verboseLogs {
-					fmt.Println(" ----=====----")
-				}
-				continue
-			}
-			TestBerst(id, conf.net_interface_name)
-		}
-		row_test_thr.Close()
-
-		for row_test_latency.Next() {
-			var id int
-			err = row_test_latency.Scan(&id)
-			if err != nil {
-				db.Close()
-				row_test_latency.Close()
-				if verboseLogs {
-					fmt.Println(" -!! Error !!-")
-				}
-				if verboseLogs {
-					fmt.Println(err)
-				}
-				if verboseLogs {
-					fmt.Println(" ----=====----")
-				}
-				continue
-			}
-			TestDelay(id, conf.net_interface_name)
-		}
-		row_test_latency.Close()
-
-		for row_test_loss.Next() {
-			var id int
-			err = row_test_loss.Scan(&id)
-			if err != nil {
-				db.Close()
-				row_test_loss.Close()
-				if verboseLogs {
-					fmt.Println(" -!! Error !!-")
-				}
-				if verboseLogs {
-					fmt.Println(err)
-				}
-				if verboseLogs {
-					fmt.Println(" ----=====----")
-				}
-				continue
-			}
-			TestLoss(id, conf.net_interface_name)
-		}
-		row_test_loss.Close()
-
-		for row_test_y1564.Next() {
-			var id int
-			err = row_test_y1564.Scan(&id)
-			if err != nil {
-				db.Close()
-				row_test_y1564.Close()
-				if verboseLogs {
-					fmt.Println(" -!! Error !!-")
-				}
-				if verboseLogs {
-					fmt.Println(err)
-				}
-				if verboseLogs {
-					fmt.Println(" ----=====----")
-				}
-				continue
-			}
-			TestY1564(id, conf.net_interface_name)
-		}
-		row_test_y1564.Close()
-
-		//go Test_SLA_real_go()
-
+	if _, err := db.ExecContext(ctx, "UPDATE test_sla_real SET status=1 WHERE status=2"); err != nil {
+		return err
 	}
-
-	// -------=======
-	/*
-		c, err := raw.ListenPacket(ifi, etherType, nil)
-		if err != nil {
-			log.Fatalf("failed to listen: %v", err)
+	for _, table := range []string{"test_throughput", "test_bert", "test_latency", "test_frame_loss", "test_y1564"} {
+		if _, err := db.ExecContext(ctx, "UPDATE "+table+" SET status=4, datetime_end=? WHERE status=2", time.Now().Format("2006-01-02 15:04:05")); err != nil {
+			return err
 		}
+	}
+	stopMonitors := func() {}
+	defer func() { stopMonitors() }()
+	poll := time.NewTicker(15 * time.Second)
+	cleanup := time.NewTicker(time.Hour)
+	defer poll.Stop()
+	defer cleanup.Stop()
+	// A completed key can be scheduled again; a running key cannot overlap itself.
+	var active sync.Map
+	slots := make(chan struct{}, 1)
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-cleanup.C:
+			for _, query := range []string{
+				"DELETE FROM modules_sfp_sla_load_rez WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)",
+				"DELETE FROM test_sla_real_rez WHERE datetime <= date_sub(now(), INTERVAL 24 HOUR)",
+				"DELETE FROM test_sla_real_alarm WHERE datatime <= date_sub(now(), INTERVAL 24 HOUR)",
+			} {
+				if _, err := db.ExecContext(ctx, query); err != nil {
+					log.Print("database cleanup failed")
+				}
+			}
+		case <-poll.C:
+			var conf global_config
+			err := db.QueryRowContext(ctx, "SELECT server_IP, net_interface_name, VLAN, VLAN_number, QinQ, QinQ_number FROM global_config LIMIT 1").Scan(&conf.server_ip, &conf.net_interface_name, &conf.vlan, &conf.vlan_number, &conf.QinQ, &conf.QinQ_number)
+			if err != nil || conf.net_interface_name == "" || conf.net_interface_name == "0" {
+				continue
+			}
+			if _, err := net.InterfaceByName(conf.net_interface_name); err != nil {
+				continue
+			}
+			modules, err := readModules(ctx, db)
+			if err != nil {
+				log.Print("read modules failed")
+				continue
+			}
+			stopMonitors()
+			stopMonitors = startMonitors(ctx, db, modules, conf)
+			for _, job := range []struct {
+				table string
+				run   func(int, string)
+			}{
+				{"test_sla_real", TestReal}, {"test_throughput", TestThroughput}, {"test_bert", TestBerst},
+				{"test_latency", TestDelay}, {"test_frame_loss", TestLoss}, {"test_y1564", TestY1564},
+			} {
+				ids, err := pendingIDs(ctx, db, job.table)
+				if err != nil {
+					log.Printf("read pending %s failed", job.table)
+					continue
+				}
+				for _, id := range ids {
+					key := fmt.Sprintf("%s/%d", job.table, id)
+					if _, loaded := active.LoadOrStore(key, true); loaded {
+						continue
+					}
+					select {
+					case slots <- struct{}{}:
+						go func() { defer active.Delete(key); defer func() { <-slots }(); job.run(id, conf.net_interface_name) }()
+					default:
+						active.Delete(key)
+					}
+				}
+			}
+		}
+	}
+}
 
-		// Send messages in one goroutine, receive messages in another.
-		go sendMessages(c, ifi.HardwareAddr)
-		go receiveMessages(c, ifi.MTU)
+func pendingIDs(ctx context.Context, db *sql.DB, table string) ([]int, error) {
+	// The caller supplies only table names from the fixed dispatch list above.
+	switch table {
+	case "test_sla_real", "test_throughput", "test_bert", "test_latency", "test_frame_loss", "test_y1564":
+	default:
+		return nil, fmt.Errorf("unknown measurement table")
+	}
+	rows, err := db.QueryContext(ctx, "SELECT id FROM "+table+" WHERE status=1")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var ids []int
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
 
-		// Block forever.
-		select {}
-	*/
+func readModules(ctx context.Context, db *sql.DB) ([]module_sfp, error) {
+	rows, err := db.QueryContext(ctx, "SELECT id, mac, name, address_ip, version, location FROM modules_sfp_sla")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var modules []module_sfp
+	for rows.Next() {
+		var m module_sfp
+		if err := rows.Scan(&m.id, &m.addres_mac, &m.name, &m.address_ip, &m.version, &m.location); err != nil {
+			return nil, err
+		}
+		modules = append(modules, m)
+	}
+	return modules, rows.Err()
 }
 
 var count_recive int
@@ -524,7 +222,6 @@ var count_recive int
 func TestReal(id int, net_interface_name string) {
 	db, err := openDB()
 	if err != nil {
-		db.Close()
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -553,7 +250,7 @@ func TestReal(id int, net_interface_name string) {
 	row, err := db.Query("SELECT id, test_type, module_first, module_second, block_size, clock, count, test_delay, test_delay_jitter, test_loss, test_delay_1, test_delay1_jitter FROM test_sla_real WHERE id=?", id)
 	if err != nil {
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -594,7 +291,7 @@ func TestReal(id int, net_interface_name string) {
 	if err != nil {
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -633,7 +330,7 @@ func TestReal(id int, net_interface_name string) {
 	if err != nil {
 		db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -669,7 +366,7 @@ func TestReal(id int, net_interface_name string) {
 			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 			db.Close()
 			row.Close()
-			row_ip.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -707,7 +404,7 @@ func TestReal(id int, net_interface_name string) {
 			db.Exec("UPDATE test_sla_real SET status=? WHERE id=?", 4, id)
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -1325,7 +1022,7 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				if verboseLogs {
 					fmt.Printf("failed to unmarshal ethernet frame: %v", err)
 				}
-				log.Fatalf("failed to unmarshal ethernet frame: %v", err)
+
 				continue
 			}
 
@@ -1458,7 +1155,6 @@ func (test *testSLA) receiveMessages(catchDetect chan int, id int, c net.PacketC
 				//*/
 				db, err := openDB()
 				if err != nil {
-					db.Close()
 					if verboseLogs {
 						fmt.Println(" -!! Error !!-")
 					}
@@ -1849,3 +1545,12 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 */
+
+func startMonitors(ctx context.Context, db *sql.DB, modules []module_sfp, conf global_config) func() {
+	ctx, cancel := context.WithCancel(ctx)
+	var wg sync.WaitGroup
+	for _, module := range modules {
+		wg.Go(func() { module.startSNMP(ctx, db, conf) })
+	}
+	return func() { cancel(); wg.Wait() }
+}

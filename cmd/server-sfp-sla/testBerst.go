@@ -1,3 +1,5 @@
+//go:build linux
+
 package main
 
 import (
@@ -16,7 +18,6 @@ func TestBerst(id int, net_interface_name string) {
 	}
 	db, err := openDB()
 	if err != nil {
-		db.Close()
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -28,7 +29,7 @@ func TestBerst(id int, net_interface_name string) {
 		}
 		return
 	}
-	db.Exec("UPDATE test_bert SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id)
+	db.Exec("UPDATE test_bert SET status=?, datatime=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id)
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
@@ -40,7 +41,7 @@ func TestBerst(id int, net_interface_name string) {
 	row, err := db.Query("select id,miss_init_test, test_type, module_first, module_second, thr_begin, count_prob_packs, count_probs, status from test_bert where id=?", id)
 	if err != nil {
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -83,7 +84,7 @@ func TestBerst(id int, net_interface_name string) {
 	if err != nil {
 		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -119,7 +120,7 @@ func TestBerst(id int, net_interface_name string) {
 	if err != nil {
 		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -154,7 +155,7 @@ func TestBerst(id int, net_interface_name string) {
 			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_ip.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -192,7 +193,7 @@ func TestBerst(id int, net_interface_name string) {
 			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -238,7 +239,7 @@ func TestBerst(id int, net_interface_name string) {
 			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -469,7 +470,7 @@ func TestBerst(id int, net_interface_name string) {
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -1091,7 +1092,6 @@ func TestBerst(id int, net_interface_name string) {
 	/*
 		db, err = openDB()
 		if err != nil {
-			db.Close()
 
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
