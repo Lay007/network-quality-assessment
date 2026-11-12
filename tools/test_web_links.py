@@ -1,8 +1,14 @@
 """Regression coverage for static web asset references."""
 
+import sys
 import unittest
+from pathlib import Path
 
-from check_web_links import WEB_ROOT, normalize, target_for
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+from check_web_links import WEB_ROOT, normalize, target_for  # noqa: E402
 
 
 class WebLinkTests(unittest.TestCase):
