@@ -1,5 +1,23 @@
 # network-quality-assessment
 
+## Runnable Go measurement engine
+
+Build and run the standalone agent without hardware, root or MySQL:
+
+```bash
+go build -o bin/measurement-agent ./cmd/measurement-agent
+bin/measurement-agent --packets 1000 --output bin/agent-results
+```
+
+Inspect the printed session directory for JSON metadata and a deterministic CSV
+trace. These timestamps and packet losses are **synthetic**. The existing Python
+analyzer produces delay/jitter distributions and reports from the trace.
+
+- [Agent configuration, lifecycle and analysis](docs/go-measurement-agent.md)
+- [Go reliability audit and remaining legacy risks](docs/go-engineering-audit.md)
+
+
+
 [![Docs Check](https://github.com/Lay007/network-quality-assessment/actions/workflows/docs-link-check.yml/badge.svg)](https://github.com/Lay007/network-quality-assessment/actions/workflows/docs-link-check.yml)
 [![Synthetic SLA Demo](https://github.com/Lay007/network-quality-assessment/actions/workflows/synthetic-sla-demo.yml/badge.svg)](https://github.com/Lay007/network-quality-assessment/actions/workflows/synthetic-sla-demo.yml)
 
