@@ -78,3 +78,17 @@ The current analyzer assumes:
 - scenario labels can be grouped independently.
 
 These assumptions are intentionally simple so that the same schema can support synthetic CI demos and future sanitized hardware traces.
+
+## Software round-trip results
+
+The Go loopback bench writes **rtt.csv**, a separate contract, for software echo
+observations. It does not redefine the packet trace schema above. Columns:
+`packet_id,tx_timestamp_ns,rx_timestamp_ns,round_trip_ns,round_trip_delta_ns,lost,measurement_kind`.
+`measurement_kind` is `round-trip`. Lost observations have empty RX/RTT/delta;
+RTT delta spans successive received observations. Software wall TX/RX values are
+diagnostic; monotonic elapsed time supplies RTT. It is not inferred one-way delay.
+
+The existing SLA analyzer expects one-way delay and must not consume this file.
+Synthetic Go sessions still write the original `trace.csv` schema and work with
+that analyzer unchanged. Timestamp provenance, clock assumptions and incomplete
+probe accounting are in JSON metadata; see [the bench guide](distributed-go-bench.md).

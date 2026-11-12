@@ -1,0 +1,43 @@
+{
+  "packets_sent": 100,
+  "packets_unfinished": 0,
+  "rtt_min_ns": 152017,
+  "rtt_max_ns": 2029631,
+  "rtt_mean_ns": 319952.48,
+  "schema_version": 1,
+  "session_id": "5a3664c561238ba48462bd2fdaeb7b29",
+  "software_version": "7bed4448987c6b331e414b78c4b2b90706b0d659 (go1.26.0)",
+  "platform": "linux/amd64",
+  "config": {
+    "target": "127.0.0.1:32791",
+    "probe_timeout_ns": 100000000,
+    "version": 1,
+    "mode": "udp",
+    "interface": "loopback",
+    "packets": 100,
+    "workers": 1,
+    "interval_ns": 10000000,
+    "timeout_ns": 5000000000,
+    "seed": 1,
+    "loss_every": 0,
+    "delay_ns": 300000,
+    "variation_ns": 10000
+  },
+  "config_sha256": "89ea85d28b54f88eac2b9f73700c3551b44ce519f75b5d054f28896bebe13eed",
+  "timestamp_provenance": {
+    "kind": "software",
+    "source": "Go time.Now and monotonic time.Since",
+    "clock_domain": "local-host-monotonic-elapsed",
+    "synchronization": "unsynchronized; remote clock unused",
+    "measurement_kind": "round-trip",
+    "note": "Application send-to-reply RTT includes scheduling, socket queues and echo processing. Wall timestamps are diagnostic only. No one-way or FPGA accuracy claim."
+  },
+  "status": "completed",
+  "started_at": "2026-11-07T21:36:34.968355672Z",
+  "ended_at": "2026-11-07T21:36:36.050009594Z",
+  "packets_attempted": 100,
+  "packets_received": 100,
+  "packets_lost": 0,
+  "loss_percent": 0,
+  "errors": []
+}

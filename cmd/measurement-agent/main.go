@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -16,17 +17,24 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if err := run(ctx, os.Args[1:], os.Stdout); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		if !errors.Is(err, flag.ErrHelp) {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
 }
 
 func run(ctx context.Context, args []string, out io.Writer) error {
+	if len(args) > 0 && args[0] == "serve" {
+		return runServe(ctx, args[1:], out)
+	}
 	c := measurement.DefaultConfig()
 	flags := flag.NewFlagSet("measurement-agent", flag.ContinueOnError)
 	flags.SetOutput(out)
 	output := flags.String("output", "results/go-agent", "result package parent directory")
 	config := flags.String("config", "", "strict JSON configuration file (duration fields use integer ns)")
+	flags.StringVar(&c.Mode, "mode", c.Mode, "synthetic or authenticated loopback udp")
+	flags.StringVar(&c.Target, "target", c.Target, "UDP loopback peer endpoint")
 	flags.IntVar(&c.Packets, "packets", c.Packets, "modeled packet count, 1..10000")
 	flags.IntVar(&c.Workers, "workers", c.Workers, "bounded workers, 1..16")
 	flags.Uint64Var(&c.Seed, "seed", c.Seed, "deterministic model seed")
@@ -72,7 +80,16 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 			return fmt.Errorf("configuration must contain one JSON object")
 		}
 	}
-	result, runErr := measurement.Run(ctx, c)
+	if c.Mode == "udp" && *config == "" {
+		c.Interface = "loopback"
+	}
+	var result measurement.Result
+	var runErr error
+	if c.Mode == "udp" {
+		result, runErr = measurement.RunUDP(ctx, c, os.Getenv("NQA_BENCH_TOKEN"))
+	} else {
+		result, runErr = measurement.Run(ctx, c)
+	}
 	if result.ID == "" {
 		return runErr
 	}

@@ -16,7 +16,8 @@ count changes; IDs, wall-clock execution times and software version are not.
 The metadata includes configuration version, full configuration and SHA-256,
 software revision (or development), Go version, platform, start/end UTC times,
 status, structured errors, modeled packet counts/loss and timestamp provenance.
-The only supported mode in this stage is synthetic. The interface is a model label,
+The default mode is synthetic; [the bench guide](distributed-go-bench.md) documents
+the authenticated loopback UDP mode and its separate RTT schema. The interface is a model label,
 not a physical NIC. Modeled timestamps start at zero; they are not host timestamps.
 
 ## Analysis and result semantics

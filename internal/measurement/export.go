@@ -37,11 +37,20 @@ func Export(base string, r Result) (string, error) {
 	if err := os.WriteFile(filepath.Join(tmp, "metadata.json"), append(metadata, '\n'), 0600); err != nil {
 		return "", err
 	}
-	f, err := os.OpenFile(filepath.Join(tmp, "trace.csv"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	traceName := "trace.csv"
+	if r.Provenance.MeasurementKind == "round-trip" {
+		traceName = "rtt.csv"
+	}
+	f, err := os.OpenFile(filepath.Join(tmp, traceName), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
 		return "", err
 	}
-	writeErr := writeTrace(f, r.Samples)
+	var writeErr error
+	if traceName == "rtt.csv" {
+		writeErr = writeRTT(f, r.Samples)
+	} else {
+		writeErr = writeTrace(f, r.Samples)
+	}
 	closeErr := f.Close()
 	if writeErr != nil {
 		return "", writeErr
@@ -72,6 +81,24 @@ func writeTrace(f *os.File, samples []Sample) error {
 			lost = "1"
 		}
 		if err := w.Write([]string{strconv.Itoa(s.PacketID), strconv.FormatInt(s.TX, 10), integer(s.RX), integer(s.Delay), integer(s.Jitter), lost, "0", "synthetic-go-v1"}); err != nil {
+			return err
+		}
+	}
+	w.Flush()
+	return w.Error()
+}
+
+func writeRTT(f *os.File, samples []Sample) error {
+	w := csv.NewWriter(f)
+	if err := w.Write([]string{"packet_id", "tx_timestamp_ns", "rx_timestamp_ns", "round_trip_ns", "round_trip_delta_ns", "lost", "measurement_kind"}); err != nil {
+		return err
+	}
+	for _, s := range samples {
+		lost := "0"
+		if s.Lost {
+			lost = "1"
+		}
+		if err := w.Write([]string{strconv.Itoa(s.PacketID), strconv.FormatInt(s.TX, 10), integer(s.RX), integer(s.RTT), integer(s.RTTDelta), lost, "round-trip"}); err != nil {
 			return err
 		}
 	}

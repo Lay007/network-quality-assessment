@@ -1,0 +1,43 @@
+name: Go measurement engine
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+permissions:
+  contents: read
+jobs:
+  portable:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: go test ./...
+      - run: go vet ./...
+  linux-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: go test -race ./...
+      - run: go test -count=5 ./internal/bench ./internal/measurement
+      - run: |
+          go build -o bin/measurement-agent ./cmd/measurement-agent
+          go build -o bin/measurement-bench ./cmd/measurement-bench
+          python3 scripts/run_go_bench.py --runs 3 --packets 100
+      - run: |
+          GOOS=linux GOARCH=amd64 go build ./...
+          GOOS=linux GOARCH=arm64 go build ./...
+          GOOS=linux GOARCH=arm GOARM=7 go build ./cmd/measurement-agent ./cmd/measurement-bench
+      - uses: actions/upload-artifact@v7
+        with:
+          name: go-loopback-software-evidence
+          path: bin/local-bench

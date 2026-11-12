@@ -1,0 +1,2144 @@
+{
+  "schema_version": 1,
+  "bench_session_id": "c4742aec645ef051f8a63c4fc09abadc",
+  "status": "completed",
+  "started_at": "2026-11-07T21:36:33.567927764Z",
+  "ended_at": "2026-11-07T21:36:34.687348085Z",
+  "agents": [
+    {
+      "agent_id": "local-a",
+      "probe_address": "127.0.0.1:32791",
+      "platform": "linux/amd64",
+      "software_version": "7bed4448987c6b331e414b78c4b2b90706b0d659 (go1.26.0)",
+      "timestamp_provenance": {
+        "kind": "software",
+        "source": "Go time.Now and monotonic time.Since",
+        "clock_domain": "local-host-monotonic-elapsed",
+        "synchronization": "unsynchronized; remote clock unused",
+        "measurement_kind": "round-trip",
+        "note": "Application send-to-reply RTT includes scheduling, socket queues and echo processing. Wall timestamps are diagnostic only. No one-way or FPGA accuracy claim."
+      }
+    },
+    {
+      "agent_id": "local-b",
+      "probe_address": "127.0.0.1:51225",
+      "platform": "linux/amd64",
+      "software_version": "7bed4448987c6b331e414b78c4b2b90706b0d659 (go1.26.0)",
+      "timestamp_provenance": {
+        "kind": "software",
+        "source": "Go time.Now and monotonic time.Since",
+        "clock_domain": "local-host-monotonic-elapsed",
+        "synchronization": "unsynchronized; remote clock unused",
+        "measurement_kind": "round-trip",
+        "note": "Application send-to-reply RTT includes scheduling, socket queues and echo processing. Wall timestamps are diagnostic only. No one-way or FPGA accuracy claim."
+      }
+    }
+  ],
+  "sessions": [
+    {
+      "control_session_id": "dcfd7905deb10e9dd6dbf1bb37caf6af",
+      "agent_id": "local-a",
+      "state": "completed",
+      "result": {
+        "packets_sent": 100,
+        "packets_unfinished": 0,
+        "rtt_min_ns": 80209,
+        "rtt_max_ns": 633973,
+        "rtt_mean_ns": 271944.95,
+        "schema_version": 1,
+        "session_id": "0bcc4baf9157dfe7fb7ed3db8246e0d3",
+        "software_version": "7bed4448987c6b331e414b78c4b2b90706b0d659 (go1.26.0)",
+        "platform": "linux/amd64",
+        "config": {
+          "target": "127.0.0.1:51225",
+          "probe_timeout_ns": 100000000,
+          "version": 1,
+          "mode": "udp",
+          "interface": "loopback",
+          "packets": 100,
+          "workers": 1,
+          "interval_ns": 10000000,
+          "timeout_ns": 5000000000,
+          "seed": 1,
+          "loss_every": 0,
+          "delay_ns": 300000,
+          "variation_ns": 10000
+        },
+        "config_sha256": "e464deffc2bd238c8696eb6b8836a8b9d54fe15efed35c839bfd3729665daa5d",
+        "timestamp_provenance": {
+          "kind": "software",
+          "source": "Go time.Now and monotonic time.Since",
+          "clock_domain": "local-host-monotonic-elapsed",
+          "synchronization": "unsynchronized; remote clock unused",
+          "measurement_kind": "round-trip",
+          "note": "Application send-to-reply RTT includes scheduling, socket queues and echo processing. Wall timestamps are diagnostic only. No one-way or FPGA accuracy claim."
+        },
+        "status": "completed",
+        "started_at": "2026-11-07T21:36:33.586754107Z",
+        "ended_at": "2026-11-07T21:36:34.66384301Z",
+        "packets_attempted": 100,
+        "packets_received": 100,
+        "packets_lost": 0,
+        "loss_percent": 0,
+        "errors": []
+      },
+      "samples": [
+        {
+          "round_trip_ns": 633973,
+          "round_trip_delta_ns": 0,
+          "packet_id": 0,
+          "tx_timestamp_ns": 1794087393587063342,
+          "rx_timestamp_ns": 1794087393587697415,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 364542,
+          "round_trip_delta_ns": -269431,
+          "packet_id": 1,
+          "tx_timestamp_ns": 1794087393598147504,
+          "rx_timestamp_ns": 1794087393598511946,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 404246,
+          "round_trip_delta_ns": 39704,
+          "packet_id": 2,
+          "tx_timestamp_ns": 1794087393609358980,
+          "rx_timestamp_ns": 1794087393609763226,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 409547,
+          "round_trip_delta_ns": 5301,
+          "packet_id": 3,
+          "tx_timestamp_ns": 1794087393620708872,
+          "rx_timestamp_ns": 1794087393621118519,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 309335,
+          "round_trip_delta_ns": -100212,
+          "packet_id": 4,
+          "tx_timestamp_ns": 1794087393631889045,
+          "rx_timestamp_ns": 1794087393632198480,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 317936,
+          "round_trip_delta_ns": 8601,
+          "packet_id": 5,
+          "tx_timestamp_ns": 1794087393643211534,
+          "rx_timestamp_ns": 1794087393643529470,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 534760,
+          "round_trip_delta_ns": 216824,
+          "packet_id": 6,
+          "tx_timestamp_ns": 1794087393653736332,
+          "rx_timestamp_ns": 1794087393654271092,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 317236,
+          "round_trip_delta_ns": -217524,
+          "packet_id": 7,
+          "tx_timestamp_ns": 1794087393664794390,
+          "rx_timestamp_ns": 1794087393665111526,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 348940,
+          "round_trip_delta_ns": 31704,
+          "packet_id": 8,
+          "tx_timestamp_ns": 1794087393675142868,
+          "rx_timestamp_ns": 1794087393675491708,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 261530,
+          "round_trip_delta_ns": -87410,
+          "packet_id": 9,
+          "tx_timestamp_ns": 1794087393686258233,
+          "rx_timestamp_ns": 1794087393686519663,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 474454,
+          "round_trip_delta_ns": 212924,
+          "packet_id": 10,
+          "tx_timestamp_ns": 1794087393696595210,
+          "rx_timestamp_ns": 1794087393697069764,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 367942,
+          "round_trip_delta_ns": -106512,
+          "packet_id": 11,
+          "tx_timestamp_ns": 1794087393708094719,
+          "rx_timestamp_ns": 1794087393708462761,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 285333,
+          "round_trip_delta_ns": -82609,
+          "packet_id": 12,
+          "tx_timestamp_ns": 1794087393719032664,
+          "rx_timestamp_ns": 1794087393719317997,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 343639,
+          "round_trip_delta_ns": 58306,
+          "packet_id": 13,
+          "tx_timestamp_ns": 1794087393730294946,
+          "rx_timestamp_ns": 1794087393730638685,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 300734,
+          "round_trip_delta_ns": -42905,
+          "packet_id": 14,
+          "tx_timestamp_ns": 1794087393741022267,
+          "rx_timestamp_ns": 1794087393741323101,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 393345,
+          "round_trip_delta_ns": 92611,
+          "packet_id": 15,
+          "tx_timestamp_ns": 1794087393751478857,
+          "rx_timestamp_ns": 1794087393751872202,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 358640,
+          "round_trip_delta_ns": -34705,
+          "packet_id": 16,
+          "tx_timestamp_ns": 1794087393762655830,
+          "rx_timestamp_ns": 1794087393763014470,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 374143,
+          "round_trip_delta_ns": 15503,
+          "packet_id": 17,
+          "tx_timestamp_ns": 1794087393773826801,
+          "rx_timestamp_ns": 1794087393774200944,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 301734,
+          "round_trip_delta_ns": -72409,
+          "packet_id": 18,
+          "tx_timestamp_ns": 1794087393785058880,
+          "rx_timestamp_ns": 1794087393785360714,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 337039,
+          "round_trip_delta_ns": 35305,
+          "packet_id": 19,
+          "tx_timestamp_ns": 1794087393796379968,
+          "rx_timestamp_ns": 1794087393796717007,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 356340,
+          "round_trip_delta_ns": 19301,
+          "packet_id": 20,
+          "tx_timestamp_ns": 1794087393807954986,
+          "rx_timestamp_ns": 1794087393808311326,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 474054,
+          "round_trip_delta_ns": 117714,
+          "packet_id": 21,
+          "tx_timestamp_ns": 1794087393819207567,
+          "rx_timestamp_ns": 1794087393819681621,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 328637,
+          "round_trip_delta_ns": -145417,
+          "packet_id": 22,
+          "tx_timestamp_ns": 1794087393830371538,
+          "rx_timestamp_ns": 1794087393830700175,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 296234,
+          "round_trip_delta_ns": -32403,
+          "packet_id": 23,
+          "tx_timestamp_ns": 1794087393841496504,
+          "rx_timestamp_ns": 1794087393841792838,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 335338,
+          "round_trip_delta_ns": 39104,
+          "packet_id": 24,
+          "tx_timestamp_ns": 1794087393852576365,
+          "rx_timestamp_ns": 1794087393852911703,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 269931,
+          "round_trip_delta_ns": -65407,
+          "packet_id": 25,
+          "tx_timestamp_ns": 1794087393863921156,
+          "rx_timestamp_ns": 1794087393864191087,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 429349,
+          "round_trip_delta_ns": 159418,
+          "packet_id": 26,
+          "tx_timestamp_ns": 1794087393875226143,
+          "rx_timestamp_ns": 1794087393875655492,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 242728,
+          "round_trip_delta_ns": -186621,
+          "packet_id": 27,
+          "tx_timestamp_ns": 1794087393886153787,
+          "rx_timestamp_ns": 1794087393886396515,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 269331,
+          "round_trip_delta_ns": 26603,
+          "packet_id": 28,
+          "tx_timestamp_ns": 1794087393896564672,
+          "rx_timestamp_ns": 1794087393896834003,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 267630,
+          "round_trip_delta_ns": -1701,
+          "packet_id": 29,
+          "tx_timestamp_ns": 1794087393907426809,
+          "rx_timestamp_ns": 1794087393907694339,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 144416,
+          "round_trip_delta_ns": -123214,
+          "packet_id": 30,
+          "tx_timestamp_ns": 1794087393918067220,
+          "rx_timestamp_ns": 1794087393918211636,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 284033,
+          "round_trip_delta_ns": 139617,
+          "packet_id": 31,
+          "tx_timestamp_ns": 1794087393928754536,
+          "rx_timestamp_ns": 1794087393929038569,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 260030,
+          "round_trip_delta_ns": -24003,
+          "packet_id": 32,
+          "tx_timestamp_ns": 1794087393939692881,
+          "rx_timestamp_ns": 1794087393939952811,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 200723,
+          "round_trip_delta_ns": -59307,
+          "packet_id": 33,
+          "tx_timestamp_ns": 1794087393950475709,
+          "rx_timestamp_ns": 1794087393950676532,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 189321,
+          "round_trip_delta_ns": -11402,
+          "packet_id": 34,
+          "tx_timestamp_ns": 1794087393961043512,
+          "rx_timestamp_ns": 1794087393961232933,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 256529,
+          "round_trip_delta_ns": 67208,
+          "packet_id": 35,
+          "tx_timestamp_ns": 1794087393971995058,
+          "rx_timestamp_ns": 1794087393972251587,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 205024,
+          "round_trip_delta_ns": -51505,
+          "packet_id": 36,
+          "tx_timestamp_ns": 1794087393982908400,
+          "rx_timestamp_ns": 1794087393983113324,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 138416,
+          "round_trip_delta_ns": -66608,
+          "packet_id": 37,
+          "tx_timestamp_ns": 1794087393993476203,
+          "rx_timestamp_ns": 1794087393993614619,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 212524,
+          "round_trip_delta_ns": 74108,
+          "packet_id": 38,
+          "tx_timestamp_ns": 1794087394003996901,
+          "rx_timestamp_ns": 1794087394004209425,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 180620,
+          "round_trip_delta_ns": -31904,
+          "packet_id": 39,
+          "tx_timestamp_ns": 1794087394014544702,
+          "rx_timestamp_ns": 1794087394014725422,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 363541,
+          "round_trip_delta_ns": 182921,
+          "packet_id": 40,
+          "tx_timestamp_ns": 1794087394025333430,
+          "rx_timestamp_ns": 1794087394025696971,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 335838,
+          "round_trip_delta_ns": -27703,
+          "packet_id": 41,
+          "tx_timestamp_ns": 1794087394036735628,
+          "rx_timestamp_ns": 1794087394037071566,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 317136,
+          "round_trip_delta_ns": -18702,
+          "packet_id": 42,
+          "tx_timestamp_ns": 1794087394047442046,
+          "rx_timestamp_ns": 1794087394047759082,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 288733,
+          "round_trip_delta_ns": -28403,
+          "packet_id": 43,
+          "tx_timestamp_ns": 1794087394058404994,
+          "rx_timestamp_ns": 1794087394058693727,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 133315,
+          "round_trip_delta_ns": -155418,
+          "packet_id": 44,
+          "tx_timestamp_ns": 1794087394069818693,
+          "rx_timestamp_ns": 1794087394069952008,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 263230,
+          "round_trip_delta_ns": 129915,
+          "packet_id": 45,
+          "tx_timestamp_ns": 1794087394080710333,
+          "rx_timestamp_ns": 1794087394080973663,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 329237,
+          "round_trip_delta_ns": 66007,
+          "packet_id": 46,
+          "tx_timestamp_ns": 1794087394091690083,
+          "rx_timestamp_ns": 1794087394092019420,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 360341,
+          "round_trip_delta_ns": 31104,
+          "packet_id": 47,
+          "tx_timestamp_ns": 1794087394102427505,
+          "rx_timestamp_ns": 1794087394102787846,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 80209,
+          "round_trip_delta_ns": -280132,
+          "packet_id": 48,
+          "tx_timestamp_ns": 1794087394113743493,
+          "rx_timestamp_ns": 1794087394113823702,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 178720,
+          "round_trip_delta_ns": 98511,
+          "packet_id": 49,
+          "tx_timestamp_ns": 1794087394124232687,
+          "rx_timestamp_ns": 1794087394124411407,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 227626,
+          "round_trip_delta_ns": 48906,
+          "packet_id": 50,
+          "tx_timestamp_ns": 1794087394135157931,
+          "rx_timestamp_ns": 1794087394135385457,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 236226,
+          "round_trip_delta_ns": 8600,
+          "packet_id": 51,
+          "tx_timestamp_ns": 1794087394145891953,
+          "rx_timestamp_ns": 1794087394146128179,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 283332,
+          "round_trip_delta_ns": 47106,
+          "packet_id": 52,
+          "tx_timestamp_ns": 1794087394156302438,
+          "rx_timestamp_ns": 1794087394156585770,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 212125,
+          "round_trip_delta_ns": -71207,
+          "packet_id": 53,
+          "tx_timestamp_ns": 1794087394166966851,
+          "rx_timestamp_ns": 1794087394167178976,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 137616,
+          "round_trip_delta_ns": -74509,
+          "packet_id": 54,
+          "tx_timestamp_ns": 1794087394178286440,
+          "rx_timestamp_ns": 1794087394178424056,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 300434,
+          "round_trip_delta_ns": 162818,
+          "packet_id": 55,
+          "tx_timestamp_ns": 1794087394190332611,
+          "rx_timestamp_ns": 1794087394190633145,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 294634,
+          "round_trip_delta_ns": -5800,
+          "packet_id": 56,
+          "tx_timestamp_ns": 1794087394200762398,
+          "rx_timestamp_ns": 1794087394201057032,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 263730,
+          "round_trip_delta_ns": -30904,
+          "packet_id": 57,
+          "tx_timestamp_ns": 1794087394211665039,
+          "rx_timestamp_ns": 1794087394211928769,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 277532,
+          "round_trip_delta_ns": 13802,
+          "packet_id": 58,
+          "tx_timestamp_ns": 1794087394222056522,
+          "rx_timestamp_ns": 1794087394222334054,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 221625,
+          "round_trip_delta_ns": -55907,
+          "packet_id": 59,
+          "tx_timestamp_ns": 1794087394232928260,
+          "rx_timestamp_ns": 1794087394233149885,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 296633,
+          "round_trip_delta_ns": 75008,
+          "packet_id": 60,
+          "tx_timestamp_ns": 1794087394243865205,
+          "rx_timestamp_ns": 1794087394244161938,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 180720,
+          "round_trip_delta_ns": -115913,
+          "packet_id": 61,
+          "tx_timestamp_ns": 1794087394254937265,
+          "rx_timestamp_ns": 1794087394255117985,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 140316,
+          "round_trip_delta_ns": -40404,
+          "packet_id": 62,
+          "tx_timestamp_ns": 1794087394266209548,
+          "rx_timestamp_ns": 1794087394266349964,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 187722,
+          "round_trip_delta_ns": 47406,
+          "packet_id": 63,
+          "tx_timestamp_ns": 1794087394276913966,
+          "rx_timestamp_ns": 1794087394277101688,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 229026,
+          "round_trip_delta_ns": 41304,
+          "packet_id": 64,
+          "tx_timestamp_ns": 1794087394287620585,
+          "rx_timestamp_ns": 1794087394287849711,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 229626,
+          "round_trip_delta_ns": 600,
+          "packet_id": 65,
+          "tx_timestamp_ns": 1794087394298865265,
+          "rx_timestamp_ns": 1794087394299094891,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 195022,
+          "round_trip_delta_ns": -34604,
+          "packet_id": 66,
+          "tx_timestamp_ns": 1794087394309445970,
+          "rx_timestamp_ns": 1794087394309640892,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 311735,
+          "round_trip_delta_ns": 116713,
+          "packet_id": 67,
+          "tx_timestamp_ns": 1794087394320156989,
+          "rx_timestamp_ns": 1794087394320468724,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 237927,
+          "round_trip_delta_ns": -73808,
+          "packet_id": 68,
+          "tx_timestamp_ns": 1794087394331007824,
+          "rx_timestamp_ns": 1794087394331245751,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 288433,
+          "round_trip_delta_ns": 50506,
+          "packet_id": 69,
+          "tx_timestamp_ns": 1794087394341792551,
+          "rx_timestamp_ns": 1794087394342080984,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 162619,
+          "round_trip_delta_ns": -125814,
+          "packet_id": 70,
+          "tx_timestamp_ns": 1794087394352894315,
+          "rx_timestamp_ns": 1794087394353057034,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 177820,
+          "round_trip_delta_ns": 15201,
+          "packet_id": 71,
+          "tx_timestamp_ns": 1794087394363565430,
+          "rx_timestamp_ns": 1794087394363743250,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 304735,
+          "round_trip_delta_ns": 126915,
+          "packet_id": 72,
+          "tx_timestamp_ns": 1794087394374145034,
+          "rx_timestamp_ns": 1794087394374449769,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 157718,
+          "round_trip_delta_ns": -147017,
+          "packet_id": 73,
+          "tx_timestamp_ns": 1794087394384900158,
+          "rx_timestamp_ns": 1794087394385057976,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 136115,
+          "round_trip_delta_ns": -21603,
+          "packet_id": 74,
+          "tx_timestamp_ns": 1794087394396138538,
+          "rx_timestamp_ns": 1794087394396274553,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 183421,
+          "round_trip_delta_ns": 47306,
+          "packet_id": 75,
+          "tx_timestamp_ns": 1794087394407026677,
+          "rx_timestamp_ns": 1794087394407209998,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 219225,
+          "round_trip_delta_ns": 35804,
+          "packet_id": 76,
+          "tx_timestamp_ns": 1794087394418020728,
+          "rx_timestamp_ns": 1794087394418239853,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 150618,
+          "round_trip_delta_ns": -68607,
+          "packet_id": 77,
+          "tx_timestamp_ns": 1794087394428519923,
+          "rx_timestamp_ns": 1794087394428670541,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 242128,
+          "round_trip_delta_ns": 91510,
+          "packet_id": 78,
+          "tx_timestamp_ns": 1794087394439093727,
+          "rx_timestamp_ns": 1794087394439335855,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 250029,
+          "round_trip_delta_ns": 7901,
+          "packet_id": 79,
+          "tx_timestamp_ns": 1794087394449864753,
+          "rx_timestamp_ns": 1794087394450114882,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 257229,
+          "round_trip_delta_ns": 7200,
+          "packet_id": 80,
+          "tx_timestamp_ns": 1794087394460938614,
+          "rx_timestamp_ns": 1794087394461195843,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 250529,
+          "round_trip_delta_ns": -6700,
+          "packet_id": 81,
+          "tx_timestamp_ns": 1794087394471363900,
+          "rx_timestamp_ns": 1794087394471614329,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 212624,
+          "round_trip_delta_ns": -37905,
+          "packet_id": 82,
+          "tx_timestamp_ns": 1794087394482061018,
+          "rx_timestamp_ns": 1794087394482273642,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 207524,
+          "round_trip_delta_ns": -5100,
+          "packet_id": 83,
+          "tx_timestamp_ns": 1794087394492632421,
+          "rx_timestamp_ns": 1794087394492840045,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 211524,
+          "round_trip_delta_ns": 4000,
+          "packet_id": 84,
+          "tx_timestamp_ns": 1794087394503358042,
+          "rx_timestamp_ns": 1794087394503569566,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 249028,
+          "round_trip_delta_ns": 37504,
+          "packet_id": 85,
+          "tx_timestamp_ns": 1794087394514168173,
+          "rx_timestamp_ns": 1794087394514417101,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 169719,
+          "round_trip_delta_ns": -79309,
+          "packet_id": 86,
+          "tx_timestamp_ns": 1794087394525169125,
+          "rx_timestamp_ns": 1794087394525338844,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 186821,
+          "round_trip_delta_ns": 17102,
+          "packet_id": 87,
+          "tx_timestamp_ns": 1794087394535437394,
+          "rx_timestamp_ns": 1794087394535624315,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 188622,
+          "round_trip_delta_ns": 1801,
+          "packet_id": 88,
+          "tx_timestamp_ns": 1794087394546055902,
+          "rx_timestamp_ns": 1794087394546244524,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 195622,
+          "round_trip_delta_ns": 7000,
+          "packet_id": 89,
+          "tx_timestamp_ns": 1794087394556409281,
+          "rx_timestamp_ns": 1794087394556604903,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 263230,
+          "round_trip_delta_ns": 67608,
+          "packet_id": 90,
+          "tx_timestamp_ns": 1794087394567043991,
+          "rx_timestamp_ns": 1794087394567307221,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 170019,
+          "round_trip_delta_ns": -93211,
+          "packet_id": 91,
+          "tx_timestamp_ns": 1794087394577740309,
+          "rx_timestamp_ns": 1794087394577911728,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 258230,
+          "round_trip_delta_ns": 88211,
+          "packet_id": 92,
+          "tx_timestamp_ns": 1794087394588323313,
+          "rx_timestamp_ns": 1794087394588581443,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 283232,
+          "round_trip_delta_ns": 25002,
+          "packet_id": 93,
+          "tx_timestamp_ns": 1794087394598999429,
+          "rx_timestamp_ns": 1794087394599282561,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 366442,
+          "round_trip_delta_ns": 83210,
+          "packet_id": 94,
+          "tx_timestamp_ns": 1794087394609728350,
+          "rx_timestamp_ns": 1794087394610094792,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 328537,
+          "round_trip_delta_ns": -37905,
+          "packet_id": 95,
+          "tx_timestamp_ns": 1794087394620558383,
+          "rx_timestamp_ns": 1794087394620886920,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 282332,
+          "round_trip_delta_ns": -46205,
+          "packet_id": 96,
+          "tx_timestamp_ns": 1794087394631691350,
+          "rx_timestamp_ns": 1794087394631973582,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 418147,
+          "round_trip_delta_ns": 135815,
+          "packet_id": 97,
+          "tx_timestamp_ns": 1794087394642065431,
+          "rx_timestamp_ns": 1794087394642483478,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 288533,
+          "round_trip_delta_ns": -129614,
+          "packet_id": 98,
+          "tx_timestamp_ns": 1794087394652911365,
+          "rx_timestamp_ns": 1794087394653199898,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 239527,
+          "round_trip_delta_ns": -49006,
+          "packet_id": 99,
+          "tx_timestamp_ns": 1794087394663601082,
+          "rx_timestamp_ns": 1794087394663840509,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        }
+      ]
+    },
+    {
+      "control_session_id": "70e7c30e6974483a3be9251667a73bfa",
+      "agent_id": "local-b",
+      "state": "completed",
+      "result": {
+        "packets_sent": 100,
+        "packets_unfinished": 0,
+        "rtt_min_ns": 97511,
+        "rtt_max_ns": 449551,
+        "rtt_mean_ns": 251624.62,
+        "schema_version": 1,
+        "session_id": "dfdf2d6b62865127430e72c90626ba0b",
+        "software_version": "7bed4448987c6b331e414b78c4b2b90706b0d659 (go1.26.0)",
+        "platform": "linux/amd64",
+        "config": {
+          "target": "127.0.0.1:32791",
+          "probe_timeout_ns": 100000000,
+          "version": 1,
+          "mode": "udp",
+          "interface": "loopback",
+          "packets": 100,
+          "workers": 1,
+          "interval_ns": 10000000,
+          "timeout_ns": 5000000000,
+          "seed": 1,
+          "loss_every": 0,
+          "delay_ns": 300000,
+          "variation_ns": 10000
+        },
+        "config_sha256": "89ea85d28b54f88eac2b9f73700c3551b44ce519f75b5d054f28896bebe13eed",
+        "timestamp_provenance": {
+          "kind": "software",
+          "source": "Go time.Now and monotonic time.Since",
+          "clock_domain": "local-host-monotonic-elapsed",
+          "synchronization": "unsynchronized; remote clock unused",
+          "measurement_kind": "round-trip",
+          "note": "Application send-to-reply RTT includes scheduling, socket queues and echo processing. Wall timestamps are diagnostic only. No one-way or FPGA accuracy claim."
+        },
+        "status": "completed",
+        "started_at": "2026-11-07T21:36:33.588430198Z",
+        "ended_at": "2026-11-07T21:36:34.664062635Z",
+        "packets_attempted": 100,
+        "packets_received": 100,
+        "packets_lost": 0,
+        "loss_percent": 0,
+        "errors": []
+      },
+      "samples": [
+        {
+          "round_trip_ns": 344039,
+          "round_trip_delta_ns": 0,
+          "packet_id": 0,
+          "tx_timestamp_ns": 1794087393588579115,
+          "rx_timestamp_ns": 1794087393588923254,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 407346,
+          "round_trip_delta_ns": 63307,
+          "packet_id": 1,
+          "tx_timestamp_ns": 1794087393599672278,
+          "rx_timestamp_ns": 1794087393600079524,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 357741,
+          "round_trip_delta_ns": -49605,
+          "packet_id": 2,
+          "tx_timestamp_ns": 1794087393611042972,
+          "rx_timestamp_ns": 1794087393611400613,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 449551,
+          "round_trip_delta_ns": 91810,
+          "packet_id": 3,
+          "tx_timestamp_ns": 1794087393622217044,
+          "rx_timestamp_ns": 1794087393622666595,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 249829,
+          "round_trip_delta_ns": -199722,
+          "packet_id": 4,
+          "tx_timestamp_ns": 1794087393633728054,
+          "rx_timestamp_ns": 1794087393633977983,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 256429,
+          "round_trip_delta_ns": 6600,
+          "packet_id": 5,
+          "tx_timestamp_ns": 1794087393644629795,
+          "rx_timestamp_ns": 1794087393644886324,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 317636,
+          "round_trip_delta_ns": 61207,
+          "packet_id": 6,
+          "tx_timestamp_ns": 1794087393655303810,
+          "rx_timestamp_ns": 1794087393655621346,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 225225,
+          "round_trip_delta_ns": -92411,
+          "packet_id": 7,
+          "tx_timestamp_ns": 1794087393666205051,
+          "rx_timestamp_ns": 1794087393666430276,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 255429,
+          "round_trip_delta_ns": 30204,
+          "packet_id": 8,
+          "tx_timestamp_ns": 1794087393676779355,
+          "rx_timestamp_ns": 1794087393677034684,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 393945,
+          "round_trip_delta_ns": 138516,
+          "packet_id": 9,
+          "tx_timestamp_ns": 1794087393687667294,
+          "rx_timestamp_ns": 1794087393688061339,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 291834,
+          "round_trip_delta_ns": -102111,
+          "packet_id": 10,
+          "tx_timestamp_ns": 1794087393699250612,
+          "rx_timestamp_ns": 1794087393699542446,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 288533,
+          "round_trip_delta_ns": -3301,
+          "packet_id": 11,
+          "tx_timestamp_ns": 1794087393710679713,
+          "rx_timestamp_ns": 1794087393710968246,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 329737,
+          "round_trip_delta_ns": 41204,
+          "packet_id": 12,
+          "tx_timestamp_ns": 1794087393721629160,
+          "rx_timestamp_ns": 1794087393721958897,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 269130,
+          "round_trip_delta_ns": -60607,
+          "packet_id": 13,
+          "tx_timestamp_ns": 1794087393732962750,
+          "rx_timestamp_ns": 1794087393733231780,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 327037,
+          "round_trip_delta_ns": 57907,
+          "packet_id": 14,
+          "tx_timestamp_ns": 1794087393743676269,
+          "rx_timestamp_ns": 1794087393744003306,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 321537,
+          "round_trip_delta_ns": -5500,
+          "packet_id": 15,
+          "tx_timestamp_ns": 1794087393754129859,
+          "rx_timestamp_ns": 1794087393754451396,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 314336,
+          "round_trip_delta_ns": -7201,
+          "packet_id": 16,
+          "tx_timestamp_ns": 1794087393765243524,
+          "rx_timestamp_ns": 1794087393765557960,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 257529,
+          "round_trip_delta_ns": -56807,
+          "packet_id": 17,
+          "tx_timestamp_ns": 1794087393776514707,
+          "rx_timestamp_ns": 1794087393776772236,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 301935,
+          "round_trip_delta_ns": 44406,
+          "packet_id": 18,
+          "tx_timestamp_ns": 1794087393787700480,
+          "rx_timestamp_ns": 1794087393788002515,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 266931,
+          "round_trip_delta_ns": -35004,
+          "packet_id": 19,
+          "tx_timestamp_ns": 1794087393798980764,
+          "rx_timestamp_ns": 1794087393799247695,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 305934,
+          "round_trip_delta_ns": 39003,
+          "packet_id": 20,
+          "tx_timestamp_ns": 1794087393809454657,
+          "rx_timestamp_ns": 1794087393809760591,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 412447,
+          "round_trip_delta_ns": 106513,
+          "packet_id": 21,
+          "tx_timestamp_ns": 1794087393820799948,
+          "rx_timestamp_ns": 1794087393821212295,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 296534,
+          "round_trip_delta_ns": -115913,
+          "packet_id": 22,
+          "tx_timestamp_ns": 1794087393831880009,
+          "rx_timestamp_ns": 1794087393832176443,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 270431,
+          "round_trip_delta_ns": -26103,
+          "packet_id": 23,
+          "tx_timestamp_ns": 1794087393842897463,
+          "rx_timestamp_ns": 1794087393843167894,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 233326,
+          "round_trip_delta_ns": -37105,
+          "packet_id": 24,
+          "tx_timestamp_ns": 1794087393854005028,
+          "rx_timestamp_ns": 1794087393854238454,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 262330,
+          "round_trip_delta_ns": 29004,
+          "packet_id": 25,
+          "tx_timestamp_ns": 1794087393865279011,
+          "rx_timestamp_ns": 1794087393865541341,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 276631,
+          "round_trip_delta_ns": 14301,
+          "packet_id": 26,
+          "tx_timestamp_ns": 1794087393875635090,
+          "rx_timestamp_ns": 1794087393875911821,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 143616,
+          "round_trip_delta_ns": -133015,
+          "packet_id": 27,
+          "tx_timestamp_ns": 1794087393886424018,
+          "rx_timestamp_ns": 1794087393886567634,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 140416,
+          "round_trip_delta_ns": -3200,
+          "packet_id": 28,
+          "tx_timestamp_ns": 1794087393896829602,
+          "rx_timestamp_ns": 1794087393896969918,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 281332,
+          "round_trip_delta_ns": 140916,
+          "packet_id": 29,
+          "tx_timestamp_ns": 1794087393907364501,
+          "rx_timestamp_ns": 1794087393907645834,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 272831,
+          "round_trip_delta_ns": -8501,
+          "packet_id": 30,
+          "tx_timestamp_ns": 1794087393917801990,
+          "rx_timestamp_ns": 1794087393918074921,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 349239,
+          "round_trip_delta_ns": 76408,
+          "packet_id": 31,
+          "tx_timestamp_ns": 1794087393928477305,
+          "rx_timestamp_ns": 1794087393928826544,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 299834,
+          "round_trip_delta_ns": -49405,
+          "packet_id": 32,
+          "tx_timestamp_ns": 1794087393939408349,
+          "rx_timestamp_ns": 1794087393939708283,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 165219,
+          "round_trip_delta_ns": -134615,
+          "packet_id": 33,
+          "tx_timestamp_ns": 1794087393950519514,
+          "rx_timestamp_ns": 1794087393950684833,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 235927,
+          "round_trip_delta_ns": 70708,
+          "packet_id": 34,
+          "tx_timestamp_ns": 1794087393960812785,
+          "rx_timestamp_ns": 1794087393961048712,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 319137,
+          "round_trip_delta_ns": 83210,
+          "packet_id": 35,
+          "tx_timestamp_ns": 1794087393971697724,
+          "rx_timestamp_ns": 1794087393972016861,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 237527,
+          "round_trip_delta_ns": -81610,
+          "packet_id": 36,
+          "tx_timestamp_ns": 1794087393982720079,
+          "rx_timestamp_ns": 1794087393982957506,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 148716,
+          "round_trip_delta_ns": -88811,
+          "packet_id": 37,
+          "tx_timestamp_ns": 1794087393993485904,
+          "rx_timestamp_ns": 1794087393993634721,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 264730,
+          "round_trip_delta_ns": 116014,
+          "packet_id": 38,
+          "tx_timestamp_ns": 1794087394003767275,
+          "rx_timestamp_ns": 1794087394004032105,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 216024,
+          "round_trip_delta_ns": -48706,
+          "packet_id": 39,
+          "tx_timestamp_ns": 1794087394014511198,
+          "rx_timestamp_ns": 1794087394014727222,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 210124,
+          "round_trip_delta_ns": -5900,
+          "packet_id": 40,
+          "tx_timestamp_ns": 1794087394025694971,
+          "rx_timestamp_ns": 1794087394025905095,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 405547,
+          "round_trip_delta_ns": 195423,
+          "packet_id": 41,
+          "tx_timestamp_ns": 1794087394036329981,
+          "rx_timestamp_ns": 1794087394036735528,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 314936,
+          "round_trip_delta_ns": -90611,
+          "packet_id": 42,
+          "tx_timestamp_ns": 1794087394047707776,
+          "rx_timestamp_ns": 1794087394048022812,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 150417,
+          "round_trip_delta_ns": -164519,
+          "packet_id": 43,
+          "tx_timestamp_ns": 1794087394058679425,
+          "rx_timestamp_ns": 1794087394058829842,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 265230,
+          "round_trip_delta_ns": 114813,
+          "packet_id": 44,
+          "tx_timestamp_ns": 1794087394069572665,
+          "rx_timestamp_ns": 1794087394069837795,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 412747,
+          "round_trip_delta_ns": 147517,
+          "packet_id": 45,
+          "tx_timestamp_ns": 1794087394080556616,
+          "rx_timestamp_ns": 1794087394080969363,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 271931,
+          "round_trip_delta_ns": -140816,
+          "packet_id": 46,
+          "tx_timestamp_ns": 1794087394091804396,
+          "rx_timestamp_ns": 1794087394092076327,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 288233,
+          "round_trip_delta_ns": 16302,
+          "packet_id": 47,
+          "tx_timestamp_ns": 1794087394102574922,
+          "rx_timestamp_ns": 1794087394102863155,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 258629,
+          "round_trip_delta_ns": -29604,
+          "packet_id": 48,
+          "tx_timestamp_ns": 1794087394113456761,
+          "rx_timestamp_ns": 1794087394113715390,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 239627,
+          "round_trip_delta_ns": -19002,
+          "packet_id": 49,
+          "tx_timestamp_ns": 1794087394124152978,
+          "rx_timestamp_ns": 1794087394124392605,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 282732,
+          "round_trip_delta_ns": 43105,
+          "packet_id": 50,
+          "tx_timestamp_ns": 1794087394134920404,
+          "rx_timestamp_ns": 1794087394135203236,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 304735,
+          "round_trip_delta_ns": 22003,
+          "packet_id": 51,
+          "tx_timestamp_ns": 1794087394145634523,
+          "rx_timestamp_ns": 1794087394145939258,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 213524,
+          "round_trip_delta_ns": -91211,
+          "packet_id": 52,
+          "tx_timestamp_ns": 1794087394156533764,
+          "rx_timestamp_ns": 1794087394156747188,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 198023,
+          "round_trip_delta_ns": -15501,
+          "packet_id": 53,
+          "tx_timestamp_ns": 1794087394167158773,
+          "rx_timestamp_ns": 1794087394167356796,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 228326,
+          "round_trip_delta_ns": 30303,
+          "packet_id": 54,
+          "tx_timestamp_ns": 1794087394178189329,
+          "rx_timestamp_ns": 1794087394178417655,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 235827,
+          "round_trip_delta_ns": 7501,
+          "packet_id": 55,
+          "tx_timestamp_ns": 1794087394189719941,
+          "rx_timestamp_ns": 1794087394189955668,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 241127,
+          "round_trip_delta_ns": 5300,
+          "packet_id": 56,
+          "tx_timestamp_ns": 1794087394201010427,
+          "rx_timestamp_ns": 1794087394201251554,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 199223,
+          "round_trip_delta_ns": -41904,
+          "packet_id": 57,
+          "tx_timestamp_ns": 1794087394211736147,
+          "rx_timestamp_ns": 1794087394211935370,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 284132,
+          "round_trip_delta_ns": 84909,
+          "packet_id": 58,
+          "tx_timestamp_ns": 1794087394222274247,
+          "rx_timestamp_ns": 1794087394222558279,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 206824,
+          "round_trip_delta_ns": -77308,
+          "packet_id": 59,
+          "tx_timestamp_ns": 1794087394233099179,
+          "rx_timestamp_ns": 1794087394233305903,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 249329,
+          "round_trip_delta_ns": 42505,
+          "packet_id": 60,
+          "tx_timestamp_ns": 1794087394244116933,
+          "rx_timestamp_ns": 1794087394244366362,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 220025,
+          "round_trip_delta_ns": -29304,
+          "packet_id": 61,
+          "tx_timestamp_ns": 1794087394254743243,
+          "rx_timestamp_ns": 1794087394254963368,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 370442,
+          "round_trip_delta_ns": 150417,
+          "packet_id": 62,
+          "tx_timestamp_ns": 1794087394265969821,
+          "rx_timestamp_ns": 1794087394266340263,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 207623,
+          "round_trip_delta_ns": -162819,
+          "packet_id": 63,
+          "tx_timestamp_ns": 1794087394276852760,
+          "rx_timestamp_ns": 1794087394277060383,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 196422,
+          "round_trip_delta_ns": -11201,
+          "packet_id": 64,
+          "tx_timestamp_ns": 1794087394287889316,
+          "rx_timestamp_ns": 1794087394288085738,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 201222,
+          "round_trip_delta_ns": 4800,
+          "packet_id": 65,
+          "tx_timestamp_ns": 1794087394299053587,
+          "rx_timestamp_ns": 1794087394299254809,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 147916,
+          "round_trip_delta_ns": -53306,
+          "packet_id": 66,
+          "tx_timestamp_ns": 1794087394309473373,
+          "rx_timestamp_ns": 1794087394309621189,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 187421,
+          "round_trip_delta_ns": 39505,
+          "packet_id": 67,
+          "tx_timestamp_ns": 1794087394320138587,
+          "rx_timestamp_ns": 1794087394320326108,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 234227,
+          "round_trip_delta_ns": 46806,
+          "packet_id": 68,
+          "tx_timestamp_ns": 1794087394330827303,
+          "rx_timestamp_ns": 1794087394331061530,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 235227,
+          "round_trip_delta_ns": 1000,
+          "packet_id": 69,
+          "tx_timestamp_ns": 1794087394341792151,
+          "rx_timestamp_ns": 1794087394342027278,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 207524,
+          "round_trip_delta_ns": -27703,
+          "packet_id": 70,
+          "tx_timestamp_ns": 1794087394352729196,
+          "rx_timestamp_ns": 1794087394352936720,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 277932,
+          "round_trip_delta_ns": 70408,
+          "packet_id": 71,
+          "tx_timestamp_ns": 1794087394363331003,
+          "rx_timestamp_ns": 1794087394363608935,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 354940,
+          "round_trip_delta_ns": 77008,
+          "packet_id": 72,
+          "tx_timestamp_ns": 1794087394374342257,
+          "rx_timestamp_ns": 1794087394374697197,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 147017,
+          "round_trip_delta_ns": -207923,
+          "packet_id": 73,
+          "tx_timestamp_ns": 1794087394385074078,
+          "rx_timestamp_ns": 1794087394385221195,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 228426,
+          "round_trip_delta_ns": 81409,
+          "packet_id": 74,
+          "tx_timestamp_ns": 1794087394395907411,
+          "rx_timestamp_ns": 1794087394396135837,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 242027,
+          "round_trip_delta_ns": 13601,
+          "packet_id": 75,
+          "tx_timestamp_ns": 1794087394406785950,
+          "rx_timestamp_ns": 1794087394407027977,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 163119,
+          "round_trip_delta_ns": -78908,
+          "packet_id": 76,
+          "tx_timestamp_ns": 1794087394418239353,
+          "rx_timestamp_ns": 1794087394418402472,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 162719,
+          "round_trip_delta_ns": -400,
+          "packet_id": 77,
+          "tx_timestamp_ns": 1794087394428703044,
+          "rx_timestamp_ns": 1794087394428865863,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 245728,
+          "round_trip_delta_ns": 83009,
+          "packet_id": 78,
+          "tx_timestamp_ns": 1794087394439302751,
+          "rx_timestamp_ns": 1794087394439548479,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 163718,
+          "round_trip_delta_ns": -82010,
+          "packet_id": 79,
+          "tx_timestamp_ns": 1794087394449842651,
+          "rx_timestamp_ns": 1794087394450006369,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 292734,
+          "round_trip_delta_ns": 129016,
+          "packet_id": 80,
+          "tx_timestamp_ns": 1794087394461032824,
+          "rx_timestamp_ns": 1794087394461325658,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 206523,
+          "round_trip_delta_ns": -86211,
+          "packet_id": 81,
+          "tx_timestamp_ns": 1794087394471613629,
+          "rx_timestamp_ns": 1794087394471820252,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 190722,
+          "round_trip_delta_ns": -15801,
+          "packet_id": 82,
+          "tx_timestamp_ns": 1794087394482264141,
+          "rx_timestamp_ns": 1794087394482454863,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 234527,
+          "round_trip_delta_ns": 43805,
+          "packet_id": 83,
+          "tx_timestamp_ns": 1794087394492840145,
+          "rx_timestamp_ns": 1794087394493074672,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 207024,
+          "round_trip_delta_ns": -27503,
+          "packet_id": 84,
+          "tx_timestamp_ns": 1794087394503523761,
+          "rx_timestamp_ns": 1794087394503730685,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 222626,
+          "round_trip_delta_ns": 15602,
+          "packet_id": 85,
+          "tx_timestamp_ns": 1794087394514305588,
+          "rx_timestamp_ns": 1794087394514528314,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 140616,
+          "round_trip_delta_ns": -82010,
+          "packet_id": 86,
+          "tx_timestamp_ns": 1794087394525143622,
+          "rx_timestamp_ns": 1794087394525284238,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 151217,
+          "round_trip_delta_ns": 10601,
+          "packet_id": 87,
+          "tx_timestamp_ns": 1794087394535613914,
+          "rx_timestamp_ns": 1794087394535765231,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 97511,
+          "round_trip_delta_ns": -53706,
+          "packet_id": 88,
+          "tx_timestamp_ns": 1794087394546257825,
+          "rx_timestamp_ns": 1794087394546355436,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 214925,
+          "round_trip_delta_ns": 117414,
+          "packet_id": 89,
+          "tx_timestamp_ns": 1794087394556608603,
+          "rx_timestamp_ns": 1794087394556823428,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 133315,
+          "round_trip_delta_ns": -81610,
+          "packet_id": 90,
+          "tx_timestamp_ns": 1794087394567259016,
+          "rx_timestamp_ns": 1794087394567392331,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 124614,
+          "round_trip_delta_ns": -8701,
+          "packet_id": 91,
+          "tx_timestamp_ns": 1794087394577801416,
+          "rx_timestamp_ns": 1794087394577925930,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 193222,
+          "round_trip_delta_ns": 68608,
+          "packet_id": 92,
+          "tx_timestamp_ns": 1794087394588581643,
+          "rx_timestamp_ns": 1794087394588774865,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 243627,
+          "round_trip_delta_ns": 50405,
+          "packet_id": 93,
+          "tx_timestamp_ns": 1794087394599245557,
+          "rx_timestamp_ns": 1794087394599489184,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 282233,
+          "round_trip_delta_ns": 38606,
+          "packet_id": 94,
+          "tx_timestamp_ns": 1794087394609925372,
+          "rx_timestamp_ns": 1794087394610207605,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 215724,
+          "round_trip_delta_ns": -66509,
+          "packet_id": 95,
+          "tx_timestamp_ns": 1794087394620821113,
+          "rx_timestamp_ns": 1794087394621036937,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 245728,
+          "round_trip_delta_ns": 30004,
+          "packet_id": 96,
+          "tx_timestamp_ns": 1794087394631492127,
+          "rx_timestamp_ns": 1794087394631737855,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 248028,
+          "round_trip_delta_ns": 2300,
+          "packet_id": 97,
+          "tx_timestamp_ns": 1794087394642480478,
+          "rx_timestamp_ns": 1794087394642728506,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 260330,
+          "round_trip_delta_ns": 12302,
+          "packet_id": 98,
+          "tx_timestamp_ns": 1794087394653139491,
+          "rx_timestamp_ns": 1794087394653399921,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        },
+        {
+          "round_trip_ns": 244428,
+          "round_trip_delta_ns": -15902,
+          "packet_id": 99,
+          "tx_timestamp_ns": 1794087394663816207,
+          "rx_timestamp_ns": 1794087394664060735,
+          "one_way_delay_ns": null,
+          "jitter_ns": null,
+          "lost": false
+        }
+      ]
+    }
+  ],
+  "packets_attempted": 200,
+  "packets_received": 200,
+  "packets_lost": 0,
+  "errors": [],
+  "note": "Loopback software RTT or explicit synthetic model; no synchronized launch, one-way or hardware timing qualification."
+}

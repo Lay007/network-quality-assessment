@@ -18,29 +18,39 @@ const ConfigVersion = 1
 
 // Config bounds memory, CPU concurrency and session duration before work starts.
 type Config struct {
-	Version   int           `json:"version"`
-	Mode      string        `json:"mode"`
-	Interface string        `json:"interface"`
-	Packets   int           `json:"packets"`
-	Workers   int           `json:"workers"`
-	Interval  time.Duration `json:"interval_ns"`
-	Timeout   time.Duration `json:"timeout_ns"`
-	Seed      uint64        `json:"seed"`
-	LossEvery int           `json:"loss_every"`
-	Delay     time.Duration `json:"delay_ns"`
-	Variation time.Duration `json:"variation_ns"`
+	Target       string        `json:"target,omitempty"`
+	ProbeTimeout time.Duration `json:"probe_timeout_ns"`
+	Version      int           `json:"version"`
+	Mode         string        `json:"mode"`
+	Interface    string        `json:"interface"`
+	Packets      int           `json:"packets"`
+	Workers      int           `json:"workers"`
+	Interval     time.Duration `json:"interval_ns"`
+	Timeout      time.Duration `json:"timeout_ns"`
+	Seed         uint64        `json:"seed"`
+	LossEvery    int           `json:"loss_every"`
+	Delay        time.Duration `json:"delay_ns"`
+	Variation    time.Duration `json:"variation_ns"`
 }
 
 func DefaultConfig() Config {
-	return Config{Version: 1, Mode: "synthetic", Interface: "synthetic", Packets: 1000, Workers: 2, Interval: time.Millisecond, Timeout: 10 * time.Second, Seed: 1, LossEvery: 20, Delay: 300 * time.Microsecond, Variation: 10 * time.Microsecond}
+	return Config{ProbeTimeout: 100 * time.Millisecond, Version: 1, Mode: "synthetic", Interface: "synthetic", Packets: 1000, Workers: 2, Interval: time.Millisecond, Timeout: 10 * time.Second, Seed: 1, LossEvery: 20, Delay: 300 * time.Microsecond, Variation: 10 * time.Microsecond}
 }
 
 func (c Config) Validate() error {
 	if c.Version != ConfigVersion {
 		return errors.New("unsupported configuration version")
 	}
-	if c.Mode != "synthetic" || c.Interface != "synthetic" {
-		return errors.New("this engine requires synthetic mode and interface")
+	if c.Mode != "synthetic" && c.Mode != "udp" {
+		return errors.New("mode must be synthetic or udp")
+	}
+	if c.Mode == "synthetic" && (c.Interface != "synthetic" || c.Target != "") {
+		return errors.New("synthetic mode requires synthetic interface and no target")
+	}
+	if c.Mode == "udp" {
+		if err := validateUDP(c); err != nil {
+			return err
+		}
 	}
 	if c.Packets < 1 || c.Packets > 10000 || c.Workers < 1 || c.Workers > 16 {
 		return errors.New("packets must be 1..10000; workers must be 1..16")
@@ -63,8 +73,11 @@ type Provenance struct {
 	Note            string `json:"note"`
 }
 
-// Sample uses integer nanoseconds; nil receive/delay fields represent loss.
+// Sample uses integer nanoseconds. Delay/Jitter are synthetic one-way fields;
+// RTT/RTTDelta describe software echoes. Missing RX represents an observation timeout.
 type Sample struct {
+	RTT      *int64 `json:"round_trip_ns,omitempty"`
+	RTTDelta *int64 `json:"round_trip_delta_ns,omitempty"`
 	PacketID int    `json:"packet_id"`
 	TX       int64  `json:"tx_timestamp_ns"`
 	RX       *int64 `json:"rx_timestamp_ns"`
@@ -79,6 +92,11 @@ type SessionError struct {
 }
 
 type Result struct {
+	Sent          int            `json:"packets_sent"`
+	Unfinished    int            `json:"packets_unfinished"`
+	RTTMin        *int64         `json:"rtt_min_ns,omitempty"`
+	RTTMax        *int64         `json:"rtt_max_ns,omitempty"`
+	RTTMean       *float64       `json:"rtt_mean_ns,omitempty"`
 	SchemaVersion int            `json:"schema_version"`
 	ID            string         `json:"session_id"`
 	Software      string         `json:"software_version"`
@@ -99,15 +117,19 @@ type Result struct {
 
 func SoftwareVersion() string {
 	version := "development"
+	dirty := false
 	if info, ok := debug.ReadBuildInfo(); ok {
 		for _, setting := range info.Settings {
 			if setting.Key == "vcs.revision" {
 				version = setting.Value
 			}
 			if setting.Key == "vcs.modified" && setting.Value == "true" {
-				version += "+dirty"
+				dirty = true
 			}
 		}
+	}
+	if dirty {
+		version += "+dirty"
 	}
 	return version + " (" + runtime.Version() + ")"
 }
@@ -122,7 +144,7 @@ func newResult(c Config) (Result, error) {
 		return Result{}, err
 	}
 	hash := sha256.Sum256(encoded)
-	return Result{SchemaVersion: 1, ID: hex.EncodeToString(id[:]), Software: SoftwareVersion(), Platform: runtime.GOOS + "/" + runtime.GOARCH, Config: c, ConfigHash: hex.EncodeToString(hash[:]), Status: "running", Start: time.Now().UTC(), Errors: []SessionError{}, Samples: make([]Sample, c.Packets)}, nil
+	return Result{SchemaVersion: 1, ID: hex.EncodeToString(id[:]), Software: SoftwareVersion(), Platform: runtime.GOOS + "/" + runtime.GOARCH, Config: c, ConfigHash: hex.EncodeToString(hash[:]), Status: "running", Start: time.Now().UTC(), Errors: []SessionError{}}, nil
 }
 
 // Run models a trace without sleeping or sending packets. Context controls actual
@@ -131,6 +153,9 @@ func Run(ctx context.Context, c Config) (Result, error) {
 	if err := c.Validate(); err != nil {
 		return Result{}, fmt.Errorf("configuration: %w", err)
 	}
+	if c.Mode == "udp" {
+		return Result{}, fmt.Errorf("UDP mode requires RunUDP with an explicit bench token")
+	}
 	r, err := newResult(c)
 	if err != nil {
 		return r, err
@@ -138,8 +163,14 @@ func Run(ctx context.Context, c Config) (Result, error) {
 	r.Provenance = Provenance{Kind: "synthetic", Source: "deterministic-integer-model-v1", ClockDomain: "modeled-relative-nanoseconds", Synchronization: "not-applicable", MeasurementKind: "synthetic-one-way", Note: "Simulated timestamps; no packets, host clock accuracy or hardware evidence."}
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
+	// Keep allocation bounds visible at the allocation site as well as in Config.
+	packetCount := c.Packets
+	if packetCount < 1 || packetCount > 10000 {
+		return Result{}, fmt.Errorf("packet allocation outside 1..10000")
+	}
+	r.Samples = make([]Sample, packetCount)
 	jobs := make(chan int, c.Workers*2)
-	ready := make([]bool, c.Packets)
+	ready := make([]bool, packetCount)
 	var wg sync.WaitGroup
 	for range c.Workers {
 		wg.Go(func() {

@@ -19,3 +19,6 @@
 
 *.gz binary
 *.zip binary
+
+# Keep evidence byte hashes stable on Windows and Linux checkouts.
+results/go-loopback-2026-11-08/** text eol=lf
