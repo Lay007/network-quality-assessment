@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB_ROOT = ROOT / "web" / "htdocs"
@@ -17,16 +18,16 @@ SCAN_EXTENSIONS = {".php", ".html", ".css", ".js"}
 SKIP_DIRECTORIES = {"code", "vendor"}
 ATTRIBUTE_REF = re.compile(r"""(?:href|src|action)\s*=\s*\\?["']([^"']+)""", re.IGNORECASE)
 CSS_URL_REF = re.compile(r"""url\(\s*["']?([^"')]+)""", re.IGNORECASE)
-SKIP_PREFIXES = ("#", "http:", "https:", "//", "data:", "javascript:", "mailto:")
+SKIP_PREFIXES = ("#", "http:", "https:", "//", "data:", "javascript:", "mailto:", "tel:", "sms:")
 
 
 def normalize(raw: str) -> str | None:
     value = raw.strip().replace('\\"', "").replace("\\'", "")
     value = value.rstrip("\\")
-    if not value or value.startswith(SKIP_PREFIXES):
+    if not value or value.lower().startswith(SKIP_PREFIXES):
         return None
     value = value.split("?", 1)[0].split("#", 1)[0]
-    return value or None
+    return unquote(value) or None
 
 
 def target_for(source: Path, value: str) -> Path | None:

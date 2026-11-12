@@ -64,5 +64,8 @@ jobs:
       - name: Lint PHP files
         run: find web/htdocs -name '*.php' -print0 | xargs -0 -n1 php -l
 
+      - name: Test web link checker edge cases
+        run: python -m unittest discover -s tools -p 'test_web_links.py' -v
+
       - name: Check web asset links
         run: python scripts/check_web_links.py
