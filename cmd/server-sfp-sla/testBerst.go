@@ -1,3 +1,5 @@
+//go:build linux
+
 package main
 
 import (
@@ -16,7 +18,6 @@ func TestBerst(id int, net_interface_name string) {
 	}
 	db, err := openDB()
 	if err != nil {
-		db.Close()
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -28,7 +29,7 @@ func TestBerst(id int, net_interface_name string) {
 		}
 		return
 	}
-	db.Exec("UPDATE test_bert SET status=?, datatime=? WHERE id=?", time.Now().Format("2006-01-02 15:04:05"), 2, id)
+	db.Exec("UPDATE test_bert SET status=?, datatime=? WHERE id=?", 2, time.Now().Format("2006-01-02 15:04:05"), id)
 	ifi, err := net.InterfaceByName(net_interface_name)
 	if err != nil {
 		db.Close()
@@ -40,7 +41,7 @@ func TestBerst(id int, net_interface_name string) {
 	row, err := db.Query("select id,miss_init_test, test_type, module_first, module_second, thr_begin, count_prob_packs, count_probs, status from test_bert where id=?", id)
 	if err != nil {
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -83,7 +84,7 @@ func TestBerst(id int, net_interface_name string) {
 	if err != nil {
 		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -119,7 +120,7 @@ func TestBerst(id int, net_interface_name string) {
 	if err != nil {
 		db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -154,7 +155,7 @@ func TestBerst(id int, net_interface_name string) {
 			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_ip.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -192,7 +193,7 @@ func TestBerst(id int, net_interface_name string) {
 			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -238,7 +239,7 @@ func TestBerst(id int, net_interface_name string) {
 			db.Exec("UPDATE test_bert SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -440,11 +441,7 @@ func TestBerst(id int, net_interface_name string) {
 	}
 	//db.Close()
 
-	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y := 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 
@@ -469,7 +466,7 @@ func TestBerst(id int, net_interface_name string) {
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -575,11 +572,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_64 = ", test.rez_64)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 
@@ -639,11 +632,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_128 = ", test.rez_128)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -702,11 +691,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_256 = ", test.rez_256)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -765,11 +750,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_512 = ", test.rez_512)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -828,11 +809,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_1024 = ", test.rez_1024)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -891,11 +868,7 @@ func TestBerst(id int, net_interface_name string) {
 		fmt.Println("->> rez_1280 = ", test.rez_1280)
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_bert WHERE id=?)", id)
-	yest.Next()
-	t_y = 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_bert", id); err != nil || !exists {
 		return
 	}
 	db.Exec("UPDATE test_bert SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, id)
@@ -1091,7 +1064,6 @@ func TestBerst(id int, net_interface_name string) {
 	/*
 		db, err = openDB()
 		if err != nil {
-			db.Close()
 
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")

@@ -1,6 +1,9 @@
+//go:build linux
+
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	//	"log"
@@ -22,6 +25,9 @@ func testPing(ip string) int {
 			fmt.Println(err)
 		}
 	}
+	if err != nil {
+		return 1
+	}
 	p.AddIPAddr(ra)
 	p.OnRecv = func(addr *net.IPAddr, rtt time.Duration) {
 		if verboseLogs {
@@ -38,6 +44,9 @@ func testPing(ip string) int {
 		if verboseLogs {
 			fmt.Println(err)
 		}
+	}
+	if err != nil {
+		return 1
 	}
 	return 0
 }
@@ -79,7 +88,6 @@ func testPing_old(ip string) int {
 }
 
 var mux_SNMP sync.Mutex
-var db_SNMP *sql.DB
 
 func (testWay *testWaySFP) getResult(thr int64, revers bool) (float32, float32, float32, float32) {
 	period_nano_gen := int64(0)
@@ -1186,125 +1194,45 @@ func findSFP(c net.PacketConn, addr net.Addr, ip_server string, ip_1sfpsla_str s
 	return 1
 }
 
-func (module *module_sfp) startSNMP(conf global_config) {
-
-	if verboseLogs {
-		fmt.Println("Start SNMP_check - ", (*module).address_ip)
-	}
+func (module *module_sfp) startSNMP(ctx context.Context, db *sql.DB, conf global_config) {
 	if conf.net_interface_name == "" {
-		if verboseLogs {
-			fmt.Println("null net_interface_name")
-		}
 		return
 	}
-	envTarget := (*module).address_ip
-	envPort := "161"
-
-	port, _ := strconv.ParseUint(envPort, 10, 16)
-
-	// Build our own GoSNMP struct, rather than using g.Default.
-	// Do verbose logging of packets.
-	params := &g.GoSNMP{
-		Target:    envTarget,
-		Port:      uint16(port),
-		Community: "public",
-		Version:   g.Version2c,
-		Timeout:   time.Millisecond * 100,
-		Retries:   1,
-	}
-
-	var SFP_laz, SFP_com int64
-	oids := []string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"}
-
-	timer_SNMP := time.NewTicker(1000 * time.Millisecond)
-
-	for range timer_SNMP.C {
+	timer := time.NewTicker(time.Second)
+	defer timer.Stop()
+	for {
 		select {
-		case <-(*module).chan_stop:
-			if verboseLogs {
-				fmt.Println("End SNMP_check - ", (*module).address_ip)
-			}
-			timer_SNMP.Stop()
+		case <-ctx.Done():
 			return
-		default:
-			{
-				mux_SNMP.Lock()
-				//	g.Default.Retries=1
-				//	g.Default.Target = (*module).address_ip
-				//	err := g.Default.Connect()
-				err := params.Connect()
-				if err != nil {
-					if verboseLogs {
-						fmt.Print("Module : ", envTarget)
-					}
-					if verboseLogs {
-						fmt.Println("Connect() err: ", err)
-					}
-					mux_SNMP.Unlock()
-					continue
-				}
-				defer params.Conn.Close()
-				result, err2 := params.Get(oids) // Get() accepts up to g.MAX_OIDS
-				if err2 != nil {
-					if verboseLogs {
-						fmt.Print("Module : ", envTarget)
-					}
-					if verboseLogs {
-						fmt.Println("Get() err: ", err2)
-					}
-					params.Conn.Close()
-					mux_SNMP.Unlock()
-					continue
-				}
-				for _, variable := range result.Variables {
-
-					if variable.Name == ".1.3.6.1.4.1.2010.1.13.0" {
-
-						SFP_com = g.ToBigInt(variable.Value).Int64() * 8
-					}
-					if variable.Name == ".1.3.6.1.4.1.2010.1.14.0" {
-
-						SFP_laz = g.ToBigInt(variable.Value).Int64() * 8
-					}
-				}
-				//params.Conn.Close()
-				//g.Default.Conn.Close()
-				mux_SNMP.Unlock()
-				/*
-					db_SNMP, err := openDB()
-					if err != nil {
-						db_SNMP.Close()
-						mux_SNMP.Unlock()
-						if verboseLogs {
-							fmt.Println(" -!! Error !!-")
-						}
-						if verboseLogs {
-							fmt.Println(err)
-						}
-						if verboseLogs {
-							fmt.Println(" ----=====----")
-						}
-						return
-					}*/
-				//rez,er:=
-				id_test := 0
-				row_mod := db_SNMP.QueryRow("SELECT id FROM modules_sfp_sla WHERE id=?", (*module).id)
-				err = row_mod.Scan(&id_test)
-
-				if err != nil || id_test == 0 {
-					if verboseLogs {
-						fmt.Println(" -!! Error check module !!-")
-					}
-					return
-				}
-
-				db_SNMP.Exec("INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) VALUES(?, NOW(), ?, ?)", (*module).id, SFP_laz, SFP_com)
-
-				//db_SNMP.Close()
-
-			}
+		case <-timer.C:
+		}
+		if err := module.sampleSNMP(ctx, db); err != nil && verboseLogs {
+			fmt.Println("SNMP sample failed")
 		}
 	}
+}
+
+func (module *module_sfp) sampleSNMP(ctx context.Context, db *sql.DB) error {
+	params := &g.GoSNMP{Target: module.address_ip, Port: 161, Community: "public", Version: g.Version2c, Timeout: 100 * time.Millisecond, Retries: 1}
+	if err := params.Connect(); err != nil {
+		return err
+	}
+	defer params.Conn.Close()
+	result, err := params.Get([]string{".1.3.6.1.4.1.2010.1.13.0", ".1.3.6.1.4.1.2010.1.14.0"})
+	if err != nil {
+		return err
+	}
+	var laser, com int64
+	for _, v := range result.Variables {
+		switch v.Name {
+		case ".1.3.6.1.4.1.2010.1.13.0":
+			com = g.ToBigInt(v.Value).Int64() * 8
+		case ".1.3.6.1.4.1.2010.1.14.0":
+			laser = g.ToBigInt(v.Value).Int64() * 8
+		}
+	}
+	_, err = db.ExecContext(ctx, "INSERT INTO modules_sfp_sla_load_rez (module_id, datatime, load_to_lazer, load_to_com) SELECT id, NOW(), ?, ? FROM modules_sfp_sla WHERE id=?", laser, com, module.id)
+	return err
 }
 
 func check_SNMP(ip string) int {

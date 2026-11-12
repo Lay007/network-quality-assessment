@@ -1,6 +1,11 @@
+//go:build linux
+
 package main
 
-import "testing"
+import (
+	"github.com/go-sql-driver/mysql"
+	"testing"
+)
 
 func TestEnvOrDefault(t *testing.T) {
 	t.Setenv("SFP_SLA_SAMPLE_ENV", "")
@@ -21,7 +26,7 @@ func TestDBDSNLocalSocket(t *testing.T) {
 	t.Setenv("SFP_SLA_DB_ADDR", "")
 
 	got := dbDSN()
-	want := "demo:secret@/metrics"
+	want := "demo:secret@/metrics?readTimeout=5s&timeout=5s&writeTimeout=5s"
 	if got != want {
 		t.Fatalf("dbDSN local mismatch: got %q want %q", got, want)
 	}
@@ -34,8 +39,19 @@ func TestDBDSNTCP(t *testing.T) {
 	t.Setenv("SFP_SLA_DB_ADDR", "127.0.0.1:3306")
 
 	got := dbDSN()
-	want := "demo:secret@tcp(127.0.0.1:3306)/metrics"
+	want := "demo:secret@tcp(127.0.0.1:3306)/metrics?readTimeout=5s&timeout=5s&writeTimeout=5s"
 	if got != want {
 		t.Fatalf("dbDSN tcp mismatch: got %q want %q", got, want)
+	}
+}
+
+func TestDBConfigurationEscapesName(t *testing.T) {
+	t.Setenv("SFP_SLA_DB_NAME", "metrics/name")
+	cfg, err := mysql.ParseDSN(dbDSN())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.DBName != "metrics/name" || cfg.Timeout <= 0 || cfg.ReadTimeout <= 0 || cfg.WriteTimeout <= 0 {
+		t.Fatalf("invalid DB configuration: name or timeouts")
 	}
 }

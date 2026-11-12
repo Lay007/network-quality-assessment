@@ -1,3 +1,5 @@
+//go:build linux
+
 package main
 
 import (
@@ -38,7 +40,6 @@ func TestThroughput(id int, net_interface_name string) {
 	}()
 	db, err := openDB()
 	if err != nil {
-		db.Close()
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -51,9 +52,8 @@ func TestThroughput(id int, net_interface_name string) {
 		return
 	}
 
-	yest, _ := db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-	if verboseLogs {
-		fmt.Println(yest)
+	if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
+		return
 	}
 
 	db.Exec("UPDATE test_throughput SET status=?, datatime=NOW() WHERE id=?", 2, id)
@@ -72,7 +72,7 @@ func TestThroughput(id int, net_interface_name string) {
 		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -160,7 +160,7 @@ func TestThroughput(id int, net_interface_name string) {
 		db.Exec("UPDATE test_throughput SET status=?, datetime_end=? WHERE id=?", 4, time.Now().Format("2006-01-02 15:04:05"), id)
 		db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 		db.Close()
-		row.Close()
+
 		if verboseLogs {
 			fmt.Println(" -!! Error !!-")
 		}
@@ -197,7 +197,7 @@ func TestThroughput(id int, net_interface_name string) {
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 			db.Close()
 			row.Close()
-			row_ip.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -237,7 +237,7 @@ func TestThroughput(id int, net_interface_name string) {
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -285,7 +285,7 @@ func TestThroughput(id int, net_interface_name string) {
 			db.Exec("INSERT INTO message (date,test_type, test_id, message) VALUES(NOW(),?, ?, ?)", 1, id, "Database query failed")
 			db.Close()
 			row.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -514,11 +514,7 @@ func TestThroughput(id int, net_interface_name string) {
 		fmt.Println("Test ====")
 	}
 
-	yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-	yest.Next()
-	t_y := 0
-	yest.Scan(&t_y)
-	if t_y != 1 {
+	if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 		return
 	}
 
@@ -536,7 +532,7 @@ func TestThroughput(id int, net_interface_name string) {
 		row_mac, err := db.Query("SELECT mac FROM modules_sfp_sla WHERE address_ip=?", ipdst_1sfpsla_str)
 		if err != nil {
 			db.Close()
-			row_mac.Close()
+
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
 			}
@@ -594,11 +590,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
 
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 
@@ -642,11 +634,7 @@ func TestThroughput(id int, net_interface_name string) {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
 
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -689,11 +677,7 @@ func TestThroughput(id int, net_interface_name string) {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
 
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 
@@ -737,11 +721,7 @@ func TestThroughput(id int, net_interface_name string) {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
 
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 
@@ -793,11 +773,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
 
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 
@@ -841,11 +817,7 @@ func TestThroughput(id int, net_interface_name string) {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
 
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 
@@ -889,11 +861,7 @@ func TestThroughput(id int, net_interface_name string) {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
 
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 
@@ -937,11 +905,7 @@ func TestThroughput(id int, net_interface_name string) {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
 
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 
@@ -984,7 +948,7 @@ func TestThroughput(id int, net_interface_name string) {
 		fmt.Printf("End 128 goroutine num: %d\n", runtime.NumGoroutine())
 	}
 
-	db.Exec("UPDATE test_throughput SET rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
+	db.Exec("UPDATE test_throughput SET rez_64=?,rez_128=?,rez_256=?,rez_512=?,rez_1024=?,rez_1280=?, rez_1518=?, status=? WHERE id=?", test.rez_64, test.rez_128, test.rez_256, test.rez_512, test.rez_1024, test.rez_1280, test.rez_1518, test.status, id)
 
 	size = 256
 	step = test.thr_begin
@@ -992,11 +956,7 @@ func TestThroughput(id int, net_interface_name string) {
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			step = step / 2
@@ -1038,11 +998,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1084,11 +1040,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1130,11 +1082,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1181,11 +1129,7 @@ func TestThroughput(id int, net_interface_name string) {
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			step = step / 2
@@ -1227,11 +1171,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1273,11 +1213,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1319,11 +1255,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1370,11 +1302,7 @@ func TestThroughput(id int, net_interface_name string) {
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			step = step / 2
@@ -1416,11 +1344,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1462,11 +1386,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1508,11 +1428,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1559,11 +1475,7 @@ func TestThroughput(id int, net_interface_name string) {
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			step = step / 2
@@ -1605,11 +1517,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1651,11 +1559,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1697,11 +1601,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1748,11 +1648,7 @@ func TestThroughput(id int, net_interface_name string) {
 
 	if test.ch_type == 0 {
 		for i := 0; i < 7; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			step = step / 2
@@ -1794,11 +1690,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 1 {
 		step = test.thr_begin / 10
 		for i := 0; i < 10; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1840,11 +1732,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 2 {
 		step = test.thr_begin / 20
 		for i := 0; i < 20; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1886,11 +1774,7 @@ func TestThroughput(id int, net_interface_name string) {
 	if test.ch_type == 3 {
 		step = test.thr_begin / 100
 		for i := 0; i < 100; i++ {
-			yest, _ = db.Query("SELECT EXISTS(SELECT id FROM test_throughput WHERE id=?)", id)
-			yest.Next()
-			t_y = 0
-			yest.Scan(&t_y)
-			if t_y != 1 {
+			if exists, err := measurementExists(db, "test_throughput", id); err != nil || !exists {
 				return
 			}
 			test_c.numberCounter = 0
@@ -1955,7 +1839,6 @@ func TestThroughput(id int, net_interface_name string) {
 	/*
 		db, err = openDB()
 		if err != nil {
-			db.Close()
 
 			if verboseLogs {
 				fmt.Println(" -!! Error !!-")
@@ -2520,9 +2403,14 @@ func (test *testThr) receivePackets_old(c net.PacketConn, mtu int, ipdst_1sfpsla
 
 func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, thr int, counter chan uint64, counterRes chan uint64) int64 {
 
+	if thr <= 0 || period_sec <= 0 || len(packet) == 0 {
+		counter <- 0
+		counterRes <- 0
+		return 0
+	}
 	size_p := len(packet)
 	//os.page
-	period_nano := int64(size_p * 8 * 1000 / thr)
+	period_nano := max(int64(size_p*8*1000/thr), 1)
 	defer func() {
 		if verboseLogs {
 			fmt.Println("Exit genSocket")
@@ -2576,13 +2464,17 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 		fmt.Println("Start generate: ", time.Now())
 	}
 	go func(done <-chan int, gen_end chan<- int) {
+		defer close(gen_end)
 		defer func() {
 			if verboseLogs {
 				fmt.Println("Exit funcgenSocket")
 			}
 		}()
 
-		ifi, _ := net.InterfaceByIndex(ifiIndex)
+		ifi, err := net.InterfaceByIndex(ifiIndex)
+		if err != nil {
+			return
+		}
 		zs, err := raw.ListenPacket(ifi, etherType, nil)
 		if err != nil {
 			if verboseLogs {
@@ -2601,7 +2493,9 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 			return
 		}
 
+		defer zs.Close()
 		ticker := time.NewTicker(time.Duration(period_nano))
+		defer ticker.Stop()
 
 	ExitLoop:
 		for {
@@ -2613,7 +2507,7 @@ func genSocket(ifiIndex int, packet []byte, packetTemp []byte, period_sec int, t
 				rez_time = (int64)(time.Since(star_gen))
 				runtime.Gosched()
 				zs.Close()
-				gen_end <- 1
+
 				break ExitLoop
 			//default:
 			case <-ticker.C:
